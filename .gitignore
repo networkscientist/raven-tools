@@ -46,10 +46,15 @@ htmlcov/
 nosetests.xml
 coverage.xml
 *.cover
+<<<<<<< HEAD
 *.py,cover
 .hypothesis/
 .pytest_cache/
 cover/
+=======
+.hypothesis/
+.pytest_cache/
+>>>>>>> 7e4401823627d8dc910c4b44be240b263efe776f
 
 # Translations
 *.mo
@@ -59,7 +64,10 @@ cover/
 *.log
 local_settings.py
 db.sqlite3
+<<<<<<< HEAD
 db.sqlite3-journal
+=======
+>>>>>>> 7e4401823627d8dc910c4b44be240b263efe776f
 
 # Flask stuff:
 instance/
@@ -72,7 +80,10 @@ instance/
 docs/_build/
 
 # PyBuilder
+<<<<<<< HEAD
 .pybuilder/
+=======
+>>>>>>> 7e4401823627d8dc910c4b44be240b263efe776f
 target/
 
 # Jupyter Notebook
@@ -83,6 +94,7 @@ profile_default/
 ipython_config.py
 
 # pyenv
+<<<<<<< HEAD
 #   For a library or package, you might want to ignore these files since the code is
 #   intended to run in multiple environments; otherwise, check them in:
 # .python-version
@@ -115,6 +127,12 @@ __pypackages__/
 # Celery stuff
 celerybeat-schedule
 celerybeat.pid
+=======
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+>>>>>>> 7e4401823627d8dc910c4b44be240b263efe776f
 
 # SageMath parsed files
 *.sage.py
@@ -145,6 +163,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+<<<<<<< HEAD
 
 # pytype static type analyzer
 .pytype/
@@ -171,3 +190,4 @@ cython_debug/
 
 # idea folder
 .idea
+=======
