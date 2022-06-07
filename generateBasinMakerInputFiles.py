@@ -1,6 +1,8 @@
 import pandas as pd
 import geopandas as gpd
-
+data_path = "/home/sirian/Applications/Hydrology/BasinMaker/broye_gr4j/data/"
+out_path = "/home/sirian/Applications/Hydrology/BasinMaker/broye_gr4j/output/"
+shapes = gpd.read_file(data_path + "/Catchment/Broye_Payerne.shp")
 df = gpd.read_file("/home/sirian/Applications/Hydrology/RAVEN/test_models/GR4J/catchment/CH-0057_attributes.geojson")
 required_columns = [
     "id",
