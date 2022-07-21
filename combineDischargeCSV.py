@@ -12,7 +12,7 @@ forcings_path: str = f"{raven_path}/data/forcings/"
 result_discharge_Path: str = f"{raven_path}/data/Discharge/"
 original_discharge_csv_path: str = f"{raven_path}/data/Discharge/original_from_hydromaps"
 
-column_names: dict[str, str] = {
+column_names = {
     "rre150h0": "PRECIP",
     "tre200h0": "TEMP_AVE",
     "tre200hx": "TEMP_MAX",
