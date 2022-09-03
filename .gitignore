@@ -77,7 +77,7 @@ instance/
 .scrapy
 
 # Sphinx documentation
-docs/_build/
+docs/build/
 
 # PyBuilder
 <<<<<<< HEAD
@@ -191,3 +191,4 @@ cython_debug/
 # idea folder
 .idea
 =======
+/docs/make.bat
