@@ -46,8 +46,14 @@ def write_rvt_pet():
         f.write("\n:EndData")
         print(" ... done")
 
+# ## Script to generate rvt file from bi-hourly q value .asc file
+def write_rvt_discharge_from_asc():
+    """Function to generate rvt file from bi-hourly q value .asc file
+
+    """
+
 # ## Script to generate rvt file from daily q value .csv files, separated in yearly files.
-def write_rvt_discharge():
+def write_rvt_discharge_from_hydromaps():
     """Function to generate rvt file from daily q value .csv files, separated in yearly files.
 
     """
@@ -57,7 +63,7 @@ def write_rvt_discharge():
     df_q['dt'] = pd.to_datetime(df_q['dt'])
     df_q = df_q.sort_values(by='dt', ascending=True).dropna()
     # Export to RAVEN .rvt file
-    with open(f"{result_discharge_Path}discharge.rvt", 'w') as f:
+    with open(f"{result_discharge_Path}BroPay_Q_2034_daily.rvt", 'w') as f:
         f.write(":ObservationData\tHYDROGRAPH\t1\tm3/s\n")
         f.write("1920-01-01\t0:00:00\t1\t36160\n")
         df_as_string = df_q.to_string(justify="right", header=False, index=False, columns={'q'})
@@ -149,7 +155,7 @@ def write_rvt_meteo(netcdf: bool = False, start_date: str = '2008-01-01', end_da
 
 write_rvt_meteo(netcdf=False, start_date='2008-01-01', end_date='2008-12-31')
 write_rvt_meteo(netcdf=True, start_date='2008-01-01', end_date='2008-12-31')
-write_rvt_discharge()
+write_rvt_discharge_from_hydromaps()
 write_rvt_pet()
 
 
