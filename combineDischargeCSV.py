@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 home_path = Path.home()
 raven_path: str = f"{home_path}/Applications/Hydrology/RAVEN"
 data_path: str = f"{raven_path}/data/"
@@ -22,6 +21,7 @@ column_names = {
 # Date range (can be overriden in function call)
 start_date = '2008-01-01'
 end_date = '2008-12-31'
+
 
 def write_rvt_pet():
     """Script to generate rvt file from monthly PET .csv files from IDAWEB
@@ -46,11 +46,13 @@ def write_rvt_pet():
         f.write("\n:EndData")
         print(" ... done")
 
+
 # ## Script to generate rvt file from bi-hourly q value .asc file
 def write_rvt_discharge_from_asc():
     """Function to generate rvt file from bi-hourly q value .asc file
 
     """
+
 
 # ## Script to generate rvt file from daily q value .csv files, separated in yearly files.
 def write_rvt_discharge_from_hydromaps():
@@ -58,7 +60,8 @@ def write_rvt_discharge_from_hydromaps():
 
     """
     # Read in the data from CSV files and concatenate into a single DataFrame
-    df_q: pd.DataFrame = pd.concat([pd.read_csv(f, sep=',') for f in glob.glob(original_discharge_csv_path + "/*.csv")], ignore_index=True)
+    df_q: pd.DataFrame = pd.concat([pd.read_csv(f, sep=',') for f in glob.glob(original_discharge_csv_path + "/*.csv")],
+                                   ignore_index=True)
     # Convert dt column to datetime format and sort by it
     df_q['dt'] = pd.to_datetime(df_q['dt'])
     df_q = df_q.sort_values(by='dt', ascending=True).dropna()
@@ -146,11 +149,21 @@ def write_rvt_meteo(netcdf: bool = False, start_date: str = '2008-01-01', end_da
             f.write(":Units\tmm/d\tC\tC\tC\n")
             df_as_string = df_meteo_ordered.to_string(justify="right", header=False, index=False,
                                                       columns=['PRECIP', 'TEMP_AVE', 'TEMP_MIN',
-                                                           'TEMP_MAX'])
+                                                               'TEMP_MAX'])
         f.write(df_as_string)
         # f.write(df_as_string)
         f.write("\n:EndMultiData")
     print("... done")
+
+
+# class RvtFile:
+#     def __init__(self, start_date="2008-01-01", end_date="2008-12-31", rvt_filename="GaugePAY"):
+#         self.StartDate = start_date
+#         self.EndDate = end_date
+#         self.RvtPath = Path(f"{forcings_path}/{rvt_filename}")
+#     def set_start_date(self, new_date: str):
+#         self.StartDate = new_date
+#         return True
 
 
 write_rvt_meteo(netcdf=False, start_date='2008-01-01', end_date='2008-12-31')
@@ -159,8 +172,9 @@ write_rvt_discharge_from_hydromaps()
 write_rvt_pet()
 
 
-
-
+# class Beispielklasse:
+#     def __init__(self):
+#         print("Hier spricht der Konstruktor")
 
 # def generate_discharge_rvt(orig_path, orig_filename, out_path):
 #     df_q = pd.read_csv(orig_path + orig_filename, sep='\t')

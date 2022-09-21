@@ -1,6 +1,10 @@
+# This script connects to the cds api and downloads data as netCDF file
+
+from pathlib import Path
 import cdsapi
 
 c = cdsapi.Client()
+home_path = Path.home()
 
 c.retrieve(
     'reanalysis-era5-land',
@@ -42,4 +46,4 @@ c.retrieve(
             6.98,
         ],
     },
-    '/home/sirian/Applications/Hydrology/RAVEN/data/forcings/2008.nc')
+    f"{home_path}/Applications/Hydrology/RAVEN/data/forcings/2008.nc")

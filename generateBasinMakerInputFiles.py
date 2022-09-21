@@ -1,9 +1,11 @@
 # import pandas as pd
 # import geopandas as gpd
-# data_path = "/home/sirian/Applications/Hydrology/BasinMaker/broye_gr4j/data/"
-# out_path = "/home/sirian/Applications/Hydrology/BasinMaker/broye_gr4j/output/"
+# from pathlib import Path
+# home_path = Path.home()
+# data_path = Path(f"{home_path}/Applications/Hydrology/BasinMaker/broye_gr4j/data")
+# out_path = "Path(f"{home_path}/Applications/Hydrology/BasinMaker/broye_gr4j/output")
 # shapes = gpd.read_file(data_path + "/Catchment/Broye_Payerne.shp")
-# df = gpd.read_file("/home/sirian/Applications/Hydrology/RAVEN/testmodels/GR4J/catchment/CH-0057_attributes.geojson")
+# df = gpd.read_file(f"{home_path}/Applications/Hydrology/RAVEN/testmodels/GR4J/catchment/CH-0057_attributes.geojson")
 # required_columns = [
 #     "id",
 #     "area_ch1903plus",
@@ -16,7 +18,7 @@
 #     "a0407_eu_dem_v11_asp8sm_maskv1_0"
 # ]
 # df_new=df[required_columns]
-# cmt = gpd.read_file("/home/sirian/Applications/Hydrology/RAVEN/testmodels/GR4J/catchment/Broye_Payerne.shp")
+# cmt = gpd.read_file(f"{home_path}/Applications/Hydrology/RAVEN/testmodels/GR4J/catchment/Broye_Payerne.shp")
 # cmt.plot()
 # cmt.to_crs(epsg=2056).plot()
 # cmt_new = cmt.merge(df_new, on='id', )
