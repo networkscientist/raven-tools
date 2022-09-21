@@ -13,6 +13,8 @@ packages = [{include = "raven_tools"}]
 python = "^3.10"
 geopandas = "^0.11.1"
 xarray = "^2022.6.0"
+sphinx-rtd-theme = "^1.0.0"
+pylint = "^2.15.3"
 
 
 [build-system]
