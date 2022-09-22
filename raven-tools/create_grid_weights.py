@@ -26,10 +26,7 @@ ds: Dataset = xr.open_dataset(netCDF_file_path, engine="netcdf4")
 # Convert the xarray Dataset into a Pandas Dataframe
 netcdf_df: DataFrame = ds.to_dataframe()
 
-# TODO: Write a function that creates a shape file with the netCDF's grid
-# TODO: Write a function that takes the Union of the grid shape file and the catchment shape file
-# TODO: Write a function that calculates the area of each grid cell that is overlapping with the catchment area and return the ratio of the total catchment area
-# TODO: Write a function that exports the grid weights into a RAVEN compatible file
+
 
 # xmin, ymin, xmax, ymax = catchment.total_bounds
 #
