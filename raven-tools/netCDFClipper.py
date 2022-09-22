@@ -8,10 +8,10 @@ from shapely.geometry import mapping, Polygon
 from xarray import Dataset
 
 # Paths
-home_path = Path.home()
+home_path = "/media/mainman/Data/"
 netcdf_files_path = Path(
-    f"{home_path}/Applications/Hydrology/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95")  # the original netCDF files are stored here
-hydro_shp_path = Path(f"{home_path}/Applications/Hydrology/RAVEN/data/Hydro")  # Hydrology shape files are stored here
+    f"{home_path}/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95")  # the original netCDF files are stored here
+hydro_shp_path = Path(f"{home_path}/RAVEN/data/Hydro")  # Hydrology shape files are stored here
 out_path = Path(f"{netcdf_files_path}/out")  # The output files will be store here
 extent_shape_file_path = Path(f"{hydro_shp_path}/River_network.shp")  # The shape file that defines the extent
 cdf_files = Path(netcdf_files_path).glob('*.nc')  # generator to capture all the netCDF files in a folder
@@ -88,17 +88,17 @@ bounding_shape, geodf = create_bounding_shape(extent_shape_file_path)
 netcdf_clipper_multi(netcdf_files_path, geodf)
 
 netcdf_files_path = Path(
-    f"{home_path}/Applications/Hydrology/RAVEN/data/MeteoSwiss_gridded_products/SrelD_v2.0_swiss.lv95")  # the original netCDF files are stored here
+    f"{home_path}/RAVEN/data/MeteoSwiss_gridded_products/SrelD_v2.0_swiss.lv95")  # the original netCDF files are stored here
 netcdf_clipper_multi(netcdf_files_path, geodf)
 
 netcdf_files_path = Path(
-    f"{home_path}/Applications/Hydrology/RAVEN/data/MeteoSwiss_gridded_products/TabsD_v2.0_swiss.lv95")  # the original netCDF files are stored here
+    f"{home_path}/RAVEN/data/MeteoSwiss_gridded_products/TabsD_v2.0_swiss.lv95")  # the original netCDF files are stored here
 netcdf_clipper_multi(netcdf_files_path, geodf)
 
 netcdf_files_path = Path(
-    f"{home_path}/Applications/Hydrology/RAVEN/data/MeteoSwiss_gridded_products/TmaxD_v2.0_swiss.lv95")  # the original netCDF files are stored here
+    f"{home_path}/RAVEN/data/MeteoSwiss_gridded_products/TmaxD_v2.0_swiss.lv95")  # the original netCDF files are stored here
 netcdf_clipper_multi(netcdf_files_path, geodf)
 
 netcdf_files_path = Path(
-    f"{home_path}/Applications/Hydrology/RAVEN/data/MeteoSwiss_gridded_products/TminD_v2.0_swiss.lv95")  # the original netCDF files are stored here
+    f"{home_path}/RAVEN/data/MeteoSwiss_gridded_products/TminD_v2.0_swiss.lv95")  # the original netCDF files are stored here
 netcdf_clipper_multi(netcdf_files_path, geodf)
