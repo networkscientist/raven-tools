@@ -5,11 +5,12 @@ from pathlib import Path
 import pandas as pd
 
 home_path = Path.home()
-raven_path: str = f"{home_path}/Applications/Hydrology/RAVEN"
+raven_path: str = "/media/mainman/Data/RAVEN"
 data_path: str = f"{raven_path}/data/"
 forcings_path: str = f"{raven_path}/data/forcings/"
 result_discharge_Path: str = f"{raven_path}/data/Discharge/"
-original_discharge_csv_path: str = f"{raven_path}/data/Discharge/original_from_hydromaps"
+original_discharge_csv_path: str = result_discharge_Path
+discharge_file_name: str = "BroPay_Q_2034_daily.rvt"
 
 column_names = {
     "rre150h0": "PRECIP",
