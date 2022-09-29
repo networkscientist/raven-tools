@@ -19,9 +19,15 @@ column_names = {
     "tre200hn": "TEMP_MIN",
 }
 
+time_column_names_asc = {
+    "YYYY": "year",
+    "MM": "month",
+    "DD": "day",
+    "HH": "hour",
+}
 # Date range (can be overriden in function call)
-start_date = '2008-01-01'
-end_date = '2008-12-31'
+start_date = '2000-01-01'
+end_date = '2000-12-31'
 
 
 def write_rvt_pet():
@@ -91,6 +97,36 @@ def subset_dataframe_time(dataframe: pd.DataFrame, start_date: str, end_date: st
     # Apply the mask
     subset_dataframe = dataframe[mask]
     return subset_dataframe
+
+
+def asc_to_rvt(ofile):
+    df_meteo: pd.DataFrame = pd.read_csv(original_discharge_csv_path + ofile, sep="\t")
+    # Convert time column to datetime format
+    df_meteo = df_meteo.rename(columns=time_column_names_asc)
+
+    df_meteo['time'] = pd.to_datetime(df_meteo[['year','month','day','hour']], format="%Y%m%d%H")
+    # Sort by date
+    # df_meteo_ordered = df_meteo_ordered.sort_values(by='time', ascending=True).dropna()
+    # Subset according to start and end date
+    start_date = "2000-01-01"
+    start_time = "0:01:00"
+    end_date = "2000-12-31"
+    df_meteo = subset_dataframe_time(df_meteo, start_date, end_date)
+    export_to_rvt_file(start_date, start_time, df_meteo)
+
+def export_to_rvt_file(date, time,df):
+    with open(result_discharge_Path + discharge_file_name, 'w') as f:
+        # print(rvt_filename)
+        f.write(f":ObservationData\tHYDROGRAPH\t1\tm3/s\n{date}\t{time}\t0.083333333\t{len(df)}\n")
+        # For gauged precipitation data
+        df_as_string = df.to_string(justify="right", header=False, index=False,
+                                                  columns=['Q.BroPay'])
+        f.write(df_as_string)
+        # f.write(df_as_string)
+        f.write("\n:EndObservationData")
+
+
+asc_to_rvt("BroPay_Q_2034_hourly.asc")
 
 
 ## Function to generate rvt file from daily meteo value .csv files from IDAWEB
