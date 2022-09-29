@@ -7,15 +7,18 @@ authors = ["Peter Zweifel <71866336+networkscientist@users.noreply.github.com>"]
 readme = "README.md"
 repository = "https://github.com/networkscientist/raven-tools"
 keywords = ["raven", "hydrology"]
-packages = [{include = "raven_tools"}]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.8.14"
+#sphinx-rtd-theme = "^1.0.0"
+#pylint = "^2.15.3"
+pandas = "^1.5.0"
 geopandas = "^0.11.1"
 xarray = "^2022.6.0"
-sphinx-rtd-theme = "^1.0.0"
-pylint = "^2.15.3"
-
+numpy = "^1.23.3"
+Shapely = "^1.8.4"
+netCDF4 = "^1.6.1"
+pygeos = "^0.13"
 
 [build-system]
 requires = ["poetry-core"]
