@@ -34,12 +34,12 @@ def write_rvt_pet():
     # Convert time column to datetime format and sort according to it
     df_pet['time'] = pd.to_datetime(df_pet['time'], format="%Y%m")
     df_pet = df_pet.sort_values(by='time', ascending=True).dropna()
-
+    df_pet = subset_dataframe_time(df_pet,start_date,end_date)
     # Export to RAVEN .rvt file
 
     with open(f"{forcings_path}GaugePAY_pet.rvt", 'w') as f:
-        print("Writing discharge data...")
-        f.write(":Data\n1981-01-01\t0:00:00\t0.041666667\t498\n")
+        print("Writing PET data...")
+        f.write(f":Data\n2000-01-01\t0:00:00\t30\t{len(df_pet)}\n")
         f.write(":Parameters\tPET_MONTH_AVE\n")
         f.write(":Units\tmm/d\n")
         dfAsString = df_pet.to_string(justify="right", header=False, index=False, columns={'ets150m0'})
