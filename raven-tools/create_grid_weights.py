@@ -11,7 +11,7 @@ Please note that the netCDF coordinates start with (x,y)=(1,1) bottom left.
 """
 
 from pathlib import Path
-from typing import Any
+from typing import Any, List
 
 import geopandas as gpd
 import numpy as np
@@ -28,27 +28,31 @@ output_file = Path(
     ".txt")
 bounding_box_filename = Path(
     "../../../../../media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/bbox.shp")
-extent_shape_file_path = Path("/media/mainman/Data/RAVEN/data/Catchment/Broye_Payerne.shp")  # The shape file that 
-# defines the extent of the catchment 
+# The shape file that defines the extent of the catchment
+extent_shape_file_path = Path("/media/mainman/Data/RAVEN/data/Catchment/Broye_Payerne.shp")
+# The netCDF file that will be used to get the bounds/extent
 netCDF_file_path = Path(
     "../../../../../media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out"
-    "/RhiresD_ch01h.swiss.lv95_196201010000_196212310000_clipped.nc")  # The netCDF file that will be used to get the bounds/extent
+    "/RhiresD_ch01h.swiss.lv95_196201010000_196212310000_clipped.nc")
 
 
 def create_overlay(grd: GeoDataFrame, ctm: GeoDataFrame):
     """Overlays a GeoDataFrame over another to create overlay Polygons
 
+    Overlays two GeoDataFrame over each other and creates two new GeoDataFrames, one for the mode 'intersection',
+    the second for the mode 'difference'
+
     :type ctm: GeoDataFrame
     :type grd: GeoDataFrame
     :rtype: GeoDataFrame
-    :param grd:
-    :param ctm:
-    :return res_u:
-    :return res_d:
+    :param grd: Grid as given by the netCDF file
+    :param ctm: Catchment as given by a shape file
+    :return res_u: Grid cells within the catchment area
+    :return res_d: Grid cell outside the catchment area
     """
 
-    res_u = ctm.overlay(grd, how='intersection')
-    res_d = grd.overlay(ctm, how='difference')
+    res_u: GeoDataFrame = ctm.overlay(grd, how='intersection')
+    res_d: GeoDataFrame = grd.overlay(ctm, how='difference')
     res_d = res_d.rename_geometry('geometry')
     res_u.set_index("cell_id")
     res_d.set_index("cell_id")
@@ -58,9 +62,13 @@ def create_overlay(grd: GeoDataFrame, ctm: GeoDataFrame):
 def calc_relative_area(gdf: GeoDataFrame):
     """Calculates the relative area of each polygon in a GeoDataFrame.
 
-    Calculates the relative area of each polygon in a GeoDataFrame with EPSG=2056, writes it into a new column and returns the GeoDataFrame with EPSG=2056.
-    :param GeoDataFrame gdf: GeoDataFrame in EPSG=2056
-    :return GeoDataFrame gdf: GeoDataFrame in EPSG=2056 (LV95)
+    Calculates the relative area of each polygon in a GeoDataFrame with EPSG=2056, writes it into a new column and
+    returns the GeoDataFrame with EPSG=2056.
+
+    :type gdf: GeoDataFrame
+    :rtype gdf: GeoDataFrame
+    :param gdf: GeoDataFrame in EPSG=2056
+    :return gdf: GeoDataFrame with relative areas of each polygon
     """
 
     # Set the CRS to WGS84 to preserve areas
@@ -73,29 +81,28 @@ def calc_relative_area(gdf: GeoDataFrame):
         # To minimize numerical errors, multiply and then divide the result by 1000000
         gdf.at[index, "area_rel"] = ((gdf.loc[index]["area"] * 1000000) / area_sum) / 1000000
         gdf.at[index, "index"] = int(index)
-        # res_union.at[index, "cell_id"] = cell_id[index]
-        # gdf.at[index, "col_id"] = int(col_id[index])
-        # gdf.at[index, "row_id"] = int(row_id[index])
     # Re-project back into the LV95 projection and export to a shape file
-    gdf = gdf.to_crs(2056)
+    gdf: GeoDataFrame = gdf.to_crs(2056)
     return gdf
 
 
-def write_weights_to_file(grd, filename):
+def write_weights_to_file(grd, filename: Path):
     """
 
-    :type grd: object
-    :type filename: object
-    :param filename:
-    :param grd:
+    :type grd: GeoDataFrame
+    :type filename: Path
+    :param filename: Path to the grid weight text file
+    :param grd: Grid derived from the netCDF file
     """
     # Write to GridWeights.txt
     data = write_grid_data(grd)
+    # The following section has been adapted from Juliane Mai's derive_grid_weights.py script. It writes to a file
+    # that is compatible with RAVEN
     with open(filename, 'w') as ff:
         ff.write(':GridWeights                     \n')
         ff.write('   #                                \n')
         ff.write('   # [# HRUs]                       \n')
-        ff.write('   :NumberHRUs       {0}            \n'.format(1))
+        ff.write('   :NumberHRUs       {0}            \n'.format(1)) # Currently for GR4J, there's 1 HRU
         ff.write('   :NumberGridCells  {0}            \n'.format(len(grid.index)))
         ff.write('   #                                \n')
         ff.write('   # [HRU ID] [Cell #] [w_kl]       \n')
@@ -105,15 +112,15 @@ def write_weights_to_file(grd, filename):
 
 
 def write_grid_data(grd):
-    """
+    """Loops over each grid cell and extracts the grid weights.
 
-    :type grd: object
-    :param grd:
-    :return:
+    :type grd: GeoDataFrame
+    :param grd: Grid as derived from the netCDF file
+    :return data_to_write: List with the relative areas/grid weights of each cell.
     """
     # Loop over each intersected feature and write the relative area (compared with the total catchment area) into a new
     # field.
-    data_to_write = []
+    data_to_write: list[list[float]] = []
     for index, row in grd.iterrows():
         data_to_write.append(
             [float(grd.loc[index]["area_rel"]), grd.loc[index]["cell_id"]])
@@ -121,13 +128,17 @@ def write_grid_data(grd):
 
 
 def copy_rel_area_from_union_to_grid(uni, grd):
+    """Takes grid weights from a union GeoDataFrame and writes the to the grid GeoDataFrame.
+
+    :type grd: GeoDataFrame
+    :type uni: GeoDataFrame
+    :param uni: GeoDataFrame containing the grid cells within the catchment.
+    :param grd: Grid GeoDataFrame as derived from netCDF file
+    :return grd: Grid GeoDataFrame with grid weights
     """
 
-    :type grd: object
-    :param uni:
-    :param grd:
-    :return:
-    """
+    # Loop over the union GeoDataFrame, take relative area/grid weight and write it to corresponding cell in grid
+    # GeoDataFrame.
     for index, row in uni.iterrows():
         cell_id_old_value = uni.at[index, "cell_id"]
         area_rel_old_value = uni.at[index, "area_rel"]
