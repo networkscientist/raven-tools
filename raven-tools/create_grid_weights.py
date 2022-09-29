@@ -11,7 +11,7 @@ Please note that the netCDF coordinates start with (x,y)=(1,1) bottom left.
 """
 
 from pathlib import Path
-from typing import Any, List
+# from typing import Any, List
 
 import geopandas as gpd
 import numpy as np
@@ -24,15 +24,14 @@ from xarray import Dataset, DataArray
 
 home_path = Path.home()
 output_file = Path(
-    "../../../../../media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/GridWeights"
-    ".txt")
+    "/media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/GridWeights.txt")
 bounding_box_filename = Path(
-    "../../../../../media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/bbox.shp")
+    "/media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/bbox.shp")
 # The shape file that defines the extent of the catchment
 extent_shape_file_path = Path("/media/mainman/Data/RAVEN/data/Catchment/Broye_Payerne.shp")
 # The netCDF file that will be used to get the bounds/extent
 netCDF_file_path = Path(
-    "../../../../../media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out"
+    "/media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out"
     "/RhiresD_ch01h.swiss.lv95_196201010000_196212310000_clipped.nc")
 
 
@@ -176,8 +175,8 @@ length: int = 1000
 wide: int = 1000
 
 # Create the northing and easting coordinates of the bounding vertex for each cell
-cols: list[Any] = list(np.arange(xmin, xmax + wide, wide))
-rows: list[Any] = list(np.arange(ymin, ymax + length, length))
+cols: list = list(np.arange(xmin, xmax + wide, wide))
+rows: list = list(np.arange(ymin, ymax + length, length))
 
 # initialize the Polygon list
 polygons: list[Polygon] = []
