@@ -207,14 +207,3 @@ write_rvt_meteo(netcdf=False, start_date='2008-01-01', end_date='2008-12-31')
 write_rvt_meteo(netcdf=True, start_date='2008-01-01', end_date='2008-12-31')
 write_rvt_discharge_from_hydromaps()
 write_rvt_pet()
-
-
-# class Beispielklasse:
-#     def __init__(self):
-#         print("Hier spricht der Konstruktor")
-
-# def generate_discharge_rvt(orig_path, orig_filename, out_path):
-#     df_q = pd.read_csv(orig_path + orig_filename, sep='\t')
-#     df_q['time'] = df_q.YYYY.map(str) + df_q.MM.map(str)
-#     df_q['DD'] = df_q['DD'].apply(lambda x: '{0:0>2}'.format(x))
-#     return df_q
