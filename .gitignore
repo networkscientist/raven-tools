@@ -192,3 +192,4 @@ cython_debug/
 .idea
 =======
 /docs/make.bat
+/raven_tools/nc_combine_config.txt
