@@ -1,33 +1,7 @@
 import glob
 from datetime import datetime
 from pathlib import Path
-
 import pandas as pd
-
-home_path = Path.home()
-raven_path: str = "/media/mainman/Data/RAVEN"
-data_path: str = f"{raven_path}/data/"
-forcings_path: str = f"{raven_path}/data/forcings/"
-result_discharge_Path: str = f"{raven_path}/data/Discharge/"
-original_discharge_csv_path: str = result_discharge_Path
-discharge_file_name: str = "BroPay_Q_2034_daily.rvt"
-
-column_names = {
-    "rre150h0": "PRECIP",
-    "tre200h0": "TEMP_AVE",
-    "tre200hx": "TEMP_MAX",
-    "tre200hn": "TEMP_MIN",
-}
-
-time_column_names_asc = {
-    "YYYY": "year",
-    "MM": "month",
-    "DD": "day",
-    "HH": "hour",
-}
-# Date range (can be overriden in function call)
-start_date = '2000-01-01'
-end_date = '2000-12-31'
 
 
 def write_rvt_pet():
@@ -40,7 +14,7 @@ def write_rvt_pet():
     # Convert time column to datetime format and sort according to it
     df_pet['time'] = pd.to_datetime(df_pet['time'], format="%Y%m")
     df_pet = df_pet.sort_values(by='time', ascending=True).dropna()
-    df_pet = subset_dataframe_time(df_pet,start_date,end_date)
+    df_pet = subset_dataframe_time(df_pet, start_date, end_date)
     # Export to RAVEN .rvt file
 
     with open(f"{forcings_path}GaugePAY_pet.rvt", 'w') as f:
@@ -99,34 +73,44 @@ def subset_dataframe_time(dataframe: pd.DataFrame, start_date: str, end_date: st
     return subset_dataframe
 
 
-def asc_to_rvt(ofile):
-    df_meteo: pd.DataFrame = pd.read_csv(original_discharge_csv_path + ofile, sep="\t")
-    # Convert time column to datetime format
+def asc_to_rvt(start="2000-01-01", end="2000-12-31"):
+    """Reads .asc discharge file and creates RAVEN .rvt file.
+
+    Reads a bi-hourly discharge .asc file, with the file path read from a global parameter and converts it to a daily
+    discharge .rvt file compatible with RAVEN. It takes start and end date as arguments to only use a selected date
+    range.
+
+    :param str start: Start date as YYYY-MM-DD formatted string
+    :param str end: End date as YYYY-MM-DD formatted string
+    """
+
+    # Read in the discharge data from .asc file
+    df_meteo: pd.DataFrame = pd.read_csv(original_discharge_csv_path + discharge_file_name_in, sep="\t")
+    # Rename the column for easier keyboard typing
     df_meteo = df_meteo.rename(columns=time_column_names_asc)
 
-    df_meteo['time'] = pd.to_datetime(df_meteo[['year','month','day','hour']], format="%Y%m%d%H")
-    # Sort by date
-    # df_meteo_ordered = df_meteo_ordered.sort_values(by='time', ascending=True).dropna()
+    # Convert time columns to datetime format
+    df_meteo['time'] = pd.to_datetime(df_meteo[['year', 'month', 'day', 'hour']], format="%Y%m%d%H")
+    # Set the start time
+    start_time = "0:00:00"
     # Subset according to start and end date
-    start_date = "2000-01-01"
-    start_time = "0:01:00"
-    end_date = "2000-12-31"
-    df_meteo = subset_dataframe_time(df_meteo, start_date, end_date)
-    export_to_rvt_file(start_date, start_time, df_meteo)
+    df_meteo = subset_dataframe_time(df_meteo, start, end)
+    # Uncomment the following line, if you want to get daily means. Otherwise, RAVEN will do it for you
+    df_meteo = df_meteo.resample('d', on='time').mean().dropna(how="all")
+    # Invoke export_to_rvt_file to export
+    export_to_rvt_file(start, start_time, df_meteo)
 
-def export_to_rvt_file(date, time,df):
-    with open(result_discharge_Path + discharge_file_name, 'w') as f:
+
+def export_to_rvt_file(date, time, df):
+    with open(result_discharge_Path + discharge_file_name_out, 'w') as f:
         # print(rvt_filename)
-        f.write(f":ObservationData\tHYDROGRAPH\t1\tm3/s\n{date}\t{time}\t0.083333333\t{len(df)}\n")
+        f.write(f":ObservationData\tHYDROGRAPH\t1\tm3/s\n{date}\t{time}\t1\t{len(df)}\n")
         # For gauged precipitation data
         df_as_string = df.to_string(justify="right", header=False, index=False,
-                                                  columns=['Q.BroPay'])
+                                    columns=['Q.BroPay'])
         f.write(df_as_string)
         # f.write(df_as_string)
         f.write("\n:EndObservationData")
-
-
-asc_to_rvt("BroPay_Q_2034_hourly.asc")
 
 
 ## Function to generate rvt file from daily meteo value .csv files from IDAWEB
@@ -193,17 +177,44 @@ def write_rvt_meteo(netcdf: bool = False, start_date: str = '2008-01-01', end_da
     print("... done")
 
 
-# class RvtFile:
-#     def __init__(self, start_date="2008-01-01", end_date="2008-12-31", rvt_filename="GaugePAY"):
-#         self.StartDate = start_date
-#         self.EndDate = end_date
-#         self.RvtPath = Path(f"{forcings_path}/{rvt_filename}")
-#     def set_start_date(self, new_date: str):
-#         self.StartDate = new_date
-#         return True
+if __name__ == '__main__':
+    home_path = Path.home()
+    raven_path: str = "/media/mainman/Data/RAVEN"
+    data_path: str = f"{raven_path}/data/"
+    forcings_path: str = f"{raven_path}/data/forcings/"
+    result_discharge_Path: str = f"{raven_path}/data/Discharge/"
+    original_discharge_csv_path: str = result_discharge_Path
+    discharge_file_name_in: str = "BroPay_Q_2034_hourly.asc"
+    discharge_file_name_out: str = "BroPay_Q_2034_daily.rvt"
 
+    column_names = {
+        "rre150h0": "PRECIP",
+        "tre200h0": "TEMP_AVE",
+        "tre200hx": "TEMP_MAX",
+        "tre200hn": "TEMP_MIN",
+    }
 
-write_rvt_meteo(netcdf=False, start_date='2008-01-01', end_date='2008-12-31')
-write_rvt_meteo(netcdf=True, start_date='2008-01-01', end_date='2008-12-31')
-write_rvt_discharge_from_hydromaps()
-write_rvt_pet()
+    time_column_names_asc = {
+        "YYYY": "year",
+        "MM": "month",
+        "DD": "day",
+        "HH": "hour",
+    }
+    # Date range (can be overriden in function call)
+    start_date = '2000-01-01'
+    end_date = '2000-12-31'
+
+    asc_to_rvt("1974-01-01", "2000-12-31")
+    # class RvtFile:
+    #     def __init__(self, start_date="2008-01-01", end_date="2008-12-31", rvt_filename="GaugePAY"):
+    #         self.StartDate = start_date
+    #         self.EndDate = end_date
+    #         self.RvtPath = Path(f"{forcings_path}/{rvt_filename}")
+    #     def set_start_date(self, new_date: str):
+    #         self.StartDate = new_date
+    #         return True
+
+    write_rvt_meteo(netcdf=False, start_date='2008-01-01', end_date='2008-12-31')
+    write_rvt_meteo(netcdf=True, start_date='2008-01-01', end_date='2008-12-31')
+    write_rvt_discharge_from_hydromaps()
+    write_rvt_pet()
