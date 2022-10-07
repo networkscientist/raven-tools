@@ -1,6 +1,5 @@
 #!/bin/bash
 #### Script that merges netCDF files of different years into 1 file.
-#source nc_combine_config.txt # Reads in the FORCING_DIR value from a config file, which is the forcing files directory.
 FORCING_DIR=$3
 RAIN_DIR="${FORCING_DIR}RhiresD_v2.0_swiss.lv95/"
 RAIN_FILE="RhiresD_ch01h.swiss.lv95_"
