@@ -48,8 +48,8 @@ def calc_relative_area(gdf: GeoDataFrame):
     returns the GeoDataFrame with EPSG=2056.
 
     :param GeoDataFrame gdf: GeoDataFrame in EPSG=2056
-    :return gdf: GeoDataFrame with relative areas of each polygon
-    :rtype gdf: GeoDataFrame
+    :return ext_gdf: GeoDataFrame with relative areas of each polygon
+    :rtype ext_gdf: GeoDataFrame
 
     """
 
