@@ -37,25 +37,30 @@ function merge_netcdf(){
   # Take in the start and end year as arguments
   start_date=$1
   end_date=$2
-  # Create empty arrays
-  declare -a DATE_RANGE
-  declare -a IN_PATHS
-  # For loop that iterates over the years
-  for i in $(seq $start_date $end_date)
-  do
-    # Appends the year to the DATE_RANGE array
-    DATE_RANGE+=("$i")
-    # Appends created filename to the input file paths array IN_PATHS
-    IN_PATHS+=("${DIRS[0]}out/RhiresD_ch01h.swiss.lv95_${i}01010000_${i}12310000_clipped.nc")
-  done
+
+
   # Create a counter to use in the next for loop
   COUNTER=0
   # Iterates over each directory in the DIRS array
   for i in "${DIRS[@]}"
   do
+    # Create empty arrays
+    declare -a IN_PATHS
+    declare -a DATE_RANGE
+    # For loop that iterates over the years
+    for d in $(seq $start_date $end_date)
+    do
+      # Appends the year to the DATE_RANGE array
+      DATE_RANGE+=("$d")
+      # Appends created filename to the input file paths array IN_PATHS
+      IN_PATHS+=("${i}out/${FILES[$COUNTER]}${d}01010000_${d}12310000_clipped.nc")
+    done
+    echo ${FILES[$COUNTER]}
     # uses the cdo command and expands the IN_PATHS to use every value as arguments
     cdo -mergetime "${IN_PATHS[@]}" "${i}merged/${FILES[$COUNTER]}${DATE_RANGE[0]}01010000_${DATE_RANGE[-1]}12310000_clipped.nc"
     ((COUNTER=COUNTER+1))
+    unset DATE_RANGE
+    unset IN_PATHS
   done
 }
 
