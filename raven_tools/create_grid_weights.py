@@ -1,12 +1,9 @@
-"""Grid Weight Creator
+"""
+Grid Weights Creator
 
-This script creates a file with the grid weights as required by RAVEN.
-
-It takes the catchment shape file and a netCDF gridded file.
-
+This script creates a file with the grid weights as required by RAVEN. It takes the catchment shape file and a netCDF gridded file.
 Currently, the dependencies have to be installed through conda-forge (create a new environment for this), at least on
 my computer.
-
 Please note that the netCDF coordinates start with (x,y)=(1,1) bottom left.
 """
 
@@ -27,13 +24,13 @@ def create_overlay(grd: GeoDataFrame, ctm: GeoDataFrame):
     Overlays two GeoDataFrame over each other and creates two new GeoDataFrames, one for the mode 'intersection',
     the second for the mode 'difference'
 
-    :type ctm: GeoDataFrame
-    :type grd: GeoDataFrame
-    :rtype: GeoDataFrame
-    :param grd: Grid as given by the netCDF file
-    :param ctm: Catchment as given by a shape file
+    :param GeoDataFrame grd: Grid as given by the netCDF file
+    :param GeoDataFrame ctm: Catchment as given by a shape file
     :return res_u: Grid cells within the catchment area
     :return res_d: Grid cell outside the catchment area
+    :rtype res_u: GeoDataFrame
+    :rtype res_d: GeoDataFrame
+
     """
 
     res_u: GeoDataFrame = ctm.overlay(grd, how='intersection')
@@ -50,10 +47,10 @@ def calc_relative_area(gdf: GeoDataFrame):
     Calculates the relative area of each polygon in a GeoDataFrame with EPSG=2056, writes it into a new column and
     returns the GeoDataFrame with EPSG=2056.
 
-    :type gdf: GeoDataFrame
-    :rtype gdf: GeoDataFrame
-    :param gdf: GeoDataFrame in EPSG=2056
+    :param GeoDataFrame gdf: GeoDataFrame in EPSG=2056
     :return gdf: GeoDataFrame with relative areas of each polygon
+    :rtype gdf: GeoDataFrame
+
     """
 
     # Set the CRS to WGS84 to preserve areas
@@ -74,10 +71,9 @@ def calc_relative_area(gdf: GeoDataFrame):
 def write_weights_to_file(grd, filename: Path):
     """
 
-    :type grd: GeoDataFrame
-    :type filename: Path
-    :param filename: Path to the grid weight text file
-    :param grd: Grid derived from the netCDF file
+    :param GeoDataFrame grd: Grid derived from the netCDF file
+    :param Path filename: Path to the grid weight text file
+
     """
     # Write to GridWeights.txt
     data = write_grid_data(grd)
@@ -99,9 +95,10 @@ def write_weights_to_file(grd, filename: Path):
 def write_grid_data(grd):
     """Loops over each grid cell and extracts the grid weights.
 
-    :type grd: GeoDataFrame
-    :param grd: Grid as derived from the netCDF file
+    :param GeoDataFrame grd: Grid as derived from the netCDF file
     :return data_to_write: List with the relative areas/grid weights of each cell.
+    :rtype data_to_write: list
+
     """
     # Loop over each intersected feature and write the relative area (compared with the total catchment area) into a new
     # field.
@@ -115,11 +112,11 @@ def write_grid_data(grd):
 def copy_rel_area_from_union_to_grid(uni, grd):
     """Takes grid weights from a union GeoDataFrame and writes the to the grid GeoDataFrame.
 
-    :type grd: GeoDataFrame
-    :type uni: GeoDataFrame
-    :param uni: GeoDataFrame containing the grid cells within the catchment.
-    :param grd: Grid GeoDataFrame as derived from netCDF file
+    :param GeoDataFrame uni: GeoDataFrame containing the grid cells within the catchment.
+    :param GeoDataFrame grd: Grid GeoDataFrame as derived from netCDF file
     :return grd: Grid GeoDataFrame with grid weights
+    :rtype grd: GeoDataFrame
+
     """
 
     # Loop over the union GeoDataFrame, take relative area/grid weight and write it to corresponding cell in grid

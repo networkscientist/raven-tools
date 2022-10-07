@@ -1,3 +1,15 @@
+"""
+This module contains tools to clip netCDF files according to the extent of a shape file.
+
+Functions:
+    create_bbox_geometry(Path)
+    create_bounding_shape(Path)
+    netcdf_to_dataset(Path)
+    dataset_to_netcdf(Dataset)
+    netcdf_clipper(Path,Path,GeoDataFrame)
+    netcdf_clipper_multi(Path,GeoDataFrame)
+"""
+
 import glob
 from pathlib import Path
 import geopandas as gpd
@@ -13,22 +25,30 @@ def create_bbox_geometry(extent_shape_path: Path):
     """Create a bounding box Polygon for an input shape file.
 
     :param str extent_shape_path: Path to the shape file for which to create a bounding box.
-    :return shapely.geometry.polygon.Polygon: A shapely polygon that defines the bounding box
-    :return GeoDataFrame gdf: The GeoDataFrame with the data from the extent shape file
+    :return pl: A shapely polygon that defines the bounding box.
+    :return gdf: The GeoDataFrame with the data from the extent shape file.
+    :rtype pl: shapely.geometry.polygon.Polygon
+    :rtype gdf: GeoDataFrame
+
     """
+
     gdf = gpd.read_file(extent_shape_path)
     se = gdf.geometry.total_bounds  # Get bounds and store in array
-    return Polygon([[se[0], se[1]], [se[2], se[1]],
-                    [se[2], se[3]], [se[0], se[3]]]), gdf  # Return the Polygon and the GeoDataFrame
+    pl = Polygon([[se[0], se[1]], [se[2], se[1]],[se[2], se[3]], [se[0], se[3]]])
+    return pl, gdf  # Return the Polygon and the GeoDataFrame
 
 
 def create_bounding_shape(ext_shape_file_path: Path):
     """Create a bounding box shape file.
 
     :param str ext_shape_file_path: Path to the shape file for which to create a bounding box.
-    :return GeoDataFrame bounding_shape: Bounding box as a GeoDataFrame.
-    :return GeoDataFrame geodf: The GeoDataFrame with the data from the extent shape file
+    :return bounding_shape: Bounding box as a GeoDataFrame.
+    :return geodf: The GeoDataFrame with the data from the extent shape file
+    :rtype bounding_shape: GeoDataFrame
+    :rtype geodf: GeoDataFrame
+
     """
+
     # Create the bounding box Polygon
     bounding_box, gdf = create_bbox_geometry(ext_shape_file_path)
     # Create the bounding shape in a GeoDataFrame
@@ -42,9 +62,12 @@ def create_bounding_shape(ext_shape_file_path: Path):
 def netcdf_to_dataset(cdf_path):
     """Reads a netCDF file into an xarray dataset
 
-    :param cdf_path: Path to the netCDF file to clip
+    :param Path cdf_path: Path to the netCDF file to clip
     :return xds: The netCDF data as an xarray dataset
+    :rtype xds: Dataset
+
     """
+
     # Read in the netCDF file into an xarray Dataset
     xds: Dataset = xarray.open_dataset(
         cdf_path)
@@ -64,11 +87,13 @@ def calculate_hamon_pet(cdf_path):
 
 
 def dataset_to_netcdf(dataset, cdf_path):
+    """ Writes xarray dataset to netCDF
+
+    :param dataset dataset: xarray Dataset to write.
+    :param Path cdf_path: netCDF file path to write to.
+
     """
 
-    :param dataset:
-    :param cdf_path:
-    """
     dataset.to_netcdf(f"{cdf_path.parent.parent}/out/{cdf_path.stem}_clipped{cdf_path.suffix}",
                       "w")  # Write the clipped netCDF file
 
@@ -76,19 +101,32 @@ def dataset_to_netcdf(dataset, cdf_path):
 def netcdf_clipper(cdf_path_in: Path, bb_shape_path: Path, gdf):
     """Clips a netCDF file according to a bounding box.
 
-    For one netCDF file in a directory, clips it according to a bounding box .shp file.
-    :param gdf: The GeoDataFrame with the data from the extent shape file
+    For one netCDF file in a directory, clips it according to a bounding box shape file.
+
+    :param GeoDataFrame gdf: The GeoDataFrame with the data from the extent shape file
     :param str cdf_path_in: Path to the netCDF file to clip
     :param str bb_shape_path: Path to the shape file of the bounding box to be used to clip.
+    :return clipped: Clipped DataSet??
+    :rtype clipped: ??
+
     """
+
     xds = netcdf_to_dataset(cdf_path_in)
     clip_box = gpd.read_file(f"{out_path}/{bb_shape_path}")
     clipped = xds.rio.clip(clip_box.geometry.apply(mapping),
                            gdf.crs)  # Clip the xarray Dataset according to the bounding box GeoDataFrame
+    # TODO: Check if it is a dataset?
     return clipped
 
 
 def netcdf_clipper_multi(ncdf_path, gdf):
+    """ Clips multiple netCDF files in a directory
+
+    :param Path ncdf_path:
+    :param GeoDataFrame gdf:
+
+    """
+
     for f in glob.glob(f"{ncdf_path}/original_files/*.nc"):
         netcdf_clipper(Path(f), bounding_box_filename, gdf)
 

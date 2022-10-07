@@ -1,13 +1,13 @@
 import glob
 from datetime import datetime
 from pathlib import Path
+
 import pandas as pd
 
 
 def write_rvt_pet():
     """Script to generate rvt file from monthly PET .csv files from IDAWEB
 
-    :return:
     """
     # Read in PET data from CSV file
     df_pet: pd.DataFrame = pd.read_csv(forcings_path + "order_103168_PAY_ets150m0_1_data.txt", sep=";", usecols=[1, 2])
@@ -28,14 +28,12 @@ def write_rvt_pet():
         print(" ... done")
 
 
-# ## Script to generate rvt file from bi-hourly q value .asc file
 def write_rvt_discharge_from_asc():
     """Function to generate rvt file from bi-hourly q value .asc file
 
     """
 
 
-# ## Script to generate rvt file from daily q value .csv files, separated in yearly files.
 def write_rvt_discharge_from_hydromaps():
     """Function to generate rvt file from daily q value .csv files, separated in yearly files.
 
@@ -58,10 +56,12 @@ def write_rvt_discharge_from_hydromaps():
 def subset_dataframe_time(dataframe: pd.DataFrame, start_date: str, end_date: str) -> pd.DataFrame:
     """Subsetting a dataframe using a time interval.
 
-        :param pd.DataFrame dataframe: Original DataFrame to subset.
-        :param str start_date: Start date (inclusive)
-        :param str end_date: End date (inclusive)
-        :return pd.DataFrame subset_dataframe: Subset DataFrame
+    :param DataFrame dataframe: Original DataFrame to subset.
+    :param str start_date: Start date (inclusive)
+    :param str end_date: End date (inclusive)
+    :return subset_dataframe: Subset DataFrame
+    :rtype subset_dataframe: DataFrame
+
     """
     # Date to string conversion
     start_date = datetime.strptime(start_date, "%Y-%m-%d")
@@ -82,6 +82,7 @@ def asc_to_rvt(start="2000-01-01", end="2000-12-31"):
 
     :param str start: Start date as YYYY-MM-DD formatted string
     :param str end: End date as YYYY-MM-DD formatted string
+
     """
 
     # Read in the discharge data from .asc file
@@ -102,6 +103,13 @@ def asc_to_rvt(start="2000-01-01", end="2000-12-31"):
 
 
 def export_to_rvt_file(date, time, df):
+    """Writes RVT file from DataFrame
+
+    :param str date: Start date
+    :param str time: Time step in days
+    :param DataFrame df: DataFrame with values to export
+
+    """
     with open(result_discharge_Path + discharge_file_name_out, 'w') as f:
         # print(rvt_filename)
         f.write(f":ObservationData\tHYDROGRAPH\t1\tm3/s\n{date}\t{time}\t1\t{len(df)}\n")

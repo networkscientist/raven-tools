@@ -4,9 +4,10 @@ import os
 
 
 def set_filenames(year):
-    """
+    """Set filenames for a given year
 
-    :param year:
+    :param year: Year to write file name
+
     """
     forcing_paths[0] = f"data_obs/RhiresD_ch01h.swiss.lv95_{year}01010000_{year}12310000_clipped.nc"
     forcing_paths[1] = f"data_obs/TabsD_ch01r.swiss.lv95_{year}01010000_{year}12310000_pet.nc"
@@ -15,16 +16,12 @@ def set_filenames(year):
 
 
 def write_rvt(start, end):
+    """Write to GridWeights.txt
+
+    :param str start: Start date
+    :param str end: End date
     """
 
-    :param start:
-    :param end:
-    :type grd: GeoDataFrame
-    :type filename: Path
-    :param filename: Path to the grid weight text file
-    :param grd: Grid derived from the netCDF file
-    """
-    # Write to GridWeights.txt
     date_list = [*range(start, end + 1)]
     file_type = ":FileType          rvt ASCII Raven 3.5"
     author = ":WrittenBy         Peter Zweifel"
