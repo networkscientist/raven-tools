@@ -7,10 +7,11 @@ Welcome to Raven Input Python's documentation!
 ==============================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
-   modules
+   raven_tools
+   api
 
 
 Indices and tables
