@@ -3,22 +3,32 @@ Raven Tools
 
 .. toctree::
    :maxdepth: 4
-netCDFClipper
+
+Pre-Processing
 -------------
-.. automodule:: netCDFClipper
+.. automodule:: raven_preprocess
     :members:
-netCDFmerger
+
+Running Raven
 ------------
-.. automodule:: netCDFmerger
+.. automodule:: raven_run
     :members:
+
+Post-Processing
+---------------
+.. automodule:: raven_postprocess
+    :members:
+
 create_grid_weights
 -------------------
 .. automodule:: create_grid_weights
     :members:
+
 combineDischargeCSV
 -------------------
 .. automodule:: combineDischargeCSV
     :members:
+
 asc_to_rvt
 ----------
 .. automodule:: asc_to_rvt
