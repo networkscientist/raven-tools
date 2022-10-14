@@ -4,6 +4,21 @@ from pathlib import Path
 
 import pandas as pd
 
+time_column_names_asc = {
+    "YYYY": "year",
+    "MM": "month",
+    "DD": "day",
+    "HH": "hour",
+}
+
+home_path = Path.home()
+raven_path: str = "/media/mainman/Data/RAVEN"
+data_path: str = f"{raven_path}/data/"
+forcings_path: str = f"{raven_path}/data/forcings/"
+result_discharge_Path: str = f"{raven_path}/data/Discharge/"
+original_discharge_csv_path: str = result_discharge_Path
+discharge_file_name_in: str = "BroPay_Q_2034_hourly.asc"
+discharge_file_name_out: str = "BroPay_Q_2034_daily.rvt"
 
 def write_rvt_pet():
     """Script to generate rvt file from monthly PET .csv files from IDAWEB
@@ -27,11 +42,6 @@ def write_rvt_pet():
         f.write("\n:EndData")
         print(" ... done")
 
-
-def write_rvt_discharge_from_asc():
-    """Function to generate rvt file from bi-hourly q value .asc file
-
-    """
 
 
 def write_rvt_discharge_from_hydromaps():
@@ -186,14 +196,7 @@ def write_rvt_meteo(netcdf: bool = False, start_date: str = '2008-01-01', end_da
 
 
 if __name__ == '__main__':
-    home_path = Path.home()
-    raven_path: str = "/media/mainman/Data/RAVEN"
-    data_path: str = f"{raven_path}/data/"
-    forcings_path: str = f"{raven_path}/data/forcings/"
-    result_discharge_Path: str = f"{raven_path}/data/Discharge/"
-    original_discharge_csv_path: str = result_discharge_Path
-    discharge_file_name_in: str = "BroPay_Q_2034_hourly.asc"
-    discharge_file_name_out: str = "BroPay_Q_2034_daily.rvt"
+
 
     column_names = {
         "rre150h0": "PRECIP",
@@ -202,17 +205,12 @@ if __name__ == '__main__':
         "tre200hn": "TEMP_MIN",
     }
 
-    time_column_names_asc = {
-        "YYYY": "year",
-        "MM": "month",
-        "DD": "day",
-        "HH": "hour",
-    }
+
     # Date range (can be overriden in function call)
     start_date = '2000-01-01'
     end_date = '2000-12-31'
 
-    asc_to_rvt("1974-01-01", "2000-12-31")
+    asc_to_rvt("1974-01-01", "2019-12-31")
     # class RvtFile:
     #     def __init__(self, start_date="2008-01-01", end_date="2008-12-31", rvt_filename="GaugePAY"):
     #         self.StartDate = start_date
