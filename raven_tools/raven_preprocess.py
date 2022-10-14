@@ -12,6 +12,7 @@ Functions:
 
 import glob
 import shutil
+import subprocess
 from pathlib import Path
 
 import geopandas as gpd
@@ -20,10 +21,9 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from geopandas import GeoDataFrame
+from netCDF4 import Dataset
 from numpy import exp
 from shapely.geometry import Polygon, mapping
-from netCDF4 import Dataset
-import subprocess
 
 
 # from xarray import Dataset
