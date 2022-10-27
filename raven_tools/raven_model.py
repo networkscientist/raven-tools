@@ -9,15 +9,25 @@ class RavenModel:
 
     """
 
-    def __init__(self, modeltype = "modeltype", catchment = "catchment"):
+    def __init__(self, modeltype="modeltype", catchment="catchment"):
+        logger.debug("Starting __init__...")
         assert isinstance(modeltype, str), f"modeltype expected a string, got {type(modeltype)} instead"
         assert isinstance(catchment, str), f"catchment expected a string, got {type(modeltype)} instead"
-        with open("raven_tools/config.yaml", "r") as f:
-            config = yaml.load(f, Loader=yaml.FullLoader)
+        logger.debug("Trying to open config.yaml...")
+        with open("raven_tools/new_model_config.yaml", "r") as f:
+            self.config = yaml.load(f, Loader=yaml.FullLoader)
+        logger.debug("config.yaml loaded.")
+        logger.debug("Trying to set self.X variables...")
         self.modeltype = modeltype
         self.rootdir = Path(os.getcwd(), "RAVEN")
         self.catchment = catchment
         self.modeldir = Path(self.rootdir, "models", self.catchment, self.modeltype)
+        logger.debug("Self.X variables set.")
+        self.dirs = [
+            Path(self.modeldir,"model"),
+            Path(self.modeldir,"model","output")
+        ]
+
         self.
     @property
     def modeltype(self):
