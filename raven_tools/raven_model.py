@@ -1,7 +1,18 @@
+import logging
 import os
+import sys
 from pathlib import Path
 
 import yaml
+
+handler = logging.StreamHandler(sys.stdout)
+frm = logging.Formatter("{levelname}: {message}",
+                         style="{")
+handler.setFormatter(frm)
+logger = logging.getLogger()
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
+logger.debug("Logging to console started")
 
 
 class RavenModel:
@@ -31,7 +42,7 @@ class RavenModel:
         self.
     @property
     def modeltype(self):
-        print("Getting model type...")
+        logger.debug("Getting model type...")
         return (self._modeltype)
 
     @modeltype.setter
