@@ -65,7 +65,8 @@ class RavenModel:
 
     def create_dirs(self):
         try:
-            Path(self.modeldir).mkdir(parents=True)
-            print(f"Model directory created: {Path(self.modeldir)}")
+            for f in self.dirs:
+                f.mkdir(parents=True)
+                print(f"Directory created: {f}")
         except FileExistsError:
             print("Directory already exists...")
