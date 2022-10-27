@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 from pathlib import Path
+import raven_run as rr
 
 import yaml
 
@@ -81,3 +82,6 @@ class RavenModel:
                 print(f"Directory created: {f}")
         except FileExistsError:
             print("Directory already exists...")
+
+    def write_rvh(self):
+        rr.write_rvh(model_dir="models", model_name=self.modeltype, project_dir=self.rootdir, catchment=self.catchment)
