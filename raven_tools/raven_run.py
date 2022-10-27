@@ -10,6 +10,23 @@ import yaml
 
 with open("raven_tools/config.yaml", "r") as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
+supported_models = [
+    "GR4J",
+    "HYMOD",
+    "HMETS"
+]
+header_line = "#########################################################################"
+file_type = ":FileType          rvt ASCII Raven 3.5"
+author = ":WrittenBy         Peter Zweifel"
+creation_date = ":CreationDate      April 2022"
+description = [
+    "#",
+    "# Emulation of GR4J simulation of Broye",
+    "#------------------------------------------------------------------------"]
+header = [header_line, file_type, author, creation_date, *description]
+
+sub_section_header_line = "#-----------------------------------------------------------------"
+newline = "\n"
 
 
 def forcing_block(start: int, end: int):
