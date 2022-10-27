@@ -127,20 +127,22 @@ def write_rvh(model_dir=config['ModelDir'], model_name=config['ModelName'], data
         ff.writelines(f"{line}{newline}" for line in hrus)
 
 
-def write_rvt(start_year: int, end_year: int, model_dir=config['ModelDir'], model_name=config['ModelName']):
+def write_rvt(start_year: int, end_year: int, model_dir=config['ModelDir'], model_name=config['ModelName'],
+              project_dir=config['ProjectDir'], catchment=config['Catchment'], model_sub_dir=config['ModelSubDir']):
     """Write to Raven *.rvt file.
 
+    :param model_sub_dir:
+    :param catchment:
+    :param project_dir:
     :param int start_year: Start year of forcings data files
     :param int end_year: End year of focings data files
     :param Path model_dir: Root directory of *.rvX files
     :param Path model_name: Name of the .rvt file to be written
 
     """
-    model_name = Path(model_name + ".rvt")
-    file_type = ":FileType          rvt ASCII Raven 3.5"
-    author = ":WrittenBy         Peter Zweifel"
-    creation_date = ":CreationDate      April 2022"
-    description = "#\n# Emulation of GR4J simulation of Broye\n#------------------------------------------------------------------------\n"
+    file_name: str = f"{catchment}_{model_name}.rvt"
+    file_path: Path = Path(project_dir, model_dir, catchment, model_name, model_sub_dir, file_name)
+
     gauge = [
         ":Gauge PYR2034\n",
         "  :Latitude    46.835913\n",
@@ -153,12 +155,8 @@ def write_rvt(start_year: int, end_year: int, model_dir=config['ModelDir'], mode
         "# observed streamflow\n",
         ":RedirectToFile data_obs/BroPay_Q_2034_daily.rvt"
     ]
-    with open((os.path.join(model_dir, model_name)), 'w') as ff:
-        ff.write(f"#########################################################################\n"
-                 f"{file_type}\n"
-                 f"{author}\n"
-                 f"{creation_date}\n")
-        ff.write(f"{description}\n")
+    with open(file_path, 'w') as ff:
+        ff.writelines(header)
         ff.write(f"# meteorological forcings\n")
         for f in forcing_block(start_year, end_year).values():
             for t in f:
