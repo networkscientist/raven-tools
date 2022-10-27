@@ -196,3 +196,4 @@ cython_debug/
 /raven_tools/test.py
 /RAVEN/
 /test_files/
+/raven_tools/new_model_config.yaml
