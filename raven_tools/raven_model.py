@@ -33,6 +33,7 @@ class RavenModel:
         self.modeltype = modeltype
         self.rootdir = Path(os.getcwd(), "RAVEN")
         self.catchment = catchment
+        self.attribute_csv = "CH-0057_attributes.csv"
         self.modeldir = Path(self.rootdir, "models", self.catchment, self.modeltype)
         logger.debug("Self.X variables set.")
         self.dirs = [
@@ -74,6 +75,22 @@ class RavenModel:
     @catchment.setter
     def catchment(self, value):
         self._catchment = value
+
+    @property
+    def config(self):
+        return self._config
+
+    @config.setter
+    def config(self, value):
+        self._config = value
+
+    @property
+    def attribute_csv(self):
+        return
+
+    @attribute_csv.setter
+    def attribute_csv(self, value):
+        self._attribute_csv = value
 
     def create_dirs(self):
         try:
