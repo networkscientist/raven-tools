@@ -2,7 +2,6 @@
 Tools to generate Raven .rv* files needed to run Raven models.
 """
 
-import os
 from pathlib import Path
 
 import pandas
@@ -274,8 +273,8 @@ def sub_section_header(title: str):
 
 
 if __name__ == '__main__':
-    model_dir = Path(config['ModelDir'])
-    model_name = Path("raven_broye_gr4j.rvt")
+    # model_dir = Path(config['ModelDir'])
+    # model_name = Path("raven_broye_gr4j.rvt")
     start_year = 1981
     end_year = 2000
-    write_rvt(1981, 1982, model_dir, model_name)
+    write_rvt(1981, 1982)
