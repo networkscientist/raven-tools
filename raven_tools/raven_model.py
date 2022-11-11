@@ -234,181 +234,31 @@ class RavenModel:
             logger_raven_model.debug(f"Directory {f} already exists, skipping...")
             print("Directory already exists...")
 
-    def write_rvi(self, params=default_params, ostrich_template=False, raven_template=True):
-        """Write .rvi initial conditions file for Raven or Ostrich
+    def write_rvx(self, ostrich_template: bool = False, raven_template: bool = True, rvx_type: str = "rvi"):
+        """Write .rvX file for Raven and/or Ostrich
 
-        :param params: Dictionary containing the model parameters and parameter names.
+        :param rvx_type: Suffix of the Raven file to be written (rvi,rvp,rvc,rvt or rvh)
         :param ostrich_template: Set True if Ostrich template should be generated.
         :param raven_template: Set True if Raven template should be generated.
-        :type params: dict
         :type raven_template: bool
         :type ostrich_template: bool
 
         """
-        logger_raven_model.debug("Starting if-tree for template type...")
-        if raven_template is True:
-            logger_raven_model.debug("Variable raven_template is True...")
-            logger_raven_model.debug("Trying to call rr.write_rvi function to create .rvi for Raven...")
-            rr.write_rvi(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=params, template_type="Raven")
-            logger_raven_model.debug(".rvi for Raven created by rr.write_rvi function")
-        if ostrich_template is True:
-            logger_raven_model.debug("Variable ostrich_template is True...")
-            logger_raven_model.debug("Trying to call rr.write_rvi function to create .rvi.tpl for Ostrich...")
-            rr.write_rvi(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=params, template_type="Ostrich")
-            logger_raven_model.debug(".rvi.tpl for Ostrich created by rr.write_rvi function")
-        if ostrich_template is False and raven_template is False:
-            logger_raven_model.debug("Variables ostrich_template and raven_template set to False.")
-            print("You have not selected a template type...")
-            logger_raven_model.debug("No template file needed to be written by function rr.write_rvi.")
-            pass
-
-    def write_rvh(self, params=default_params, ostrich_template=False, raven_template=True):
-        """Write .rvh initial conditions file for Raven or Ostrich
-
-        :param params: Dictionary containing the model parameters and parameter names.
-        :param ostrich_template: Set True if Ostrich template should be generated.
-        :param raven_template: Set True if Raven template should be generated.
-        :type params: dict
-        :type raven_template: bool
-        :type ostrich_template: bool
-
-        """
-        logger_raven_model.debug("Starting if-tree for template type...")
-        if raven_template is True:
-            logger_raven_model.debug("Variable raven_template is True...")
-            logger_raven_model.debug("Trying to call rr.write_rvh function to create .rvh for Raven...")
-            rr.write_rvh(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=params, template_type="Raven")
-            logger_raven_model.debug(".rvh for Raven created by rr.write_rvh function")
-        if ostrich_template is True:
-            logger_raven_model.debug("Variable ostrich_template is True...")
-            logger_raven_model.debug("Trying to call rr.write_rvh function to create .rvh.tpl for Ostrich...")
-            rr.write_rvh(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=params, template_type="Ostrich")
-            logger_raven_model.debug(".rvh.tpl for Ostrich created by rr.write_rvh function")
-        if ostrich_template is False and raven_template is False:
-            logger_raven_model.debug("Variables ostrich_template and raven_template set to False.")
-            print("You have not selected a template type...")
-            logger_raven_model.debug("No template file needed to be written by function rr.write_rvh.")
-            pass
-
-    def write_rvp(self, params=default_params, ostrich_template=False, raven_template=True):
-        """Write .rvp initial conditions file for Raven or Ostrich
-
-        :param params: Dictionary containing the model parameters and parameter names.
-        :param ostrich_template: Set True if Ostrich template should be generated.
-        :param raven_template: Set True if Raven template should be generated.
-        :type params: dict
-        :type raven_template: bool
-        :type ostrich_template: bool
-
-        """
-        logger_raven_model.debug("Starting if-tree for template type...")
-        if raven_template is True:
-            logger_raven_model.debug("Variable raven_template is True...")
-            logger_raven_model.debug("Trying to call rr.write_rvp function to create .rvp for Raven...")
-            rr.write_rvp(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=params, template_type="Raven")
-            logger_raven_model.debug(".rvp for Raven created by rr.write_rvp function")
-        if ostrich_template is True:
-            logger_raven_model.debug("Variable ostrich_template is True...")
-            logger_raven_model.debug("Trying to call rr.write_rvp function to create .rvp.tpl for Ostrich...")
-            rr.write_rvp(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=params, template_type="Ostrich")
-            logger_raven_model.debug(".rvp.tpl for Ostrich created by rr.write_rvp function")
-        if ostrich_template is False and raven_template is False:
-            logger_raven_model.debug("Variables ostrich_template and raven_template set to False.")
-            print("You have not selected a template type...")
-            logger_raven_model.debug("No template file needed to be written by function rr.write_rvp.")
-            pass
-
-    def write_rvc(self, params=default_params, ostrich_template=False, raven_template=True):
-        """Write .rvc initial conditions file for Raven or Ostrich
-
-        :param params: Dictionary containing the model parameters and parameter names.
-        :param ostrich_template: Set True if Ostrich template should be generated.
-        :param raven_template: Set True if Raven template should be generated.
-        :type params: dict
-        :type raven_template: bool
-        :type ostrich_template: bool
-
-        """
-        logger_raven_model.debug("Starting if-tree for template type...")
-        if raven_template is True:
-            logger_raven_model.debug("Variable raven_template is True...")
-            logger_raven_model.debug("Trying to call rr.write_rvc function to create .rvc for Raven...")
-            rr.write_rvc(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=params, template_type="Raven")
-            logger_raven_model.debug(".rvc for Raven created by rr.write_rvc function")
-        if ostrich_template is True:
-            logger_raven_model.debug("Variable ostrich_template is True...")
-            logger_raven_model.debug("Trying to call rr.write_rvc function to create .rvc.tpl for Ostrich...")
-            rr.write_rvc(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=params, template_type="Ostrich")
-            logger_raven_model.debug(".rvc.tpl for Ostrich created by rr.write_rvc function")
-        if ostrich_template is False and raven_template is False:
-            logger_raven_model.debug("Variables ostrich_template and raven_template set to False.")
-            print("You have not selected a template type...")
-            logger_raven_model.debug("No template file needed to be written by function rr.write_rvc.")
-            pass
-
-    def write_rvt(self, params=default_params, ostrich_template=False, raven_template=True):
-        """Write .rvt initial conditions file for Raven or Ostrich
-
-        :param params: Dictionary containing the model parameters and parameter names.
-        :param ostrich_template: Set True if Ostrich template should be generated.
-        :param raven_template: Set True if Raven template should be generated.
-        :type params: dict
-        :type raven_template: bool
-        :type ostrich_template: bool
-
-        """
-        # TODO: Implement discharge and forcings time series.
-        logger_raven_model.debug("Starting if-tree for template type...")
-        if raven_template is True:
-            logger_raven_model.debug("Variable raven_template is True...")
-            logger_raven_model.debug("Trying to call rr.write_rvt function to create .rvt for Raven...")
-            rr.write_rvt(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=params, template_type="Raven")
-            logger_raven_model.debug(".rvt for Raven created by rr.write_rvt function")
-        if ostrich_template is True:
-            logger_raven_model.debug("Variable ostrich_template is True...")
-            logger_raven_model.debug("Trying to call rr.write_rvt function to create .rvt.tpl for Ostrich...")
-            rr.write_rvt(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=params, template_type="Ostrich")
-            logger_raven_model.debug(".rvt.tpl for Ostrich created by rr.write_rvt function")
-        if ostrich_template is False and raven_template is False:
-            logger_raven_model.debug("Variables ostrich_template and raven_template set to False.")
-            print("You have not selected a template type...")
-            logger_raven_model.debug("No template file needed to be written by function rr.write_rvt.")
-            pass
-
-    def write_rvx(self, params=default_params, ostrich_template=False, raven_template=True, rvx_type="rvi"):
-        """Write .rvt initial conditions file for Raven or Ostrich
-
-        :param params: Dictionary containing the model parameters and parameter names.
-        :param ostrich_template: Set True if Ostrich template should be generated.
-        :param raven_template: Set True if Raven template should be generated.
-        :type params: dict
-        :type raven_template: bool
-        :type ostrich_template: bool
-
-        """
+        assert rvx_type in raven_filetypes, f"Raven suffix .{rvx_type} is not in list of accepted suffixes."
         # TODO: Implement discharge and forcings time series.
         logger_raven_model.debug("Starting if-tree for template type...")
         if raven_template is True:
             logger_raven_model.debug("Variable raven_template is True...")
             logger_raven_model.debug(f"Trying to call rr.write_rvx function to create .{rvx_type} for Raven...")
             rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=params, template_type="Raven", rvx_type=rvx_type)
+                         catchment=self.catchment, params=self.default_params, template_type="Raven", rvx_type=rvx_type)
             logger_raven_model.debug(f".{rvx_type} for Raven created by rr.write_rvx function")
         if ostrich_template is True:
             logger_raven_model.debug("Variable ostrich_template is True...")
             logger_raven_model.debug(f"Trying to call rr.write_rvx function to create .{rvx_type}.tpl for Ostrich...")
             rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=params, template_type="Ostrich", rvx_type=rvx_type)
+                         catchment=self.catchment, params=self.default_params, template_type="Ostrich",
+                         rvx_type=rvx_type)
             logger_raven_model.debug(f".{rvx_type}.tpl for Ostrich created by rr.write_rvx function")
         if ostrich_template is False and raven_template is False:
             logger_raven_model.debug("Variables ostrich_template and raven_template set to False.")
