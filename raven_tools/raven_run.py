@@ -17,9 +17,9 @@ handler.setFormatter(frm)
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 logger.debug('Trying to read config.yaml file')
-with open("raven_tools/new_model_config.yaml", "r") as f:
+with open("raven_tools/config/new_model_config.yaml", "r") as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
-with open("raven_tools/default_params.yaml", "r") as f:
+with open("raven_tools/config/default_params.yaml", "r") as f:
     default_params = yaml.load(f, Loader=yaml.FullLoader)
 model_dir = config['ModelDir']
 model_type = config['ModelName']
