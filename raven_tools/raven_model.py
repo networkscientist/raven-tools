@@ -49,14 +49,14 @@ class RavenModel:
         assert isinstance(catchment, str), f"catchment expected a string, got {type(model_type)} instead"
         assert model_type in supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
         logger_raven_model.debug("Trying to open config.yaml...")
-        with open("raven_tools/config/new_model_config.yaml", "r") as f:
+        with open("config/new_model_config.yaml", "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
         logger_raven_model.debug("config.yaml loaded.")
         logger_raven_model.debug("Trying to set self.X variables...")
         logger_raven_model.debug("Setting self.model_type...")
         self.model_type = model_type
         logger_raven_model.debug("Setting self.root_dir...")
-        self.root_dir = Path(os.getcwd(), "RAVEN")
+        self.root_dir = Path(os.path.join(os.getcwd(), os.pardir, Path("RAVEN")))
         logger_raven_model.debug("Setting self.catchment...")
         self.catchment = catchment
         logger_raven_model.debug("Setting self.attribute_csv_name (file name with catchment attributes...")
@@ -71,7 +71,7 @@ class RavenModel:
         ]
         logger_raven_model.debug("Self.X variables set.")
         logger_raven_model.debug(f"__init__ of {__name__} finished...")
-        with open("raven_tools/config/default_params.yaml", "r") as f:
+        with open("config/default_params.yaml", "r") as f:
             self.default_params = yaml.load(f, Loader=yaml.FullLoader)
 
     def __getitem__(self, item):
@@ -194,7 +194,7 @@ class RavenModel:
         :rtype: str
         """
         logger_raven_model.debug("Getting name of catchment attribute CSV file...")
-        return self._attribute_csv
+        return self._attribute_csvcsv
 
     @attribute_csv.setter
     def attribute_csv(self, value: str):
