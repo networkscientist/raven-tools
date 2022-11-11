@@ -196,6 +196,7 @@ cython_debug/
 /raven_tools/test.py
 /RAVEN/
 /test_files/
-/raven_tools/config/*config.yaml
+/raven_tools/config/config.yaml
+/raven_tools/config/new_model_config.yaml
 /raven_tools/*.bkp
 /raven_tools/raven_tools_gist.md
