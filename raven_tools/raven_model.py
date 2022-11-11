@@ -215,7 +215,7 @@ class RavenModel:
         assert isinstance(catchment, str), f"catchment expected a string, got {type(model_type)} instead"
         assert model_type in supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
         logger_raven_model.debug("Trying to open config.yaml...")
-        with open("raven_tools/new_model_config.yaml", "r") as f:
+        with open("raven_tools/config/new_model_config.yaml", "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
         logger_raven_model.debug("config.yaml loaded.")
         logger_raven_model.debug("Trying to set self.X variables...")
