@@ -53,10 +53,12 @@ default_params = {
             "HMETS_Param_03": "0.5",
             "HMETS_Param_04": "0.5",
             "HMETS_Param_05": "0.5",
+            "HMETS_Param_05b": "0.5",
             "HMETS_Param_06": "0.5",
             "HMETS_Param_07": "0.5",
             "HMETS_Param_08": "0.5",
             "HMETS_Param_09": "0.5",
+            "HMETS_Param_09b": "0.5",
             "HMETS_Param_10": "0.5",
             "HMETS_Param_11": "0.5",
             "HMETS_Param_12": "0.5",
@@ -68,6 +70,8 @@ default_params = {
             "HMETS_Param_18": "0.5",
             "HMETS_Param_19": "0.5",
             "HMETS_Param_20": "0.5",
+            "HMETS_Param_20b": "0.5",
+            "HMETS_Param_21b": "0.5",
             "HMETS_Param_21": "0.5"
         },
         "HBV": {
@@ -134,10 +138,12 @@ default_params = {
             "HMETS_Param_03": "GAMMA_SHAPE2",
             "HMETS_Param_04": "GAMMA_SCALE2",
             "HMETS_Param_05": "MIN_MELT_FACTOR",
+            "HMETS_Param_05b": "0.5",
             "HMETS_Param_06": "0.5",
             "HMETS_Param_07": "DD_MELT_TEMP",
             "HMETS_Param_08": "DD_AGGRADATION",
             "HMETS_Param_09": "SNOW_SWI_MIN",
+            "HMETS_Param_09b": "0.5",
             "HMETS_Param_10": "0.5",
             "HMETS_Param_11": "SWI_REDUCT_COEFF",
             "HMETS_Param_12": "DD_REFREEZE_TEMP",
@@ -149,6 +155,8 @@ default_params = {
             "HMETS_Param_18": "BASEFLOW_COEFF_TOPSOIL",
             "HMETS_Param_19": "BASEFLOW_COEFF_PHREATIC",
             "HMETS_Param_20": "0.5",
+            "HMETS_Param_20b": "0.5",
+            "HMETS_Param_21b": "0.5",
             "HMETS_Param_21": "0.5"
         },
         "HBV": {
@@ -524,4 +532,35 @@ class RavenModel:
             logger_raven_model.debug("Variables ostrich_template and raven_template set to False.")
             print("You have not selected a template type...")
             logger_raven_model.debug("No template file needed to be written by function rr.write_rvt.")
+            pass
+
+    def write_rvx(self, params=default_params, ostrich_template=False, raven_template=True, rvx_type="rvi"):
+        """Write .rvt initial conditions file for Raven or Ostrich
+
+        :param params: Dictionary containing the model parameters and parameter names.
+        :param ostrich_template: Set True if Ostrich template should be generated.
+        :param raven_template: Set True if Raven template should be generated.
+        :type params: dict
+        :type raven_template: bool
+        :type ostrich_template: bool
+
+        """
+        # TODO: Implement discharge and forcings time series.
+        logger_raven_model.debug("Starting if-tree for template type...")
+        if raven_template is True:
+            logger_raven_model.debug("Variable raven_template is True...")
+            logger_raven_model.debug(f"Trying to call rr.write_rvx function to create .{rvx_type} for Raven...")
+            rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
+                         catchment=self.catchment, params=params, template_type="Raven", rvx_type=rvx_type)
+            logger_raven_model.debug(f".{rvx_type} for Raven created by rr.write_rvx function")
+        if ostrich_template is True:
+            logger_raven_model.debug("Variable ostrich_template is True...")
+            logger_raven_model.debug(f"Trying to call rr.write_rvx function to create .{rvx_type}.tpl for Ostrich...")
+            rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
+                         catchment=self.catchment, params=params, template_type="Ostrich", rvx_type=rvx_type)
+            logger_raven_model.debug(f".{rvx_type}.tpl for Ostrich created by rr.write_rvx function")
+        if ostrich_template is False and raven_template is False:
+            logger_raven_model.debug("Variables ostrich_template and raven_template set to False.")
+            print("You have not selected a template type...")
+            logger_raven_model.debug("No template file needed to be written by function rr.write_rvx.")
             pass
