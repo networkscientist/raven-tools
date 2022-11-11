@@ -24,179 +24,13 @@ supported_models = [
     "MOHYSE"
 ]
 
-default_params = {
-    "params": {
-        "GR4J": {
-            "GR4J_X1": "0.5",
-            "GR4J_X2": "0.5",
-            "GR4J_X3": "0.5",
-            "GR4J_X4": "0.5",
-            "Cemaneige_X1": "0.5",
-            "Cemaneige_X2": "0.5",
-            "Melt_Factor": "0.5",
-            "Airsnow_Coeff": "0.5"
-        },
-        "HYMOD": {
-            "HYMOD_Param_01": "0.5",
-            "HYMOD_Param_02": "0.5",
-            "HYMOD_Param_03": "0.5",
-            "HYMOD_Param_04": "0.5",
-            "HYMOD_Param_05": "0.5",
-            "HYMOD_Param_06": "0.5",
-            "HYMOD_Param_07": "0.5",
-            "HYMOD_Param_08": "0.5",
-            "HYMOD_Param_09": "0.5"
-        },
-        "HMETS": {
-            "HMETS_Param_01": "0.5",
-            "HMETS_Param_02": "0.5",
-            "HMETS_Param_03": "0.5",
-            "HMETS_Param_04": "0.5",
-            "HMETS_Param_05": "0.5",
-            "HMETS_Param_05b": "0.5",
-            "HMETS_Param_06": "0.5",
-            "HMETS_Param_07": "0.5",
-            "HMETS_Param_08": "0.5",
-            "HMETS_Param_09": "0.5",
-            "HMETS_Param_09b": "0.5",
-            "HMETS_Param_10": "0.5",
-            "HMETS_Param_11": "0.5",
-            "HMETS_Param_12": "0.5",
-            "HMETS_Param_13": "0.5",
-            "HMETS_Param_14": "0.5",
-            "HMETS_Param_15": "0.5",
-            "HMETS_Param_16": "0.5",
-            "HMETS_Param_17": "0.5",
-            "HMETS_Param_18": "0.5",
-            "HMETS_Param_19": "0.5",
-            "HMETS_Param_20": "0.5",
-            "HMETS_Param_20b": "0.5",
-            "HMETS_Param_21b": "0.5",
-            "HMETS_Param_21": "0.5"
-        },
-        "HBV": {
-            "HBV_Param_01": "0.5",
-            "HBV_Param_02": "0.5",
-            "HBV_Param_03": "0.5",
-            "HBV_Param_04": "0.5",
-            "HBV_Param_05": "0.5",
-            "HBV_Param_06": "0.5",
-            "HBV_Param_07": "0.5",
-            "HBV_Param_08": "0.5",
-            "HBV_Param_09": "0.5",
-            "HBV_Param_10": "0.5",
-            "HBV_Param_11": "0.5",
-            "HBV_Param_12": "0.5",
-            "HBV_Param_13": "0.5",
-            "HBV_Param_14": "0.5",
-            "HBV_Param_15": "0.5",
-            "HBV_Param_16": "0.5",
-            "HBV_Param_17": "0.5",
-            "HBV_Param_18": "0.5",
-            "HBV_Param_19": "0.5",
-            "HBV_Param_20": "0.5",
-            "HBV_Param_21": "0.5"
-        },
-        "MOHYSE": {
-            "MOHYSE_Param_01": "0.5",
-            "MOHYSE_Param_02": "0.5",
-            "MOHYSE_Param_03": "0.5",
-            "MOHYSE_Param_04": "0.5",
-            "MOHYSE_Param_05": "0.5",
-            "MOHYSE_Param_06": "0.5",
-            "MOHYSE_Param_07": "0.5",
-            "MOHYSE_Param_08": "0.5",
-            "MOHYSE_Param_09": "0.5",
-            "MOHYSE_Param_10": "0.5"
-        }
-    },
-    "names": {
-        "GR4J": {
-            "GR4J_X1": "GR4J_x1",
-            "GR4J_X2": "GR4J_x2",
-            "GR4J_X3": "GR4J_x3",
-            "GR4J_X4": "GR4J_x4",
-            "Cemaneige_X1": "Cemaneige_x1",
-            "Cemaneige_X2": "Cemaneige_x2",
-            "Melt_Factor": "Melt_Factor",
-            "Airsnow_Coeff": "Airsnow_Coeff"
-        },
-        "HYMOD": {
-            "HYMOD_Param_01": "Res_Constant",
-            "HYMOD_Param_02": "C_max",
-            "HYMOD_Param_03": "T_s",
-            "HYMOD_Param_04": "K_s",
-            "HYMOD_Param_05": "Melt_Factor",
-            "HYMOD_Param_06": "DD_Melt_Temp",
-            "HYMOD_Param_07": "B_exp",
-            "HYMOD_Param_08": "PET_Correction",
-            "HYMOD_Param_09": "ALPHA"
-        },
-        "HMETS": {
-            "HMETS_Param_01": "GAMMA_SHAPE",
-            "HMETS_Param_02": "GAMMA_SCALE",
-            "HMETS_Param_03": "GAMMA_SHAPE2",
-            "HMETS_Param_04": "GAMMA_SCALE2",
-            "HMETS_Param_05": "MIN_MELT_FACTOR",
-            "HMETS_Param_05b": "0.5",
-            "HMETS_Param_06": "0.5",
-            "HMETS_Param_07": "DD_MELT_TEMP",
-            "HMETS_Param_08": "DD_AGGRADATION",
-            "HMETS_Param_09": "SNOW_SWI_MIN",
-            "HMETS_Param_09b": "0.5",
-            "HMETS_Param_10": "0.5",
-            "HMETS_Param_11": "SWI_REDUCT_COEFF",
-            "HMETS_Param_12": "DD_REFREEZE_TEMP",
-            "HMETS_Param_13": "REFREEZE_FACTOR",
-            "HMETS_Param_14": "REFREEZE_EXP",
-            "HMETS_Param_15": "PET_CORRECTION_TOPSOIL",
-            "HMETS_Param_16": "HMETS_RUNOFF_COEFF",
-            "HMETS_Param_17": "PERC_COEFF_TOPSOIL",
-            "HMETS_Param_18": "BASEFLOW_COEFF_TOPSOIL",
-            "HMETS_Param_19": "BASEFLOW_COEFF_PHREATIC",
-            "HMETS_Param_20": "0.5",
-            "HMETS_Param_20b": "0.5",
-            "HMETS_Param_21b": "0.5",
-            "HMETS_Param_21": "0.5"
-        },
-        "HBV": {
-            "HBV_Param_01": "RAINSNOW_TEMP",
-            "HBV_Param_02": "MELT_FACTOR",
-            "HBV_Param_03": "REFREEZE_FACTOR",
-            "HBV_Param_04": "SNOW_SWI",
-            "HBV_Param_05": "POROSITY",
-            "HBV_Param_06": "FIELD_CAPACITY",
-            "HBV_Param_07": "HBV_BETA",
-            "HBV_Param_08": "MAX_PERC_RATE_FAST_RES",
-            "HBV_Param_09": "BASEFLOW_COEFF_FAST_RES",
-            "HBV_Param_10": "BASEFLOW_COEFF_SLOW_RES",
-            "HBV_Param_11": "TIME_CONC_MAX_BAS",
-            "HBV_Param_12": "PRECIP_LAPSE_PCALT",
-            "HBV_Param_13": "ADIABATIC_LAPSE_TCALT",
-            "HBV_Param_14": "SAT_WILT",
-            "HBV_Param_15": "1_PLUS_ALPHA",
-            "HBV_Param_16": "MAX_CAP_RISE_RATE",
-            "HBV_Param_17": "THICKNESS_TOPSOIL",
-            "HBV_Param_18": "HBV_MELT_FOR_CORR",
-            "HBV_Param_19": "GLAC_STORAGE_COEFF",
-            "HBV_Param_20": "RAIN_CORRECTION_RFCF",
-            "HBV_Param_21": "SNOW_CORRECTION_SFCF"
-        },
-        "MOHYSE": {
-            "MOHYSE_Param_01": "MOHYSE_PET_COEFF",
-            "MOHYSE_Param_02": "AET_COEFF",
-            "MOHYSE_Param_03": "MELT_FACTOR",
-            "MOHYSE_Param_04": "DD_MELT_TEMP",
-            "MOHYSE_Param_05": "Thickness_TOPSOIL",
-            "MOHYSE_Param_06": "PERC_COEFF_TOPSOIL",
-            "MOHYSE_Param_07": "BASEFLOW_COEFF_TOPSOIL",
-            "MOHYSE_Param_08": "BASEFLOW_COEFF_GWSOIL",
-            "MOHYSE_Param_09": "GAMMA_SHAPE",
-            "MOHYSE_Param_10": "TIME_CONC"
-
-        }
-    }
-}
+raven_filetypes = [
+    "rvi",
+    "rvh",
+    "rvp",
+    "rvc",
+    "rvt"
+]
 
 
 class RavenModel:
@@ -237,6 +71,11 @@ class RavenModel:
         ]
         logger_raven_model.debug("Self.X variables set.")
         logger_raven_model.debug(f"__init__ of {__name__} finished...")
+        with open("raven_tools/config/default_params.yaml", "r") as f:
+            self.default_params = yaml.load(f, Loader=yaml.FullLoader)
+
+    def __getitem__(self, item):
+        print(type(item), item)
 
     @property
     def model_type(self) -> str:
@@ -365,6 +204,18 @@ class RavenModel:
         """
         logger_raven_model.debug("Setting name of catchment attribute CSV file...")
         self._attribute_csv = value
+
+    @property
+    def default_params(self):
+        """
+
+        :return:
+        """
+        return self._default_params
+
+    @default_params.setter
+    def default_params(self, value: dict):
+        self._default_params: dict = value
 
     def create_dirs(self):
         """Create model (sub-)directories.
