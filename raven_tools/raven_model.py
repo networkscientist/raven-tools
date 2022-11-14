@@ -57,7 +57,7 @@ class RavenModel:
         logger_raven_model.debug("Setting self.model_type...")
         self.model_type = model_type
         logger_raven_model.debug("Setting self.root_dir...")
-        self.root_dir = Path(os.path.join(os.getcwd(), os.pardir, Path("RAVEN")))
+        self.root_dir = Path(os.path.join(os.getcwd(), Path("RAVEN")))
         logger_raven_model.debug("Setting self.catchment...")
         self.catchment = catchment
         logger_raven_model.debug("Setting self.attribute_csv_name (file name with catchment attributes...")
@@ -266,3 +266,29 @@ class RavenModel:
             print("You have not selected a template type...")
             logger_raven_model.debug("No template file needed to be written by function rr.write_rvx.")
             pass
+
+    def write_ost_in(self):
+        """Write .rvX file for Raven and/or Ostrich
+
+        :param rvx_type: Suffix of the Raven file to be written (rvi,rvp,rvc,rvt or rvh)
+        :param ostrich_template: Set True if Ostrich template should be generated.
+        :param raven_template: Set True if Raven template should be generated.
+        :type raven_template: bool
+        :type ostrich_template: bool
+
+        """
+
+        logger_raven_model.debug("Variable raven_template is True...")
+        logger_raven_model.debug(f"Trying to call rr.write_ostrich_files() function to create ostrich input files\
+            for Raven...")
+        rr.write_ost_in(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
+                        catchment=self.catchment, params=self.default_params)
+        logger_raven_model.debug(f"ost_in.txt for Raven created by rr.write_rvx function")
+
+    def write_save_best(self):
+        logger_raven_model.debug("Variable raven_template is True...")
+        logger_raven_model.debug(f"Trying to call rr.write_ostrich_files() function to create ostrich input files\
+            for Raven...")
+        rr.write_save_best(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
+                        catchment=self.catchment)
+        logger_raven_model.debug(f"ost_in.txt for Raven created by rr.write_rvx function")
