@@ -48,8 +48,9 @@ class RavenModel:
         assert isinstance(model_type, str), f"model_type expected a string, got {type(model_type)} instead"
         assert isinstance(catchment, str), f"catchment expected a string, got {type(model_type)} instead"
         assert model_type in supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
+        logger_raven_model.debug(f"CWD: {os.getcwd()}")
         logger_raven_model.debug("Trying to open config.yaml...")
-        with open("config/new_model_config.yaml", "r") as f:
+        with open("raven_tools/config/new_model_config.yaml", "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
         logger_raven_model.debug("config.yaml loaded.")
         logger_raven_model.debug("Trying to set self.X variables...")
@@ -71,7 +72,7 @@ class RavenModel:
         ]
         logger_raven_model.debug("Self.X variables set.")
         logger_raven_model.debug(f"__init__ of {__name__} finished...")
-        with open("config/default_params.yaml", "r") as f:
+        with open("raven_tools/config/default_params.yaml", "r") as f:
             self.default_params = yaml.load(f, Loader=yaml.FullLoader)
 
     def __getitem__(self, item):
