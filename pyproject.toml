@@ -20,7 +20,7 @@ Shapely = "^1.8.4"
 netCDF4 = "^1.6.1"
 pygeos = "^0.13"
 pyet = "^1.1.0"
-rioxarray = "^0.13.0"
+rioxarray = "^0.13.2"
 PyYAML = "^6.0"
 hydroeval = "^0.1.0"
 
