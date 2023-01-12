@@ -272,7 +272,7 @@ class RavenModel:
                   ost_in=True,
                   save_best=True,
                   ost_raven=True):
-        """Write Ostrich files ost_in.txt, save_best.sh and ost-raven.sh
+        """Write Ostrich files ostIn.txt, save_best.sh and ost-raven.sh
 
         :param ost_raven:
         :param ost_in:
@@ -285,4 +285,4 @@ class RavenModel:
         rr.write_ostrich(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
                          catchment=self.catchment, params=self.default_params, ost_in=ost_in, save_best=save_best,
                          ost_raven=ost_raven)
-        logger_raven_model.debug(f"ost_in.txt for Raven created by rr.write_rvx function")
+        logger_raven_model.debug(f"ostIn.txt for Raven created by rr.write_rvx function")
