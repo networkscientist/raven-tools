@@ -11,6 +11,7 @@ Welcome to Raven Input Python's documentation!
    :caption: Contents:
 
    raven_tools
+   installation
    api
 
 
