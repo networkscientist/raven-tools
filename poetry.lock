@@ -1313,14 +1313,14 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "rioxarray"
-version = "0.13.0"
+version = "0.13.3"
 description = "geospatial xarray extension powered by rasterio"
 category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "rioxarray-0.13.0-py3-none-any.whl", hash = "sha256:b448780070ec8fe194c5ab80c87150535939619dc7552c0be8c802e844c6bec3"},
-    {file = "rioxarray-0.13.0.tar.gz", hash = "sha256:86d949c5f05b70a5d45a63118f26f97423d368982953004be3c1c3ab48f575ed"},
+    {file = "rioxarray-0.13.3-py3-none-any.whl", hash = "sha256:d18baa4364b1f2c43f8df54711aae341f4fc0478f06d5bda20790d727be75bf6"},
+    {file = "rioxarray-0.13.3.tar.gz", hash = "sha256:04133647f53164c3347b1c6182a1264576386574076ca3c3052dfa90cddf4e48"},
 ]
 
 [package.dependencies]
@@ -1830,4 +1830,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.14"
-content-hash = "f14aaaffb2f0caa940cf3a536aa8e908cce5272dffa1710977c84cf0ca221e07"
+content-hash = "9d8ca41c41e5bdac8bb1dc3fc1bd99baed233d387664cf81fdb3260da042b5d7"
