@@ -32,11 +32,17 @@ from shapely.geometry import Polygon, mapping
 def create_bbox_geometry(extent_shape_path: Path):
     """Create a bounding box Polygon for an input shape file.
 
-    :param Path extent_shape_path: Path to the shape file for which to create a bounding box.
-    :return bbox_poly: A shapely polygon that defines the bounding box.
-    :return ext_gdf: The GeoDataFrame with the data from the extent shape file.
-    :rtype bbox_poly: shapely.geometry.polygon.Polygon
-    :rtype ext_gdf: GeoDataFrame
+    Parameters
+    ----------
+    extent_shape_path : Path
+        Path to the shape file for which to create a bounding box.
+
+    Returns
+    -------
+    bbox_poly : Polygon
+        A shapely polygon that defines the bounding box.
+    ext_gdf : GeoDataFrame
+        The GeoDataFrame with the data from the extent shape file.
 
     """
 
@@ -49,13 +55,18 @@ def create_bbox_geometry(extent_shape_path: Path):
 def create_bounding_shape(extent_shape_file_path: Path, bb_file_path: Path):
     """Create a bounding box shape file.
 
-    :param Path extent_shape_file_path: Path to the shape file for which to create a bounding box.
-    :param Path bb_file_path: Full path to the bounding box shape file to be written.
-    :return bbox_gdf: Bounding box as a GeoDataFrame.
-    :return ext_gdf: The GeoDataFrame with the data from the extent shape file
-    :rtype bbox_gdf: GeoDataFrame
-    :rtype ext_gdf: GeoDataFrame
-
+    Parameters
+    ----------
+    extent_shape_file_path : Path
+        Path to the shape file for which to create a bounding box.
+    bb_file_path : Path
+        Full path to the bounding box shape file to be written.
+    Returns
+    -------
+    bbox_gdf : GeoDataFrame
+        Bounding box as a GeoDataFrame.
+    ext_gdf : GeoDataFrame
+        The GeoDataFrame with the data from the extent shape file
     """
 
     # Create the bounding box Polygon
@@ -131,8 +142,8 @@ def netcdf_clipper_multi(netcdf_dir_path: Path, bbox_file_path: Path, bbox_gdf: 
     """ Clips multiple netCDF files in a directory
 
     :param bbox_file_path: Full Path to the bounding box shape file
-    :param Path netcdf_dir_path: Path to directory with netCDF files to clip.
-    :param GeoDataFrame bbox_gdf: Bounding box GeoDataFrame created with create_bounding_shape()
+    :param netcdf_dir_path: Path to directory with netCDF files to clip.
+    :param bbox_gdf: Bounding box GeoDataFrame created with create_bounding_shape()
 
     """
 
@@ -195,3 +206,6 @@ def nc_merge(start_year: int, end_year: int, forcing_dir: str):
     :type forcing_dir: str
     """
     subprocess.call(['raven_tools/nc_combine.sh', str(start_year), str(end_year), forcing_dir])
+
+if __name__ == '__main__':
+    print()

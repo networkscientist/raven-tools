@@ -19,16 +19,25 @@ logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 logger.debug(f"CWD: {os.getcwd()}")
 logger.debug('Trying to read config.yaml file')
-with open("raven_tools/config/new_model_config.yaml", "r") as f:
-    config = yaml.load(f, Loader=yaml.FullLoader)
-with open("raven_tools/config/default_params.yaml", "r") as f:
-    default_params = yaml.load(f, Loader=yaml.FullLoader)
-model_dir = config['ModelDir']
-model_type = config['ModelName']
-data_dir = config['DataDir']
-project_dir = config['ProjectDir']
-catchment = config['Catchment']
-model_sub_dir = config['ModelSubDir']
+try:
+    with open("raven_tools/config/new_model_config.yaml", "r") as f:
+        config = yaml.load(f, Loader=yaml.FullLoader)
+        model_dir = config['ModelDir']
+        model_type = config['ModelName']
+        data_dir = config['DataDir']
+        project_dir = config['ProjectDir']
+        catchment = config['Catchment']
+        model_sub_dir = config['ModelSubDir']
+except FileNotFoundError:
+    print("Config file could not be found...")
+    pass
+try:
+    with open("raven_tools/config/default_params.yaml", "r") as f:
+        default_params = yaml.load(f, Loader=yaml.FullLoader)
+except FileNotFoundError:
+    print("Default parameters file could not be found...")
+    pass
+
 supported_models = [
     "GR4J",
     "HYMOD",
@@ -43,17 +52,20 @@ raven_filetypes = [
     "rvc",
     "rvt"
 ]
+try:
 
-header_line = "#########################################################################"
-file_type = ":FileType          rvt ASCII Raven 3.5"
-author = f":WrittenBy         {config['Author']}"
-creation_date = ":CreationDate      April 2022"
-description = [
-    "#",
-    "# Emulation of GR4J simulation of Broye",
-    "#------------------------------------------------------------------------"]
-header = [header_line, file_type, author, creation_date, *description]
-
+    header_line = "#########################################################################"
+    file_type = ":FileType          rvt ASCII Raven 3.5"
+    author = f":WrittenBy         {config['Author']}"
+    creation_date = ":CreationDate      April 2022"
+    description = [
+        "#",
+        "# Emulation of GR4J simulation of Broye",
+        "#------------------------------------------------------------------------"]
+    header = [header_line, file_type, author, creation_date, *description]
+except NameError:
+    print("Probably config file could not be found...")
+    pass
 subsection_header_line: str = "#-----------------------------------------------------------------"
 newline: str = "\n"
 
@@ -2052,4 +2064,4 @@ if __name__ == '__main__':
     # model_type = Path("raven_broye_gr4j.rvt")
     start_year = 1981
     end_year = 2000
-    write_rvt(1981, 1982)
+    #write_rvt(1981, 1982)

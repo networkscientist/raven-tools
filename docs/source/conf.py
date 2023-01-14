@@ -13,7 +13,7 @@
 import os
 import sys
 import sphinx_rtd_theme
-sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, os.path.abspath('../../raven_tools/'))
 
 
 # -- Project information -----------------------------------------------------
@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.abspath('../../'))
 project = 'Raven Input Python'
 copyright = '2022, Peter Zweifel'
 author = 'Peter Zweifel'
+version = '0.1alpha'
 
 
 # -- General configuration ---------------------------------------------------
@@ -33,9 +34,14 @@ extensions = [
     'sphinx_rtd_theme',
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon'
+    'sphinx.ext.napoleon',
+    'sphinx_autodoc_typehints'
 ]
 
+autosummary_generate = True #Turn on sphinx.ext.autosummary
+napoleon_use_rtype = True
+#napoleon_custom_sections = [('Returns', 'params_style')]
+autodoc_typehints = 'both'
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -57,5 +63,5 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-#pygments_style = 'xcode'
+pygments_style = 'colorful'
 #see https://pygments.org/styles/

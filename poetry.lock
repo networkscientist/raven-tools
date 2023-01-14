@@ -1526,6 +1526,26 @@ lint = ["docutils-stubs", "flake8 (>=3.5.0)", "flake8-bugbear", "flake8-comprehe
 test = ["cython", "html5lib", "pytest (>=4.6)", "typed_ast"]
 
 [[package]]
+name = "sphinx-autodoc-typehints"
+version = "1.20.2"
+description = "Type hints (PEP 484) support for the Sphinx autodoc extension"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "sphinx_autodoc_typehints-1.20.2-py3-none-any.whl", hash = "sha256:56c3b96d11a0d9c88dfb6b88178689f2cf0fd9710166ddeb7308abddfe43aa30"},
+    {file = "sphinx_autodoc_typehints-1.20.2.tar.gz", hash = "sha256:5efda31203ee3775aa82e80f30274b22952387639b609f9715d5a0dd63939163"},
+]
+
+[package.dependencies]
+sphinx = ">=5.3"
+
+[package.extras]
+docs = ["furo (>=2022.9.29)", "sphinx (>=5.3)", "sphinx-autodoc-typehints (>=1.19.4)"]
+testing = ["covdefaults (>=2.2)", "coverage (>=6.5)", "diff-cover (>=7.0.1)", "nptyping (>=2.3.1)", "pytest (>=7.2)", "pytest-cov (>=4)", "sphobjinv (>=2.2.2)", "typing-extensions (>=4.4)"]
+type-comment = ["typed-ast (>=1.5.4)"]
+
+[[package]]
 name = "sphinx-rtd-theme"
 version = "1.1.1"
 description = "Read the Docs theme for Sphinx"
@@ -1810,4 +1830,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.14"
-content-hash = "35f7a64a268caead0ef50169be001fa547617c6656c1d7ae5ef1732ae3f3695d"
+content-hash = "f14aaaffb2f0caa940cf3a536aa8e908cce5272dffa1710977c84cf0ca221e07"

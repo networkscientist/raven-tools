@@ -29,12 +29,13 @@ combineDischargeCSV
 .. automodule:: combineDischargeCSV
     :members:
 
-nc_combine.sh
--------------
-.. automodule:: nc_combine
-    :members:
-
 raven_model
 -----------
 .. automodule:: raven_model
+.. autoclass:: RavenModel
+    :members:
+
+nc_combine.sh
+-------------
+.. automodule:: nc_combine
     :members:

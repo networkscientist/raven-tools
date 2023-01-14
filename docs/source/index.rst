@@ -6,10 +6,17 @@
 Welcome to Raven Input Python's documentation!
 ==============================================
 
+Have a look at the :doc:`Use Cases </use_cases>`
+
 .. toctree::
    :maxdepth: 3
    :caption: Contents:
 
+   use_cases
+   workflow/raven_preprocess
+   workflow/raven_run
+   workflow/raven_postprocess
+   generated/modules
    raven_tools
    installation
    api
