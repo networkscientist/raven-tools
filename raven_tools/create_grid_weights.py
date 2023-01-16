@@ -6,6 +6,7 @@ Currently, the dependencies have to be installed through conda-forge (create a n
 my computer.
 Please note that the netCDF coordinates start with (x,y)=(1,1) bottom left.
 """
+#TODO: Check wether deps still have to be installed through conda-forge...
 
 from pathlib import Path
 import geopandas as gpd
@@ -21,15 +22,22 @@ from xarray import Dataset, DataArray
 def create_overlay(grd: GeoDataFrame, ctm: GeoDataFrame):
     """Overlays a GeoDataFrame over another to create overlay Polygons
 
-    Overlays two GeoDataFrame over each other and creates two new GeoDataFrames, one for the mode 'intersection',
+    Overlays two GeoDataFrame over each other and returns two new GeoDataFrames, one for the mode 'intersection',
     the second for the mode 'difference'
 
-    :param GeoDataFrame grd: Grid as given by the netCDF file
-    :param GeoDataFrame ctm: Catchment as given by a shape file
-    :return res_u: Grid cells within the catchment area
-    :return res_d: Grid cell outside the catchment area
-    :rtype res_u: GeoDataFrame
-    :rtype res_d: GeoDataFrame
+    Parameters
+    ----------
+    grd : GeoDataFrame
+        Grid as given by the netCDF file
+    ctm : GeoDataFrame
+        Catchment as given by a shape file
+
+    Returns
+    -------
+    res_u : GeoDataFrame
+        Grid cells within the catchment area
+    res_d : GeoDataFrame
+        Grid cells outside the catchment area
 
     """
 
@@ -47,9 +55,15 @@ def calc_relative_area(gdf: GeoDataFrame):
     Calculates the relative area of each polygon in a GeoDataFrame with EPSG=2056, writes it into a new column and
     returns the GeoDataFrame with EPSG=2056.
 
-    :param GeoDataFrame gdf: GeoDataFrame in EPSG=2056
-    :return ext_gdf: GeoDataFrame with relative areas of each polygon
-    :rtype ext_gdf: GeoDataFrame
+    Parameters
+    ----------
+    gdf : GeoDataFrame
+        GeoDataFrame in EPSG=2056
+
+    Returns
+    -------
+    gdf : GeoDataFrame
+        GeoDataFrame with relative areas of each polygon
 
     """
 
@@ -68,11 +82,15 @@ def calc_relative_area(gdf: GeoDataFrame):
     return gdf
 
 
-def write_weights_to_file(grd, filename: Path):
-    """
+def write_weights_to_file(grd: GeoDataFrame, filename: Path):
+    """Write grid weights to Raven compatible file
 
-    :param GeoDataFrame grd: Grid derived from the netCDF file
-    :param Path filename: Path to the grid weight text file
+    Parameters
+    ----------
+    grd : GeoDataFrame
+        Grid derived from the netCDF file
+    filename : Path
+        Path to the grid weight text file
 
     """
     # Write to GridWeights.txt
@@ -92,12 +110,18 @@ def write_weights_to_file(grd, filename: Path):
         ff.write(':EndGridWeights \n')
 
 
-def write_grid_data(grd):
+def write_grid_data(grd: GeoDataFrame):
     """Loops over each grid cell and extracts the grid weights.
 
-    :param GeoDataFrame grd: Grid as derived from the netCDF file
-    :return data_to_write: List with the relative areas/grid weights of each cell.
-    :rtype data_to_write: list
+    Parameters
+    ----------
+    grd : GeoDataFrame
+        Grid as derived from the netCDF file
+
+    Returns
+    -------
+    data_to_write : list
+        List with the relative areas/grid weights of each cell.
 
     """
     # Loop over each intersected feature and write the relative area (compared with the total catchment area) into a new
@@ -109,13 +133,20 @@ def write_grid_data(grd):
     return data_to_write
 
 
-def copy_rel_area_from_union_to_grid(uni, grd):
+def copy_rel_area_from_union_to_grid(uni: GeoDataFrame, grd: GeoDataFrame):
     """Takes grid weights from a union GeoDataFrame and writes the to the grid GeoDataFrame.
 
-    :param GeoDataFrame uni: GeoDataFrame containing the grid cells within the catchment.
-    :param GeoDataFrame grd: Grid GeoDataFrame as derived from netCDF file
-    :return grd: Grid GeoDataFrame with grid weights
-    :rtype grd: GeoDataFrame
+    Parameters
+    ----------
+    uni : GeoDataFrame
+        GeoDataFrame containing the grid cells within the catchment.
+    grd : GeoDataFrame
+        Grid GeoDataFrame as derived from netCDF file
+
+    Returns
+    -------
+    grd : GeoDataFrame
+        Grid GeoDataFrame with grid weights
 
     """
 

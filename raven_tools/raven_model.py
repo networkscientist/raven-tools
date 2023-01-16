@@ -5,7 +5,7 @@ from pathlib import Path
 
 import yaml
 
-import raven_run as rr
+import raven_tools.raven_run as rr
 
 handler = logging.StreamHandler(sys.stdout)
 frm = logging.Formatter("{levelname}: {message} ({filename}/{funcName}/{lineno})",

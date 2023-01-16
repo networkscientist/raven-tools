@@ -1,16 +1,16 @@
 Raven Tools
-=============
+===========
 
 .. toctree::
    :maxdepth: 4
 
 Pre-Processing
--------------
+--------------
 .. automodule:: raven_preprocess
     :members:
 
 Running Raven
-------------
+-------------
 .. automodule:: raven_run
     :members:
 
@@ -21,12 +21,12 @@ Post-Processing
 
 create_grid_weights
 -------------------
-.. automodule:: create_grid_weights
+.. automodule:: exclude/create_grid_weights
     :members:
 
 combineDischargeCSV
 -------------------
-.. automodule:: combineDischargeCSV
+.. automodule:: exclude/combineDischargeCSV
     :members:
 
 raven_model
