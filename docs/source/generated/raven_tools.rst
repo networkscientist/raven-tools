@@ -4,14 +4,6 @@ raven\_tools package
 Submodules
 ----------
 
-raven\_tools.broye\_netcdf\_\_from\_cds\_downloader module
-----------------------------------------------------------
-
-.. automodule:: raven_tools.broye_netcdf__from_cds_downloader
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 raven\_tools.combineDischargeCSV module
 ---------------------------------------
 

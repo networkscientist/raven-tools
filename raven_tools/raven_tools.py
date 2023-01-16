@@ -65,5 +65,5 @@ res_diff.to_file("/media/mainman/Data/RAVEN/data/difference.shp")
 grid.set_index("cell_id")
 
 # Write a RAVEN compatible grid weights file
-grid = rpe.copy_rel_area_from_union_to_grid(res_union, grid)
+grid: gpd.GeoDataFrame = rpe.copy_rel_area_from_union_to_grid(res_union, grid)
 rpe.write_weights_to_file(grid, output_file)

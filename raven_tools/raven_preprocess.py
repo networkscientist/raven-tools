@@ -32,17 +32,15 @@ from shapely.geometry import Polygon, mapping
 def create_bbox_geometry(extent_shape_path: Path):
     """Create a bounding box Polygon for an input shape file.
 
-    Parameters
-    ----------
-    extent_shape_path : Path
-        Path to the shape file for which to create a bounding box.
+    Args:
+        extent_shape_path : Path
+            Path to the shape file for which to create a bounding box.
 
-    Returns
-    -------
-    bbox_poly : Polygon
-        A shapely polygon that defines the bounding box.
-    ext_gdf : GeoDataFrame
-        The GeoDataFrame with the data from the extent shape file.
+    Returns:
+        bbox_poly : Polygon
+            A shapely polygon that defines the bounding box.
+        ext_gdf : GeoDataFrame
+            The GeoDataFrame with the data from the extent shape file.
 
     """
 
@@ -58,19 +56,17 @@ def create_bounding_shape(extent_shape_file_path: Path, bb_file_path: Path):
     This function takes a shape file, creates a bounding box around the features and returns this box as a
     GeoDataFrame. Additionally, returns the original extent as a GeoDataFrame.
 
-    Parameters
-    ----------
-    extent_shape_file_path : Path
-        Path to the shape file for which to create a bounding box.
-    bb_file_path : Path
-        Full path to the bounding box shape file to be written.
+    Args:
+        extent_shape_file_path : Path
+            Path to the shape file for which to create a bounding box.
+        bb_file_path : Path
+            Full path to the bounding box shape file to be written.
 
-    Returns
-    -------
-    bbox_gdf : GeoDataFrame
-        Bounding box as a GeoDataFrame.
-    ext_gdf : GeoDataFrame
-        The GeoDataFrame with the data from the extent shape file
+    Returns:
+        bbox_gdf : GeoDataFrame
+            Bounding box as a GeoDataFrame.
+        ext_gdf : GeoDataFrame
+            The GeoDataFrame with the data from the extent shape file
 
     """
 
@@ -85,18 +81,16 @@ def create_bounding_shape(extent_shape_file_path: Path, bb_file_path: Path):
     return bbox_gdf, ext_gdf
 
 
-def netcdf_to_dataset(netcdf_file_path: Path):
+def netcdf_to_dataset(netcdf_file_path: Path) -> xr.Dataset:
     """Reads a netCDF file into an xarray dataset
 
-    Parameters
-    ----------
-    netcdf_file_path : Path
-        Path to the netCDF file to clip
+    Args:
+        netcdf_file_path : Path
+            Path to the netCDF file to clip
 
-    Returns
-    -------
-    xds : Dataset
-        The netCDF data as a netCDF4 dataset
+    Returns:
+        xds : Dataset
+            The netCDF data as a netCDF4 dataset
 
     """
 
@@ -117,12 +111,11 @@ def netcdf_to_dataset(netcdf_file_path: Path):
 def dataset_to_netcdf(xds_to_write: xr.Dataset, netcdf_file_path: Path):
     """ Writes xarray dataset to netCDF
 
-    Parameters
-    ----------
-    xds_to_write : Dataset
-        xarray Dataset to write.
-    netcdf_file_path : Path
-        netCDF file path to write to.
+    Args:
+        xds_to_write : Dataset
+            xarray Dataset to write.
+        netcdf_file_path : Path
+            netCDF file path to write to.
 
     """
 
@@ -131,24 +124,22 @@ def dataset_to_netcdf(xds_to_write: xr.Dataset, netcdf_file_path: Path):
         f"{netcdf_file_path.parent.parent}/out/{netcdf_file_path.stem}_clipped{netcdf_file_path.suffix}", "w")
 
 
-def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, ext_gdf: GeoDataFrame):
+def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, ext_gdf: GeoDataFrame) -> xr.Dataset:
     """Clips a netCDF file according to a bounding box.
 
     For one netCDF file in a directory, clips it according to a bounding box shape file.
 
-    Parameters
-    ----------
-    ext_gdf : GeoDataFrame
-        The GeoDataFrame with the data from the extent shape file
-    netcdf_file_path : Path
-        Path to the netCDF file to clip
-    bbox_file_path : Path
-        Path to the shape file of the bounding box to be used to clip.
+    Args:
+        ext_gdf : GeoDataFrame
+            The GeoDataFrame with the data from the extent shape file
+        netcdf_file_path : Path
+            Path to the netCDF file to clip
+        bbox_file_path : Path
+            Path to the shape file of the bounding box to be used to clip.
 
-    Returns
-    -------
-    xds_clipped : Dataset
-        The clipped Dataset
+    Returns:
+        xds_clipped : xr.Dataset
+            The clipped Dataset
 
     """
 
@@ -164,14 +155,13 @@ def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, ext_gdf: GeoDat
 def netcdf_clipper_multi(netcdf_dir_path: Path, bbox_file_path: Path, bbox_gdf: GeoDataFrame):
     """ Clips multiple netCDF files in a directory
 
-    Parameters
-    ----------
-    bbox_file_path : Path
-        Full Path to the bounding box shape file
-    netcdf_dir_path : Path
-        Path to directory with netCDF files to clip.
-    bbox_gdf : GeoDataFrame
-        Bounding box GeoDataFrame created with create_bounding_shape()
+    Args:
+        bbox_file_path : Path
+            Full Path to the bounding box shape file
+        netcdf_dir_path : Path
+            Path to directory with netCDF files to clip.
+        bbox_gdf : GeoDataFrame
+            Bounding box GeoDataFrame created with create_bounding_shape()
 
     """
 
@@ -182,11 +172,10 @@ def netcdf_clipper_multi(netcdf_dir_path: Path, bbox_file_path: Path, bbox_gdf: 
 def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
     """
 
-    Parameters
-    ----------
-    name_pattern : dict[str, str]
-    netcdf_file_path : Path
-        Path to the netCDF file to calculate PET from
+    Args:
+        name_pattern : dict[str, str]
+        netcdf_file_path : Path
+            Path to the netCDF file to calculate PET from
 
     """
     cdf_out_path = Path(str(netcdf_file_path).replace(list(name_pattern.keys())[0], list(name_pattern.values())[0]))
@@ -243,8 +232,22 @@ def nc_merge(start_year: int, end_year: int, forcing_dir: str):
     subprocess.call(['raven_tools/nc_combine.sh', str(start_year), str(end_year), forcing_dir])
 
 
-def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, export_shp=True):
+def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, export_shp:bool=True):
+    """Creates a grid GeoDataFrame and optionally exports to shape file
 
+    Args:
+        netcdf_filepath : Path
+            Path to netCDF file that contains the grid
+        bounding_box_filename : Path
+            Path to bounding box shape file
+        export_shp : bool
+            Set to True if you want to export the grid into a shape file
+
+    Returns:
+        grid :
+            GeoDataFrame containing the grid
+
+    """
     # Read in the bounding box shape file from the clipping folder as a GeoPandas DataFrame
     bbox: GeoDataFrame = gpd.read_file(bounding_box_filename)
     bbox.set_crs(21781, allow_override=True)
@@ -296,12 +299,11 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, export_shp=T
     # Every cell that is not within the catchment area will have area_rel set to zero
     grid["area_rel"] = 0
     grid = grid.set_crs(2056)
-    return grid
 
     if export_shp:
         # Export the grid to a shape file
         grid.to_file("/media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/grid.shp")
-
+    return grid
 
 def create_overlay(grd: GeoDataFrame, ctm: GeoDataFrame):
     """Overlays a GeoDataFrame over another to create overlay Polygons
@@ -309,19 +311,17 @@ def create_overlay(grd: GeoDataFrame, ctm: GeoDataFrame):
     Overlays two GeoDataFrame over each other and returns two new GeoDataFrames, one for the mode 'intersection',
     the second for the mode 'difference'
 
-    Parameters
-    ----------
-    grd : GeoDataFrame
-        Grid as given by the netCDF file
-    ctm : GeoDataFrame
-        Catchment as given by a shape file
+    Args:
+        grd : GeoDataFrame
+            Grid as given by the netCDF file
+        ctm : GeoDataFrame
+            Catchment as given by a shape file
 
-    Returns
-    -------
-    res_u : GeoDataFrame
-        Grid cells within the catchment area
-    res_d : GeoDataFrame
-        Grid cells outside the catchment area
+    Returns:
+        res_u : GeoDataFrame
+            Grid cells within the catchment area
+        res_d : GeoDataFrame
+            Grid cells outside the catchment area
 
     """
 
@@ -333,21 +333,19 @@ def create_overlay(grd: GeoDataFrame, ctm: GeoDataFrame):
     return res_u, res_d
 
 
-def calc_relative_area(gdf: GeoDataFrame):
+def calc_relative_area(gdf: GeoDataFrame) -> GeoDataFrame:
     """Calculates the relative area of each polygon in a GeoDataFrame.
 
     Calculates the relative area of each polygon in a GeoDataFrame with EPSG=2056, writes it into a new column and
     returns the GeoDataFrame with EPSG=2056.
 
-    Parameters
-    ----------
-    gdf : GeoDataFrame
-        GeoDataFrame in EPSG=2056
+    Args:
+        gdf : GeoDataFrame
+            GeoDataFrame in EPSG=2056
 
-    Returns
-    -------
-    gdf : GeoDataFrame
-        GeoDataFrame with relative areas of each polygon
+    Returns:
+        gdf : GeoDataFrame
+            GeoDataFrame with relative areas of each polygon
 
     """
 
@@ -369,12 +367,11 @@ def calc_relative_area(gdf: GeoDataFrame):
 def write_weights_to_file(grd: GeoDataFrame, filename: Path):
     """Write grid weights to Raven compatible file
 
-    Parameters
-    ----------
-    grd : GeoDataFrame
-        Grid derived from the netCDF file
-    filename : Path
-        Path to the grid weight text file
+    Args:
+        grd : GeoDataFrame
+            Grid derived from the netCDF file
+        filename : Path
+            Path to the grid weights text file
 
     """
     # Write to GridWeights.txt
@@ -394,18 +391,16 @@ def write_weights_to_file(grd: GeoDataFrame, filename: Path):
         ff.write(':EndGridWeights \n')
 
 
-def write_grid_data(grd: GeoDataFrame):
+def write_grid_data(grd: GeoDataFrame) -> list[list[float]]:
     """Loops over each grid cell and extracts the grid weights.
 
-    Parameters
-    ----------
-    grd : GeoDataFrame
-        Grid as derived from the netCDF file
+    Args:
+        grd : GeoDataFrame
+            Grid as derived from the netCDF file
 
-    Returns
-    -------
-    data_to_write : list[list[float]]
-        List with the relative areas/grid weights of each cell.
+    Returns:
+        data_to_write : list[list[float]]
+            List with the relative areas/grid weights of each cell.
 
     """
     # Loop over each intersected feature and write the relative area (compared with the total catchment area) into a new
@@ -417,20 +412,18 @@ def write_grid_data(grd: GeoDataFrame):
     return data_to_write
 
 
-def copy_rel_area_from_union_to_grid(uni: GeoDataFrame, grd: GeoDataFrame):
+def copy_rel_area_from_union_to_grid(uni: GeoDataFrame, grd: GeoDataFrame) -> GeoDataFrame:
     """Takes grid weights from a union GeoDataFrame and writes the to the grid GeoDataFrame.
 
-    Parameters
-    ----------
-    uni : GeoDataFrame
-        GeoDataFrame containing the grid cells within the catchment.
-    grd : GeoDataFrame
-        Grid GeoDataFrame as derived from netCDF file
+    Args:
+        uni : GeoDataFrame
+            GeoDataFrame containing the grid cells within the catchment.
+        grd : GeoDataFrame
+            Grid GeoDataFrame as derived from netCDF file
 
-    Returns
-    -------
-    grd : GeoDataFrame
-        Grid GeoDataFrame with grid weights
+    Returns:
+        grd : GeoDataFrame
+            Grid GeoDataFrame with grid weights
 
     """
 
