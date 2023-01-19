@@ -34,15 +34,20 @@ raven_filetypes = [
 
 
 class RavenModel:
-    """Class that allows various operations on a selected model.
+    """Class that allows various operations on a selected model. There are methods to create the suggested directory
+    structure, to create .rvX RAVEN configuration files and to write Ostrich configuration files.
+
+    Args:
+
+    Attributes:
 
     """
 
     def __init__(self, model_type="model_type", catchment="catchment"):
         """
-
-        :param model_type:
-        :param catchment:
+        Args:
+            model_type (str): Name of model_type (GR4J, HYMOD, HMETS, HBV or MOHYSE)
+            catchment (str): Name of catchment
         """
         logger_raven_model.debug(f"Starting __init__ of {__name__}...")
         assert isinstance(model_type, str), f"model_type expected a string, got {type(model_type)} instead"
@@ -80,7 +85,7 @@ class RavenModel:
 
     @property
     def model_type(self) -> str:
-        """Returns model type.
+        """Returns model type. Supported models are GR4J, HYMOD, HMETS, MOHYSE and HBV-EC."""
 
         Returns model type. Supported models are: GR4J, HYMOD, HMETS, MOHYSE and HBV-EC.
 
@@ -105,7 +110,7 @@ class RavenModel:
 
     @property
     def root_dir(self) -> Path:
-        """Get root directory
+        """Get root directory that contains the 'RAVEN' folder."""
 
         :return self._root_dir: Root directory that contains the 'RAVEN' folder.
         :rtype self._root_dir: Path
@@ -126,7 +131,7 @@ class RavenModel:
 
     @property
     def model_dir(self) -> Path:
-        """Get model directory
+        """Get model directory"""
 
         :return self._model_dir:
         :rtype: Path
