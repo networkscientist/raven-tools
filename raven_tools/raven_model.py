@@ -87,6 +87,17 @@ class RavenModel:
         print(type(item), item)
 
     @property
+    def data_dir(self) -> Path:
+        logger_raven_model.debug("Getting data dir...")
+        return self._data_dir
+
+    @data_dir.setter
+    def data_dir(self, value: Path):
+        logger_raven_model.debug("Setting data dir...")
+        assert isinstance(value, Path), f"data_dir should be of type Path, is type {self._data_dir} instead."
+        self._data_dir = value
+
+    @property
     def model_type(self) -> str:
         """Returns model type. Supported models are GR4J, HYMOD, HMETS, MOHYSE and HBV-EC."""
 
