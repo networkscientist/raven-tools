@@ -73,8 +73,11 @@ class RavenModel:
         logger_raven_model.debug("Setting self.model_type...")
         self.dirs = [
             Path(self.model_dir, "model"),
-            Path(self.model_dir, "model", "output")
+            Path(self.model_dir, "model", "output"),
+            Path(self.model_dir, "model", "data_obs")
         ]
+        logger_raven_model.debug("Setting self.data_dir...")
+        self.data_dir = Path(self.root_dir, self.config['DataDir'])
         logger_raven_model.debug("Self.X variables set.")
         logger_raven_model.debug(f"__init__ of {__name__} finished...")
         with open("raven_tools/config/default_params.yaml", "r") as f:
