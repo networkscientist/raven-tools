@@ -101,23 +101,12 @@ class RavenModel:
     def model_type(self) -> str:
         """Returns model type. Supported models are GR4J, HYMOD, HMETS, MOHYSE and HBV-EC."""
 
-        Returns model type. Supported models are: GR4J, HYMOD, HMETS, MOHYSE and HBV-EC.
-
-        :return: Model type
-        :rtype self._model_type: str
-        """
         logger_raven_model.debug("Getting model type...")
         assert isinstance(self._model_type, str), f"model type should be str, is type{self._model_type} instead."
         return self._model_type
 
     @model_type.setter
     def model_type(self, value: str):
-        """Set the model type
-
-        Set the model type. Supported models are: GR4J, HYMOD, HMETS, MOHYSE and HBV-EC
-
-        :param str value: Model type
-        """
         logger_raven_model.debug("Setting model type...")
         assert isinstance(value, str), f"model_type expected string, got type{value} instead."
         self._model_type = value
@@ -126,19 +115,12 @@ class RavenModel:
     def root_dir(self) -> Path:
         """Get root directory that contains the 'RAVEN' folder."""
 
-        :return self._root_dir: Root directory that contains the 'RAVEN' folder.
-        :rtype self._root_dir: Path
-        """
         logger_raven_model.debug("Getting root dir...")
         assert isinstance(self._root_dir, Path), f"root_dir should be Path, got type{self._root_dir} instead."
         return self._root_dir
 
     @root_dir.setter
     def root_dir(self, value: Path):
-        """Set root directory aka project directory
-
-        :param Path value: Root directory that contains the 'RAVEN' folder
-        """
         logger_raven_model.debug("Setting root dir...")
         assert isinstance(value, Path), f"root_dir expected Path, got {type(self._root_dir)} instead."
         self._root_dir = value
@@ -147,19 +129,12 @@ class RavenModel:
     def model_dir(self) -> Path:
         """Get model directory"""
 
-        :return self._model_dir:
-        :rtype: Path
-        """
         logger_raven_model.debug("Getting model dir...")
         assert isinstance(self._model_dir, Path), f"model_dir should be Path, is {type(self._model_dir)} instead."
         return self._model_dir
 
     @model_dir.setter
     def model_dir(self, value: Path):
-        """Set model directory
-
-        :param Path value: Path to model directory
-        """
         logger_raven_model.debug("Setting model dir...")
         assert isinstance(value, Path), f"model_dir expected a Path, got {type(value)} instead."
         self._model_dir = value
