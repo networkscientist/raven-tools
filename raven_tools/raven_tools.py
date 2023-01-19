@@ -14,6 +14,7 @@ models = [
 for m in models:
     model_instance = rm.RavenModel(model_type=m, catchment="Broye")
     model_instance.create_dirs()
+    model_instance.create_symlinks()
     for s in suffix:
         model_instance.write_rvx(ostrich_template=True, rvx_type=s)
     model_instance.write_ost()
