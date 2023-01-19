@@ -43,7 +43,7 @@ class RavenModel:
 
     """
 
-    def __init__(self, model_type="model_type", catchment="catchment"):
+    def __init__(self, model_type: str = "GR4J", catchment: str = "default"):
         """
         Args:
             model_type (str): Name of model_type (GR4J, HYMOD, HMETS, HBV or MOHYSE)
