@@ -1,4 +1,5 @@
-import raven_tools.raven_model as rm
+import raven_model as rm
+
 suffix = [
     "rvi", "rvh", "rvp", "rvc", "rvt"
 ]
