@@ -221,14 +221,45 @@ class RavenModel:
         """
 
         logger_raven_model.debug("Trying to create model directories...")
-        try:
-            for f in self.dirs:
+        for f in self.dirs:
+            try:
                 logger_raven_model.debug(f"Creating directory: {f}")
                 f.mkdir(parents=True)
                 print(f"Directory created: {f}")
-        except FileExistsError:
-            logger_raven_model.debug(f"Directory {f} already exists, skipping...")
-            print("Directory already exists...")
+            except FileExistsError:
+                logger_raven_model.debug(f"Directory {f} already exists, skipping...")
+                print("Directory already exists...")
+                pass
+
+    def create_symlinks(self):
+        logger_raven_model.debug("Trying to create data symlinks...")
+        try:
+            src = ["RhiresD_v2.0_swiss.lv95",
+                   "SrelD_v2.0_swiss.lv95",
+                   "TabsD_v2.0_swiss.lv95",
+                   "TmaxD_v2.0_swiss.lv95",
+                   "TminD_v2.0_swiss.lv95"]
+            for s in src:
+                dst = Path(self.model_dir, "model", "data_obs", s)
+                logger_raven_model.debug(f"Symlink src: MeteoSwiss_gridded_products/{s}")
+                logger_raven_model.debug(f"Symlink dst: {dst}")
+                os.symlink(Path(self.data_dir, "MeteoSwiss_gridded_products", s), dst)
+                logger_raven_model.debug(f"Symlink created")
+                print(f"Symlink created:\n"
+                      f"Source: MeteoSwiss_gridded_products/{s}\n"
+                      f"Destination: {dst}")
+            src = Path(self.data_dir, "Discharge", "BroPay_Q_2034_daily.rvt")
+            logger_raven_model.debug(f"Symlink src: {src}")
+            logger_raven_model.debug(f"Symlink dst: {dst}")
+            os.symlink(src, dst)
+            logger_raven_model.debug(f"Symlink created")
+            print(f"Symlink created:\n"
+                  f"Source: {src}\n"
+                  f"Destination: {dst}")
+        except:
+            logger_raven_model.debug(f"Error creating symlinks...")
+            logger_raven_model.exception("Error creating symlinks...")
+            print("There has been an error creating symlinks...")
 
     def write_rvx(self, ostrich_template: bool = False, raven_template: bool = True, rvx_type: str = "rvi"):
         """Write .rvX file for Raven and/or Ostrich
