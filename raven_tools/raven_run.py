@@ -28,6 +28,7 @@ try:
         project_dir = config['ProjectDir']
         catchment = config['Catchment']
         model_sub_dir = config['ModelSubDir']
+        grid_weights_file = config['GridWeights']
 except FileNotFoundError:
     print("Config file could not be found...")
     pass
@@ -91,7 +92,7 @@ def forcing_block(start: int, end: int):
             f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/merged/RhiresD_ch01h.swiss.lv95_{start}01010000_{end}12310000_clipped.nc",
             "    :VarNameNC            RhiresD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            "    :RedirectToFile       data_obs/GridWeights.txt ",
+            f"    :RedirectToFile       data_obs/{grid_weights_file}",
             ":EndGriddedForcing"],
         'Average Temperature': [
             ":GriddedForcing           Average Temperature",
@@ -99,7 +100,7 @@ def forcing_block(start: int, end: int):
             f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/merged/TabsD_ch01r.swiss.lv95_{start}01010000_{end}12310000_clipped.nc",
             "    :VarNameNC            TabsD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            "    :RedirectToFile       data_obs/GridWeights.txt ",
+            f"    :RedirectToFile       data_obs/{grid_weights_file}",
             ":EndGriddedForcing"],
         'Maximum Temperature': [
             ":GriddedForcing           Maximum Temperature",
@@ -107,7 +108,7 @@ def forcing_block(start: int, end: int):
             f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/merged/TmaxD_ch01r.swiss.lv95_{start}01010000_{end}12310000_clipped.nc",
             "    :VarNameNC            TmaxD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            "    :RedirectToFile       data_obs/GridWeights.txt ",
+            f"    :RedirectToFile       data_obs/{grid_weights_file}",
             ":EndGriddedForcing"],
         'Minimum Temperature': [
             ":GriddedForcing           Minimum Temperature",
@@ -115,7 +116,7 @@ def forcing_block(start: int, end: int):
             f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/merged/TminD_ch01r.swiss.lv95_{start}01010000_{end}12310000_clipped.nc",
             "    :VarNameNC            TminD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            "    :RedirectToFile       data_obs/GridWeights.txt ",
+            f"    :RedirectToFile       data_obs/{grid_weights_file}",
             ":EndGriddedForcing"
         ]
     }
