@@ -6,30 +6,29 @@ import os
 from pathlib import Path
 
 import pandas
-import yaml
+
+import raven_tools as rt
 
 logger = rt.logger
 
 logger.debug(f"CWD: {os.getcwd()}")
 logger.debug('Trying to read config.yaml file')
+
 try:
-    with open("raven_tools/config/new_model_config.yaml", "r") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
-        model_dir = config['ModelDir']
-        model_type = config['ModelName']
-        data_dir = config['DataDir']
-        project_dir = config['ProjectDir']
-        catchment = config['Catchment']
-        model_sub_dir = config['ModelSubDir']
-        grid_weights_file = config['GridWeights']
-except FileNotFoundError:
-    print("Config file could not be found...")
-    pass
+    config = rt.config
+    model_dir = config['ModelDir']
+    model_type = config['ModelName']
+    data_dir = config['DataDir']
+    project_dir = config['ProjectDir']
+    catchment = config['Catchment']
+    model_sub_dir = config['ModelSubDir']
+    grid_weights_file = config['GridWeights']
+except:
+    logger.exception("Error getting config from __init__.py!")
+
 try:
-    with open("raven_tools/config/default_params.yaml", "r") as f:
-        default_params = yaml.load(f, Loader=yaml.FullLoader)
-except FileNotFoundError:
-    print("Default parameters file could not be found...")
+    default_params = rt.params
+except:
     pass
 
 supported_models = [

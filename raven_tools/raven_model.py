@@ -3,6 +3,7 @@ from pathlib import Path
 
 import yaml
 
+import raven_tools as rt
 import raven_run as rr
 
 logger = rt.logger
@@ -45,9 +46,9 @@ class RavenModel:
         assert isinstance(model_type, str), f"model_type expected a string, got {type(model_type)} instead"
         assert isinstance(catchment, str), f"catchment expected a string, got {type(model_type)} instead"
         assert model_type in supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
-        with open("raven_tools/config/new_model_config.yaml", "r") as f:
         logger.debug(f"CWD: {os.getcwd()}")
         logger.debug("Trying to open config.yaml...")
+        with open(rt.config_filepath, "r") as f:
             self.config = yaml.load(f, Loader=yaml.FullLoader)
         logger.debug("config.yaml loaded.")
         logger.debug("Trying to set self.X variables...")
