@@ -68,14 +68,6 @@ raven\_tools.raven\_run module
    :undoc-members:
    :show-inheritance:
 
-raven\_tools.raven\_tools module
---------------------------------
-
-.. automodule:: raven_tools.raven_tools
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 
