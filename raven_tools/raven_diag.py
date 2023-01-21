@@ -6,7 +6,7 @@ import csv
 
 if __name__ == '__main__':
     df = pd.read_csv(sys.argv[1], index_col=1)
-    # df = pd.read_csv("/media/mainman/Data/RAVEN/testmodels/Broye/HYMOD/processor_3/model/output/Broye_HYMOD_Hydrographs.csv", index_col=1)
+    df = pd.read_csv("/home/sirian/Applications/Hydrology/RAVEN/testmodels/GR4J/processor_0/model/output/raven_broye_gr4j_Hydrographs.csv", index_col=1)
     # simulations = df.iloc[:"2000-01-01",:4]
     end = df.index.searchsorted("2000-01-01")
     simulations = df.iloc[:end,3]
