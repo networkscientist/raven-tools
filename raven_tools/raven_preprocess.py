@@ -219,14 +219,13 @@ def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
 def nc_merge(start_year: int, end_year: int, forcing_dir: str):
     """
 
-    Parameters
-    ----------
-    start_year : int
-        Start year
-    end_year : int
-        End Year
-    forcing_dir : str
-        Root directory where forcing files are located
+    Args:
+        start_year : int
+            Start year
+        end_year : int
+            End Year
+        forcing_dir : str
+            Root directory where forcing files are located
 
     """
     subprocess.call(['raven_tools/nc_combine.sh', str(start_year), str(end_year), forcing_dir])
@@ -244,7 +243,7 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, export_shp:b
             Set to True if you want to export the grid into a shape file
 
     Returns:
-        grid :
+        grid : GeoDataFrame
             GeoDataFrame containing the grid
 
     """

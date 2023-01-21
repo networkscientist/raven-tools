@@ -70,10 +70,15 @@ def forcing_block(start: int, end: int):
     it creates the relevant directory Paths, which are based on Swiss gridded input data. Further parameters,
     as required by RAVEN are added and finally, the forcings data block is returned as a Dictionary.
 
-    :param int start: Start year of forcings data files
-    :param int end: End year of focings data files
-    :return: The forcing data block
-    :rtype: Dictionary
+    Args:
+        start : int
+            Start year of forcings data files
+        end : int
+            End year of forcings data files
+
+    Returns:
+        forcing_data: dict[str, list[str]]
+            The forcing data block
 
     """
 
@@ -120,15 +125,18 @@ def forcing_block(start: int, end: int):
 
 def write_rvt(start_year: int, end_year: int, model_dir=model_dir, model_type=model_type,
               project_dir=project_dir, catchment=catchment, model_sub_dir=model_sub_dir):
-    """Write to Raven *.rvt file.
+    """Write to Raven .rvt file.
 
-    :param model_sub_dir:
-    :param catchment:
-    :param project_dir:
-    :param int start_year: Start year of forcings data files
-    :param int end_year: End year of focings data files
-    :param Path model_dir: Root directory of *.rvX files
-    :param Path model_type: Name of the .rvt file to be written
+    Args:
+        model_sub_dir:
+        catchment:
+        project_dir:
+        start_year : int
+            Start year of forcings data files
+        end_year : int
+            End year of forcings data files
+        model_dir: Root directory of .rvX files
+        model_type: Name of the .rvt file to be written
 
     """
     file_name: str = f"{catchment}_{model_type}.rvt"
@@ -158,14 +166,8 @@ def write_rvt(start_year: int, end_year: int, model_dir=model_dir, model_type=mo
 
 
 def generate_template_rvx(csv_file=None, model_type=model_type, params=default_params, param_or_name="names") -> dict:
-    """Generates template text which can be written to .rvX file
+    """Generates template text which can be written to .rvX file.
 
-    :param model_type:
-    :param csv_file:
-    :param params:
-    :param param_or_name:
-    :return rvx_params:
-    :rtype rvx_params: dict
     """
 
     logger.debug("Entered generate_template() function.")
@@ -1019,13 +1021,16 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
 def generate_template_ostrich(model_type: str = model_type,
                               params: dict = default_params,
                               catchment: str = catchment) -> dict:
-    """Generates template text which can be written to .rvp file
+    """
+    Generates template text which can be written to .rvp file
 
     :param str catchment:
     :param str model_type:
     :param dict params:
     :return ost_params[model_type]:
     :rtype ost_params[model_type]: dict
+        params : dict
+            Dictionary containing parameters values
     """
 
     file_name = f"{catchment}_{model_type}"
@@ -1884,11 +1889,14 @@ def generate_template_ostrich(model_type: str = model_type,
 
 def subsection_header(title: str) -> list[str]:
     """Generates subsection header for a .rvX file from given title.
-
-    :param str title: Title to be used in subsection header.
-    :return subsection_head: List of header line as strings.
-    :rtype subsection_head: list[str]
+    Args:
+        title (str):
+            Title to be used in subsection header.
+    Returns:
+        subsection_head: list[str]
+            List of header line as strings.
     """
+
     logger.debug("Arrived in function subsection_header().")
     subsection_head: list[str] = [
         subsection_header_line,
@@ -1913,18 +1921,20 @@ def write_rvx(model_dir: str = model_dir,
               attribute_csv_dir: str = "Hydromap Attributes",
               rvx_type: str = "rvi"):
     """Writes .rvX file(s), either as an Ostrich or Raven template.
+    Args:
+        model_dir (str): The directory where the model files are stored. Default is "model_dir".
+        model_type (str): The type of model to use. Default is "model_type".
+        data_dir (str): The directory where the input data is stored. Default is "data_dir".
+        project_dir (Path): The directory of the project. Default is "project_dir".
+        catchment (str): The name of the catchment for which the RVX file should be created. Default is "catchment".
+        model_sub_dir (str): The sub-directory where the model files are stored. Default is "model_sub_dir".
+        params (dict): A dictionary of model parameters. Default is "default_params".
+        template_type (str): The type of template to use. Default is "Raven".
+        attribute_csv_name (str): The name of the attribute CSV file. Default is "CH-0057_attributes.csv".
+        attribute_csv_dir (str): The directory where the attribute CSV file is stored. Default is "Hydromap Attributes".
+        rvx_type (str): The type of RVX file to create. Default is "rvi".
 
-    :param template_type:
-    :param attribute_csv_name:
-    :param attribute_csv_dir:
-    :param rvx_type:
-    :param model_dir:
-    :param model_type:
-    :param data_dir:
-    :param project_dir:
-    :param catchment:
-    :param model_sub_dir:
-    :param params:
+        This function writes the RVX file for the given catchment, model type, and parameters.
     """
 
     logger.debug("Arrived in function write_rvx().")
@@ -1991,15 +2001,17 @@ def write_ostrich(
         ost_raven: bool = True
 ):
     """Writes Ostrich input files ostIn.txt, save_best.sh and Ost-RAVEN.sh
+    Args:
+        model_dir (str): The directory where the model files are stored. Default is "model_dir".
+        model_type (str): The type of model to use. Default is "model_type".
+        project_dir (Path): The directory of the project. Default is "project_dir".
+        catchment (str): The name of the catchment for which the RVX file should be created. Default is "catchment".
+        params (dict): A dictionary of model parameters. Default is "default_params".
+        ost_in (bool): Flag to indicate if Ostrich input file should be created. Default is True.
+        save_best (bool): Flag to indicate if save_best.sh file should be created. Default is True.
+        ost_raven (bool): Flag to indicate if Ost-RAVEN.sh file should be created. Default is True.
 
-    :param model_dir:
-    :param model_type:
-    :param project_dir:
-    :param catchment:
-    :param params:
-    :param ost_in:
-    :param save_best:
-    :param ost_raven:
+    This function writes Ostrich input files ostIn.txt, save_best.sh and Ost-RAVEN.sh
     """
     logger.debug("Arrived in function write_ostrich().")
     assert model_type in supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
