@@ -2,21 +2,14 @@
 Tools to generate Raven .rv* files needed to run Raven models.
 """
 
-import logging
 import os
-import sys
 from pathlib import Path
 
 import pandas
 import yaml
 
-logger = logging.getLogger(__name__)
-handler = logging.StreamHandler(sys.stdout)
-frm = logging.Formatter("{levelname}: {message} ({filename}/{funcName}/{lineno})",
-                        style="{")
-handler.setFormatter(frm)
-logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
+logger = rt.logger
+
 logger.debug(f"CWD: {os.getcwd()}")
 logger.debug('Trying to read config.yaml file')
 try:
