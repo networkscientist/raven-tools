@@ -168,6 +168,19 @@ def write_rvt(start_year: int, end_year: int, model_dir=model_dir, model_type=mo
 def generate_template_rvx(csv_file=None, model_type=model_type, params=default_params, param_or_name="names") -> dict:
     """Generates template text which can be written to .rvX file.
 
+        Args:
+            model_type : str
+                Name of the model type
+            csv_file : str
+                File path of the csv file
+            params : dict
+                Parameters for the model
+            param_or_name : str
+                Name of the parameter or parameter value
+
+        Returns:
+            rvx_params : dict
+                Dictionary containing the parameters for the .rvX file
     """
 
     logger.debug("Entered generate_template() function.")
@@ -1024,13 +1037,17 @@ def generate_template_ostrich(model_type: str = model_type,
     """
     Generates template text which can be written to .rvp file
 
-    :param str catchment:
-    :param str model_type:
-    :param dict params:
-    :return ost_params[model_type]:
-    :rtype ost_params[model_type]: dict
+    Args:
+        catchment : str
+            Catchment name
+        model_type : str
+            Name of model type
         params : dict
             Dictionary containing parameters values
+
+    Return:
+        ost_params[model_type] : dict
+            Dictionary with Ostrich parameters
     """
 
     file_name = f"{catchment}_{model_type}"
