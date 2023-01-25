@@ -1,29 +1,14 @@
+"""
+Work with a Raven class.
+"""
+
 import os
 from pathlib import Path
 
-import yaml
-
 import raven_tools as rt
-import raven_run as rr
 
 logger = rt.logger
 logger.debug("Logging from raven_model to console started")
-
-supported_models = [
-    "GR4J",
-    "HYMOD",
-    "HMETS",
-    "HBV",
-    "MOHYSE"
-]
-
-raven_filetypes = [
-    "rvi",
-    "rvh",
-    "rvp",
-    "rvc",
-    "rvt"
-]
 
 
 class RavenModel:
@@ -36,7 +21,7 @@ class RavenModel:
 
     """
 
-    def __init__(self, model_type: str = "GR4J", catchment: str = "default"):
+    def __init__(self, model_type: str = "GR4J", catchment: str = "default", catchment_id: str = "CH-0057"):
         """
         Args:
             model_type (str): Name of model_type (GR4J, HYMOD, HMETS, HBV or MOHYSE)
@@ -44,12 +29,17 @@ class RavenModel:
         """
         logger.debug(f"Starting __init__ of {__name__}...")
         assert isinstance(model_type, str), f"model_type expected a string, got {type(model_type)} instead"
-        assert isinstance(catchment, str), f"catchment expected a string, got {type(model_type)} instead"
-        assert model_type in supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
+        assert isinstance(catchment, str), f"catchment expected a string, got {type(catchment)} instead"
+        assert isinstance(catchment_id, str), f"catchment_id expected a string, got {type(catchment_id)} instead"
+        self.supported_models = rt.supported_models
+        self.raven_filetypes = rt.raven_filetypes
+        assert model_type in self.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
         logger.debug(f"CWD: {os.getcwd()}")
         logger.debug("Trying to open config.yaml...")
-        with open(rt.config_filepath, "r") as f:
-            self.config = yaml.load(f, Loader=yaml.FullLoader)
+        try:
+            self.config = rt.config
+        except:
+            logger("Error getting config file from __init__.py")
         logger.debug("config.yaml loaded.")
         logger.debug("Trying to set self.X variables...")
         logger.debug("Setting self.model_type...")
@@ -58,36 +48,51 @@ class RavenModel:
         self.root_dir = Path(os.path.join(os.getcwd(), Path("RAVEN")))
         logger.debug("Setting self.catchment...")
         self.catchment = catchment
+        logger.debug("Setting self.catchment_id...")
+        self.catchment_id = catchment_id
         logger.debug("Setting self.attribute_csv_name (file name with catchment attributes...")
-        self.attribute_csv = "CH-0057_attributes.csv"
+        self.attribute_csv = f"{self.catchment_id}_attributes.csv"
         logger.debug("Setting self.model_dir...")
         self.model_dir = Path(self.root_dir, "models", self.catchment, self.model_type)
         logger.debug("Setting self.dirs...")
         logger.debug("Setting self.model_type...")
-        self.dirs = [
+        self.dirs: list[Path] = [
             Path(self.model_dir, "model"),
             Path(self.model_dir, "model", "output"),
             Path(self.model_dir, "model", "data_obs")
         ]
         logger.debug("Setting self.data_dir...")
-        self.data_dir = Path(self.root_dir, self.config['DataDir'])
+        self.data_dir: Path = Path(self.root_dir, self.config['DataDir'])
+        logger.debug("Setting meteo folder...")
+        self.meteo_dir = self.config['MeteoSubDir']
+        logger.debug("Setting start year...")
+        self.start_year = self.config['StartYear']
+        logger.debug("Setting end year...")
+        self.end_year = self.config['EndYear']
         logger.debug("Self.X variables set.")
         logger.debug(f"__init__ of {__name__} finished...")
-        with open("raven_tools/config/default_params.yaml", "r") as f:
-            self.default_params = yaml.load(f, Loader=yaml.FullLoader)
+        try:
+            self.default_params = rt.default_params
+        except:
+            logger("Error getting default_params file from __init__.py")
 
     def __getitem__(self, item):
         print(type(item), item)
 
     @property
     def data_dir(self) -> Path:
+        """
+
+        Returns:
+
+        """
         logger.debug("Getting data dir...")
         return self._data_dir
 
     @data_dir.setter
     def data_dir(self, value: Path):
         logger.debug("Setting data dir...")
-        assert isinstance(value, Path), f"data_dir should be of type Path, is type {self._data_dir} instead."
+        assert isinstance(value, Path), f"data_dir should be of type Path, is type {type(value)} instead."
         self._data_dir = value
 
     @property
@@ -95,13 +100,13 @@ class RavenModel:
         """Returns model type. Supported models are GR4J, HYMOD, HMETS, MOHYSE and HBV-EC."""
 
         logger.debug("Getting model type...")
-        assert isinstance(self._model_type, str), f"model type should be str, is type{self._model_type} instead."
+        assert isinstance(self._model_type, str), f"model type should be str, is type{type(self._model_type)} instead."
         return self._model_type
 
     @model_type.setter
     def model_type(self, value: str):
         logger.debug("Setting model type...")
-        assert isinstance(value, str), f"model_type expected string, got type{value} instead."
+        assert isinstance(value, str), f"model_type expected string, got type{type(value)} instead."
         self._model_type = value
 
     @property
@@ -109,13 +114,13 @@ class RavenModel:
         """Get root directory that contains the 'RAVEN' folder."""
 
         logger.debug("Getting root dir...")
-        assert isinstance(self._root_dir, Path), f"root_dir should be Path, got type{self._root_dir} instead."
+        assert isinstance(self._root_dir, Path), f"root_dir should be Path, got type{type(self._root_dir)} instead."
         return self._root_dir
 
     @root_dir.setter
     def root_dir(self, value: Path):
         logger.debug("Setting root dir...")
-        assert isinstance(value, Path), f"root_dir expected Path, got {type(self._root_dir)} instead."
+        assert isinstance(value, Path), f"root_dir expected Path, got {type(value)} instead."
         self._root_dir = value
 
     @property
@@ -182,7 +187,7 @@ class RavenModel:
         :rtype: str
         """
         logger.debug("Getting name of catchment attribute CSV file...")
-        return self._attribute_csvcsv
+        return self._attribute_csv
 
     @attribute_csv.setter
     def attribute_csv(self, value: str):
@@ -204,6 +209,86 @@ class RavenModel:
     @default_params.setter
     def default_params(self, value: dict):
         self._default_params: dict = value
+
+    @property
+    def meteo_dir(self) -> str:
+        """Return directory with meteorological forcings files.
+
+        Returns:
+
+
+        """
+        return self._meteo_dir
+
+    @meteo_dir.setter
+    def meteo_dir(self, value: str):
+        self._meteo_dir: str = value
+
+    @property
+    def start_year(self) -> int:
+        """Returns start year."""
+
+        logger.debug("Getting start year...")
+        assert isinstance(self._start_year, int), f"Start year should be int, is type{type(self._start_year)} instead."
+        return self._start_year
+
+    @start_year.setter
+    def start_year(self, value: int):
+        logger.debug("Setting start year ...")
+        assert isinstance(value, int), f"start_year expected int, got {type(value)} instead."
+        self._start_year = value
+
+    @property
+    def end_year(self) -> int:
+        """Returns end year."""
+
+        logger.debug("Getting end year...")
+        assert isinstance(self._end_year, int), f"end_year should be int, is type{type(self._end_year)} instead."
+        return self._end_year
+
+    @end_year.setter
+    def end_year(self, value: int):
+        logger.debug("Setting end year ...")
+        assert isinstance(value, int), f"end_year expected int, got {type(value)} instead."
+        self._end_year = value
+
+    @property
+    def supported_models(self) -> list[str]:
+        """Returns supported_models."""
+        assert isinstance(self._supported_models,
+                          list), f"supported_models should be list[str], is type{type(self._supported_models)} instead."
+        return self._supported_models
+
+    @supported_models.setter
+    def supported_models(self, value: list[str]):
+        assert isinstance(value,
+                          list), f"supported_models should be list[str], is type{type(value)} instead."
+        self._supported_models = value
+
+    @property
+    def raven_filetypes(self) -> list[str]:
+        """Returns raven_filetypes."""
+        assert isinstance(self._raven_filetypes,
+                          list), f"raven_filetypes should be list[str], is type{type(self._raven_filetypes)} instead."
+        return self._raven_filetypes
+
+    @raven_filetypes.setter
+    def raven_filetypes(self, value: list[str]):
+        assert isinstance(value,
+                          list), f"raven_filetypes should be list[str], is type{type(value)} instead."
+        self._raven_filetypes = value
+
+    @property
+    def catchment_id(self) -> str:
+        """Returns catchment_id."""
+        assert isinstance(self._catchment_id,
+                          str), f"catchment_id should be str, is type {type(self._catchment_id)} instead."
+        return self._catchment_id
+
+    @catchment_id.setter
+    def catchment_id(self, value: str):
+        assert isinstance(value, str), f"catchment_id should be str, is type {type(value)} instead."
+        self._catchment_id = value
 
     def create_dirs(self):
         """Create model (sub-)directories.
@@ -264,21 +349,22 @@ class RavenModel:
         :type ostrich_template: bool
 
         """
-        assert rvx_type in raven_filetypes, f"Raven suffix .{rvx_type} is not in list of accepted suffixes."
+        assert rvx_type in rt.raven_filetypes, f"Raven suffix .{rvx_type} is not in list of accepted suffixes."
         # TODO: Implement discharge and forcings time series.
         logger.debug("Starting if-tree for template type...")
         if raven_template is True:
             logger.debug("Variable raven_template is True...")
             logger.debug(f"Trying to call rr.write_rvx function to create .{rvx_type} for Raven...")
-            rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=self.default_params, template_type="Raven", rvx_type=rvx_type)
+            rt.raven_run.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
+                                   catchment=self.catchment, params=self.default_params, template_type="Raven",
+                                   rvx_type=rvx_type)
             logger.debug(f".{rvx_type} for Raven created by rr.write_rvx function")
         if ostrich_template is True:
             logger.debug("Variable ostrich_template is True...")
             logger.debug(f"Trying to call rr.write_rvx function to create .{rvx_type}.tpl for Ostrich...")
-            rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=self.default_params, template_type="Ostrich",
-                         rvx_type=rvx_type)
+            rt.raven_run.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
+                                   catchment=self.catchment, params=self.default_params, template_type="Ostrich",
+                                   rvx_type=rvx_type)
             logger.debug(f".{rvx_type}.tpl for Ostrich created by rr.write_rvx function")
         if ostrich_template is False and raven_template is False:
             logger.debug("Variables ostrich_template and raven_template set to False.")
@@ -300,7 +386,17 @@ class RavenModel:
         logger.debug("Variable raven_template is True...")
         logger.debug(f"Trying to call rr.write_ostrich_files() function to create ostrich input files\
             for Raven...")
-        rr.write_ostrich(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=self.default_params, ost_in=ost_in, save_best=save_best,
-                         ost_raven=ost_raven)
+        rt.raven_run.write_ostrich(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
+                                   catchment=self.catchment, params=self.default_params, ost_in=ost_in,
+                                   save_best=save_best,
+                                   ost_raven=ost_raven)
         logger.debug(f"ostIn.txt for Raven created by rr.write_rvx function")
+
+    def create_netcdf(self, merge=True):
+        """Create the netCDF files for the chosen catchment
+
+        """
+        rt.raven_preprocess.netcdf_clipper_multi()
+        rt.raven_preprocess.netcdf_to_dataset()
+        if merge:
+            pass
