@@ -4,6 +4,19 @@
 
 Installation
 ============
+
+RAVEN compilation from source
+-----------------------------
+
+Dependencies
+~~~~~~~~~~~~
+I needed to install libnetcdf-dev.
+
+Compilation
+~~~~~~~~~~~
+
+To compile Raven 3.6 on a Linux system with netCDF support, make sure that the CXXFLAGS and LDLIBS lines in the Makefile are uncommented. Then set the value for the LDLIBS to where your netCDF libraries are located. If you don't know what to set here, use ``nc-config --libs`` and use the returned line as LDLIBS. On my system (gcc 11.3.0), I additionally had to comment the c++11 flag.
+
 Ostrich parallel processing
 ---------------------------
 
