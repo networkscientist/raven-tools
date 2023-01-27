@@ -6,32 +6,32 @@ Raven Tools
 
 Pre-Processing
 --------------
-.. automodule:: raven_preprocess
+.. automodule:: processing.raven_preprocess
     :members:
 
 Running Raven
 -------------
-.. automodule:: raven_run
+.. automodule:: processing.raven_run
     :members:
 
 Post-Processing
 ---------------
-.. automodule:: raven_postprocess
+.. automodule:: processing.raven_postprocess
     :members:
 
 create_grid_weights
 -------------------
-.. automodule:: exclude/create_grid_weights
+.. automodule:: create_grid_weights
     :members:
 
 combineDischargeCSV
 -------------------
-.. automodule:: exclude/combineDischargeCSV
+.. automodule:: combineDischargeCSV
     :members:
 
 raven_model
 -----------
-.. automodule:: raven_model
+.. automodule:: model.raven_model
 .. autoclass:: RavenModel
     :members:
 

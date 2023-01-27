@@ -12,9 +12,9 @@
 #
 import os
 import sys
-import sphinx_rtd_theme
-sys.path.insert(0, os.path.abspath('../../raven_tools/'))
 
+sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../../raven_tools/'))
 
 # -- Project information -----------------------------------------------------
 
@@ -22,7 +22,6 @@ project = 'Raven Input Python'
 copyright = '2022, Peter Zweifel'
 author = 'Peter Zweifel'
 version = '0.1alpha'
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -38,9 +37,10 @@ extensions = [
     'sphinx_autodoc_typehints'
 ]
 
-autosummary_generate = True #Turn on sphinx.ext.autosummary
+autosummary_generate = True  # Turn on sphinx.ext.autosummary
 napoleon_use_rtype = True
-#napoleon_custom_sections = [('Returns', 'params_style')]
+napoleon_google_docstring = True
+# napoleon_custom_sections = [('Returns', 'params_style')]
 autodoc_typehints = 'both'
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -49,7 +49,6 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -64,4 +63,4 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = ['_static']
 
 pygments_style = 'colorful'
-#see https://pygments.org/styles/
+# see https://pygments.org/styles/

@@ -113,7 +113,7 @@ Also: `Thorough
 example <https://thomas-cokelaer.info/tutorials/sphinx/docstring_python.html>`__
 and `Module
 Docstrings <https://coderslegacy.com/python/module-docstrings/>`__
-
+as well as: `Idiot's guide <https://samnicholls.net/2016/06/15/how-to-sphinx-readthedocs/>`__
 
 
 Version Control
