@@ -1,8 +1,8 @@
+import datetime as dt
+from pathlib import Path
+
 import ravenpy.models
 from ravenpy.models import GR4JCN_OST
-import os
-from pathlib import Path
-import datetime as dt
 
 model = GR4JCN_OST(workdir="/media/mainman/Data/RAVEN/testmodels/GR4J_tmp")
 model = ravenpy.models.Raven(workdir="/media/mainman/Data/RAVEN/testmodels/GR4J_tmp")
@@ -39,7 +39,7 @@ model(forcings)
 ravenpy.config.commands.RavenCommand.
 model(
     ts=forcings,
-    start_date=dt.datetime(1981,1,1),
-    end_date = dt.datetime(2019,12,31)
+    start_date=dt.datetime(1981, 1, 1),
+    end_date=dt.datetime(2019, 12, 31)
 )
-model.config.commands.
+model.project_config.commands.
