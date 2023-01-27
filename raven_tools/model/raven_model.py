@@ -2,13 +2,17 @@
 Work with a Raven class.
 """
 
+import logging
 import os
 from pathlib import Path
 
-import raven_tools as rt
+# import raven_tools as rt
 
-logger = rt.logger
+logger = logging.getLogger(__name__)
 logger.debug("Logging from raven_model to console started")
+from raven_tools import config
+from raven_tools.processing import raven_run as rr
+from raven_tools.processing import raven_preprocess as rpe
 
 
 class RavenModel:
@@ -31,16 +35,16 @@ class RavenModel:
         assert isinstance(model_type, str), f"model_type expected a string, got {type(model_type)} instead"
         assert isinstance(catchment, str), f"catchment expected a string, got {type(catchment)} instead"
         assert isinstance(catchment_id, str), f"catchment_id expected a string, got {type(catchment_id)} instead"
-        self.supported_models = rt.supported_models
-        self.raven_filetypes = rt.raven_filetypes
+        self.supported_models = config.variables.supported_models
+        self.raven_filetypes = config.variables.raven_filetypes
         assert model_type in self.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
         logger.debug(f"CWD: {os.getcwd()}")
-        logger.debug("Trying to open config.yaml...")
+        logger.debug("Trying to open project_config.yaml...")
         try:
-            self.config = rt.config
+            self.conf = config.variables.project_config
         except:
-            logger("Error getting config file from __init__.py")
-        logger.debug("config.yaml loaded.")
+            logger.debug("Error getting project_config file from __init__.py")
+        logger.debug("project_config.yaml loaded.")
         logger.debug("Trying to set self.X variables...")
         logger.debug("Setting self.model_type...")
         self.model_type = model_type
@@ -57,22 +61,22 @@ class RavenModel:
         logger.debug("Setting self.dirs...")
         logger.debug("Setting self.model_type...")
         self.dirs: list[Path] = [
-            Path(self.model_dir, "model"),
-            Path(self.model_dir, "model", "output"),
-            Path(self.model_dir, "model", "data_obs")
+            Path(self.model_dir, ""),
+            Path(self.model_dir, "", "output"),
+            Path(self.model_dir, "", "data_obs")
         ]
         logger.debug("Setting self.data_dir...")
-        self.data_dir: Path = Path(self.root_dir, self.config['DataDir'])
+        self.data_dir: Path = Path(self.root_dir, self.conf['DataDir'])
         logger.debug("Setting meteo folder...")
-        self.meteo_dir = self.config['MeteoSubDir']
+        self.meteo_dir = self.conf['MeteoSubDir']
         logger.debug("Setting start year...")
-        self.start_year = self.config['StartYear']
+        self.start_year = self.conf['StartYear']
         logger.debug("Setting end year...")
-        self.end_year = self.config['EndYear']
+        self.end_year = self.conf['EndYear']
         logger.debug("Self.X variables set.")
         logger.debug(f"__init__ of {__name__} finished...")
         try:
-            self.default_params = rt.default_params
+            self.default_params = config.variables.default_params
         except:
             logger("Error getting default_params file from __init__.py")
 
@@ -159,7 +163,7 @@ class RavenModel:
         self._catchment = value
 
     @property
-    def config(self):
+    def conf(self):
         """Returns configuration
 
         :return: Configuration
@@ -167,11 +171,11 @@ class RavenModel:
         logger.debug("Getting configuration")
         return self._config
 
-    @config.setter
-    def config(self, value):
+    @conf.setter
+    def conf(self, value):
         """Set configuration
 
-        Set the configuration, if changed after model creation. Expects a python object created from a YAML config\
+        Set the configuration, if changed after model creation. Expects a python object created from a YAML project_config\
         file with structure as the template file.
 
         :param value: Configuration loaded from yaml.load()
@@ -318,7 +322,7 @@ class RavenModel:
                    "TmaxD_v2.0_swiss.lv95",
                    "TminD_v2.0_swiss.lv95"]
             for s in src:
-                dst = Path(self.model_dir, "model", "data_obs", s)
+                dst = Path(self.model_dir, "", "data_obs", s)
                 logger.debug(f"Symlink src: MeteoSwiss_gridded_products/{s}")
                 logger.debug(f"Symlink dst: {dst}")
                 os.symlink(Path(self.data_dir, "MeteoSwiss_gridded_products", s), dst)
@@ -349,22 +353,22 @@ class RavenModel:
         :type ostrich_template: bool
 
         """
-        assert rvx_type in rt.raven_filetypes, f"Raven suffix .{rvx_type} is not in list of accepted suffixes."
+        assert rvx_type in config.variables.raven_filetypes, f"Raven suffix .{rvx_type} is not in list of accepted suffixes."
         # TODO: Implement discharge and forcings time series.
         logger.debug("Starting if-tree for template type...")
         if raven_template is True:
             logger.debug("Variable raven_template is True...")
             logger.debug(f"Trying to call rr.write_rvx function to create .{rvx_type} for Raven...")
-            rt.raven_run.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                                   catchment=self.catchment, params=self.default_params, template_type="Raven",
-                                   rvx_type=rvx_type)
+            rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
+                         catchment=self.catchment, params=self.default_params, template_type="Raven",
+                         rvx_type=rvx_type)
             logger.debug(f".{rvx_type} for Raven created by rr.write_rvx function")
         if ostrich_template is True:
             logger.debug("Variable ostrich_template is True...")
             logger.debug(f"Trying to call rr.write_rvx function to create .{rvx_type}.tpl for Ostrich...")
-            rt.raven_run.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                                   catchment=self.catchment, params=self.default_params, template_type="Ostrich",
-                                   rvx_type=rvx_type)
+            rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
+                         catchment=self.catchment, params=self.default_params, template_type="Ostrich",
+                         rvx_type=rvx_type)
             logger.debug(f".{rvx_type}.tpl for Ostrich created by rr.write_rvx function")
         if ostrich_template is False and raven_template is False:
             logger.debug("Variables ostrich_template and raven_template set to False.")
@@ -386,17 +390,17 @@ class RavenModel:
         logger.debug("Variable raven_template is True...")
         logger.debug(f"Trying to call rr.write_ostrich_files() function to create ostrich input files\
             for Raven...")
-        rt.raven_run.write_ostrich(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                                   catchment=self.catchment, params=self.default_params, ost_in=ost_in,
-                                   save_best=save_best,
-                                   ost_raven=ost_raven)
+        rr.write_ostrich(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
+                         catchment=self.catchment, params=self.default_params, ost_in=ost_in,
+                         save_best=save_best,
+                         ost_raven=ost_raven)
         logger.debug(f"ostIn.txt for Raven created by rr.write_rvx function")
 
     def create_netcdf(self, merge=True):
         """Create the netCDF files for the chosen catchment
 
         """
-        rt.raven_preprocess.netcdf_clipper_multi()
-        rt.raven_preprocess.netcdf_to_dataset()
+        rpe.netcdf_clipper_multi()
+        rpe.netcdf_to_dataset()
         if merge:
             pass
