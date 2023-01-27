@@ -1,16 +1,16 @@
 """
 Tools to generate Raven .rv* files needed to run Raven models.
 """
-
+import logging
 import os
 from pathlib import Path
 
 import pandas
 
 from raven_tools import config
-from raven_tools import log
 
-logger = log.logger
+logger = logging.getLogger(__name__)
+logging.debug("TEEEST")
 
 logger.debug(f"CWD: {os.getcwd()}")
 logger.debug('Trying to read project_config.yaml file')

@@ -1,11 +1,7 @@
-import logging
 import os
 from pathlib import Path
 
 import yaml
-
-logger = logging.getLogger(__name__)
-logger.debug("Logging from variables.py started.")
 
 os.path.abspath(Path(os.path.abspath(__file__), ".."))
 config_filepath = Path(os.path.abspath(Path(os.path.abspath(__file__), "..")),

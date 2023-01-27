@@ -1,5 +1,8 @@
-import raven_model as rm
+# import raven_model as rm
+# import model.raven_model
+import raven_tools as rt
 
+# import raven_tools.model as rm
 # import raven_run as rr
 # gr4j_broye = rm.RavenModel(model_type="GR4J", catchment="Broye")
 # gr4j_broye = rm.RavenModel(model_type="HYMOD", catchment="Broye")
@@ -17,16 +20,27 @@ models = [
     "HBV",
     "MOHYSE"
 ]
-for m in models:
-    model_instance = rm.RavenModel(model_type=m, catchment="Broye")
-    model_instance.create_dirs()
-    for s in suffix:
-        model_instance.write_rvx(ostrich_template=True, rvx_type=s)
-gr4j_broye.write_rvx(rvx_type="rvi")
-gr4j_broye.write_rvx(rvx_type="rvh")
-gr4j_broye.write_rvx(rvx_type="rvp")
-gr4j_broye.write_rvx(rvx_type="rvc")
-gr4j_broye.write_rvx(rvx_type="rvt")
+
+catchments = ["Ticino",
+              "Broye",
+              "Thur",
+              "Massa",
+              "Weisse Lütschine",
+              "Dischmabach"]
+
+for c in catchments:
+    for m in rt.config.variables.supported_models:
+        model_instance = rt.model.raven_model.RavenModel(model_type=m, catchment=c)
+        print(model_instance.start_year)
+        model_instance.create_dirs()
+        model_instance.create_symlinks()
+        for s in suffix:
+            model_instance.write_rvx(ostrich_template=True, rvx_type=s)
+# gr4j_broye.write_rvx(rvx_type="rvi")
+# gr4j_broye.write_rvx(rvx_type="rvh")
+# gr4j_broye.write_rvx(rvx_type="rvp")
+# gr4j_broye.write_rvx(rvx_type="rvc")
+# gr4j_broye.write_rvx(rvx_type="rvt")
 # gr4j_broye.write_rvp()
 # gr4j_broye.write_rvh(ostrich_template=True)
 # gr4j_broye.write_rvi(ostrich_template=True)
