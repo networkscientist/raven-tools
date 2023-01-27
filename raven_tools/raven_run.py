@@ -31,20 +31,6 @@ try:
 except:
     pass
 
-supported_models = [
-    "GR4J",
-    "HYMOD",
-    "HMETS",
-    "HBV",
-    "MOHYSE"
-]
-raven_filetypes = [
-    "rvi",
-    "rvh",
-    "rvp",
-    "rvc",
-    "rvt"
-]
 try:
 
     header_line = "#########################################################################"
@@ -184,7 +170,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
     """
 
     logger.debug("Entered generate_template() function.")
-    assert model_type in supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
+    assert model_type in rt.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
     logger.debug("model_type is in the list of supported models.")
 
     logger.debug("Trying to create rvx_params dictionary...")
@@ -1053,7 +1039,7 @@ def generate_template_ostrich(model_type: str = model_type,
     file_name = f"{catchment}_{model_type}"
     param_or_name = "names"
     logger.debug("Entered generate_template() function.")
-    assert model_type in supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
+    assert model_type in rt.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
     logger.debug("model_type is in the list of supported models.")
     ost_params = {
         "GR4J":
@@ -1955,8 +1941,8 @@ def write_rvx(model_dir: str = model_dir,
     """
 
     logger.debug("Arrived in function write_rvx().")
-    assert model_type in supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
-                                           f"supported_models."
+    assert model_type in rt.supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
+                                              f"supported_models."
     logger.debug(
         f"Trying to read catchment attribute CSV file {Path(project_dir, data_dir, attribute_csv_dir, attribute_csv_name)}...")
     csv_file = pandas.read_csv(Path(project_dir, data_dir, attribute_csv_dir, attribute_csv_name), sep=",",
@@ -2031,8 +2017,8 @@ def write_ostrich(
     This function writes Ostrich input files ostIn.txt, save_best.sh and Ost-RAVEN.sh
     """
     logger.debug("Arrived in function write_ostrich().")
-    assert model_type in supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
-                                           f"supported_models."
+    assert model_type in rt.supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
+                                              f"supported_models."
 
     ost_in_file_name: str = f"ostIn.txt"
     save_best_file_name: str = f"save_best.sh"

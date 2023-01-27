@@ -26,9 +26,6 @@ from numpy import exp
 from shapely.geometry import Polygon, mapping
 
 
-# from xarray import Dataset
-
-
 def create_bbox_geometry(extent_shape_path: Path):
     """Create a bounding box Polygon for an input shape file.
 
@@ -231,7 +228,7 @@ def nc_merge(start_year: int, end_year: int, forcing_dir: str):
     subprocess.call(['raven_tools/nc_combine.sh', str(start_year), str(end_year), forcing_dir])
 
 
-def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, export_shp:bool=True):
+def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, export_shp: bool = True):
     """Creates a grid GeoDataFrame and optionally exports to shape file
 
     Args:
@@ -303,6 +300,7 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, export_shp:b
         # Export the grid to a shape file
         grid.to_file("/media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/grid.shp")
     return grid
+
 
 def create_overlay(grd: GeoDataFrame, ctm: GeoDataFrame):
     """Overlays a GeoDataFrame over another to create overlay Polygons
