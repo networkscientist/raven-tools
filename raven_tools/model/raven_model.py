@@ -333,7 +333,6 @@ class RavenModel:
                       f"Destination: {dst}")
             except FileExistsError:
                 logger.exception("Error creating symlink: File already exists")
-        # TODO: There is a bug here that creates symlinks in the symlinked directories, creating infinite nested dirs.
         src = Path(self.data_dir, "Discharge", "BroPay_Q_2034_daily.rvt")
         logger.debug("Source Path created.")
         logger.debug(f"Symlink src: {src}")
