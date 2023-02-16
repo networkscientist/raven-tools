@@ -58,12 +58,15 @@ class RavenModel:
         self.attribute_csv = f"{self.catchment_id}_attributes.csv"
         logger.debug("Setting self.model_dir...")
         self.model_dir = Path(self.root_dir, "models", self.catchment, self.model_type)
+        logger.debug("Setting self.model_sub_dir...")
+        self.model_sub_dir = self.conf['ModelSubDir']
         logger.debug("Setting self.dirs...")
         logger.debug("Setting self.model_type...")
         self.dirs: list[Path] = [
             Path(self.model_dir, ""),
-            Path(self.model_dir, "", "output"),
-            Path(self.model_dir, "", "data_obs")
+            # Path(self.model_dir, "", self.model_sub_dir),
+            Path(self.model_dir, self.model_sub_dir, "", "output"),
+            Path(self.model_dir, self.model_sub_dir, "", "data_obs")
         ]
         logger.debug("Setting self.data_dir...")
         self.data_dir: Path = Path(self.root_dir, self.conf['DataDir'])
@@ -82,6 +85,18 @@ class RavenModel:
 
     def __getitem__(self, item):
         print(type(item), item)
+
+    @property
+    def model_sub_dir(self) -> str:
+        """Returns model_sub_dir."""
+        assert isinstance(self._model_sub_dir,
+                          str), f"model_sub_dir should be str, is type {type(self._model_sub_dir)} instead."
+        return self._model_sub_dir
+
+    @model_sub_dir.setter
+    def model_sub_dir(self, value: str):
+        assert isinstance(value, str), f"model_sub_dir should be str, is type {type(self._model_sub_dir)} instead."
+        self._model_sub_dir = value
 
     @property
     def data_dir(self) -> Path:
@@ -322,11 +337,11 @@ class RavenModel:
                "TminD_v2.0_swiss.lv95"]
         logger.debug("List with source folders created.")
         for s in src:
-            dst = Path(self.model_dir, "model", "data_obs")
+            dst = Path(self.model_dir, self.model_sub_dir, "data_obs", s)
             logger.debug(f"Symlink src: MeteoSwiss_gridded_products/{s}")
             logger.debug(f"Symlink dst: {dst}")
             try:
-                os.symlink(Path(self.data_dir, "MeteoSwiss_gridded_products", s), dst)
+                os.symlink(Path(self.data_dir, "MeteoSwiss_gridded_products", s), dst, target_is_directory=True)
                 logger.debug(f"Symlink created")
                 print(f"Symlink created:\n"
                       f"Source: MeteoSwiss_gridded_products/{s}\n"
