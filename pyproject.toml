@@ -10,7 +10,7 @@ keywords = ["raven", "hydrology"]
 
 [tool.poetry.dependencies]
 python = "^3.8.14"
-sphinx-rtd-theme = "^1.0.0"
+sphinx-rtd-theme = "^1.2.0"
 pylint = "^2.16.2"
 pandas = "^1.5.0"
 geopandas = "^0.12.1"
@@ -19,12 +19,12 @@ numpy = "^1.24.2"
 Shapely = "^1.8.4"
 netCDF4 = "^1.6.2"
 pygeos = "^0.13"
-pyet = "^1.1.0"
+pyet = "^1.2.2"
 rioxarray = "^0.13.3"
 PyYAML = "^6.0"
 hydroeval = "^0.1.0"
 pygments = "^2.14.0"
-sphinx-autodoc-typehints = "^1.20.2"
+sphinx-autodoc-typehints = "^1.22"
 
 [build-system]
 requires = ["poetry-core"]
