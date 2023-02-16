@@ -20,6 +20,7 @@ names:
     HBV_Param_09: BASEFLOW_COEFF_FAST_RES
     HBV_Param_10: BASEFLOW_COEFF_SLOW_RES
     HBV_Param_11: TIME_CONC_MAX_BAS
+    HBV_Param_11b: HBV_Param_11b
     HBV_Param_12: PRECIP_LAPSE_PCALT
     HBV_Param_13: ADIABATIC_LAPSE_TCALT
     HBV_Param_14: SAT_WILT
@@ -99,6 +100,7 @@ params:
     HBV_Param_09: '0.5'
     HBV_Param_10: '0.5'
     HBV_Param_11: '0.5'
+    HBV_Param_11b: '0.5'
     HBV_Param_12: '0.5'
     HBV_Param_13: '0.5'
     HBV_Param_14: '0.5'
