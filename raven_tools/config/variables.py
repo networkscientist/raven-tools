@@ -37,3 +37,38 @@ raven_filetypes = [
     "rvc",
     "rvt"
 ]
+
+# Station coordinates are from https://www.hydrodaten.admin.ch/en/{STATION_ID}.html
+
+catchments = {
+    "Ticino":
+        {"ID": 2020,
+         "lat": 721245,
+         "lon": 117025,
+         },
+    "Broye":
+        {"ID": 2034,
+         "lat": 561660,
+         "lon": 187320
+         },
+    "Thur":
+        {"ID": 2044,
+         "lat": 693510,
+         "lon": 272500
+         },
+    "Massa":
+        {"ID": 2161,
+         "lat": 643700,
+         "lon": 137290
+         },
+    "Weisse Lütschine":
+        {"ID": 2200,
+         "lat": 635310,
+         "lon": 164550
+         },
+    "Dischmabach":
+        {"ID": 2327,
+         "lat": 786220,
+         "lon": 183370
+         }
+}

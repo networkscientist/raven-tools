@@ -34,8 +34,12 @@ for c in catchments:
         print(model_instance.start_year)
         model_instance.create_dirs()
         model_instance.create_symlinks()
+        model_instance.start_year = 1980
+        model_instance.end_year = 1989
+        model_instance.write_rvt()
         for s in suffix:
             model_instance.write_rvx(ostrich_template=True, rvx_type=s)
+            model_instance.write_ost()
 # gr4j_broye.write_rvx(rvx_type="rvi")
 # gr4j_broye.write_rvx(rvx_type="rvh")
 # gr4j_broye.write_rvx(rvx_type="rvp")

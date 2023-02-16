@@ -27,6 +27,7 @@ names:
     HBV_Param_15: 1_PLUS_ALPHA
     HBV_Param_16: MAX_CAP_RISE_RATE
     HBV_Param_17: THICKNESS_TOPSOIL
+    HBV_Param_17b: HBV_Param_17b
     HBV_Param_18: HBV_MELT_FOR_CORR
     HBV_Param_19: GLAC_STORAGE_COEFF
     HBV_Param_20: RAIN_CORRECTION_RFCF
@@ -107,6 +108,7 @@ params:
     HBV_Param_15: '0.5'
     HBV_Param_16: '0.5'
     HBV_Param_17: '0.5'
+    HBV_Param_17b: '0.5'
     HBV_Param_18: '0.5'
     HBV_Param_19: '0.5'
     HBV_Param_20: '0.5'

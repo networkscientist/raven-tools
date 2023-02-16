@@ -13,6 +13,7 @@ logger.debug("Logging from raven_model to console started")
 from raven_tools import config
 from raven_tools.processing import raven_run as rr
 from raven_tools.processing import raven_preprocess as rpe
+from pyproj import Transformer
 
 
 class RavenModel:
@@ -44,6 +45,14 @@ class RavenModel:
             self.conf = config.variables.project_config
         except:
             logger.debug("Error getting project_config file from __init__.py")
+
+        try:
+            self.ctm_info = config.variables.catchments[catchment]['ID']
+            self.gauge_lat, self.gauge_lon = ch1903_to_wgs84(config.variables.catchments[catchment]["lat"],
+                                                             config.variables.catchments[catchment]["lon"])
+        except:
+            logger.exception("Error getting catchments info from __init__.py")
+
         logger.debug("project_config.yaml loaded.")
         logger.debug("Trying to set self.X variables...")
         logger.debug("Setting self.model_type...")
@@ -178,6 +187,17 @@ class RavenModel:
         self._catchment = value
 
     @property
+    def ctm_info(self) -> int:
+        """Returns ctm_info."""
+        assert isinstance(self._ctm_info, int), f"ctm_info should be dict, is type {type(self._ctm_info)} instead."
+        return self._ctm_info
+
+    @ctm_info.setter
+    def ctm_info(self, value: int):
+        assert isinstance(value, int), f"ctm_info should be dict, is type {type(value)} instead."
+        self._ctm_info = value
+
+    @property
     def conf(self):
         """Returns configuration
 
@@ -197,6 +217,30 @@ class RavenModel:
         """
         logger.debug("Setting configuration...")
         self._config = value
+
+    @property
+    def gauge_lat(self) -> float:
+        """Returns gauge_lat."""
+        assert isinstance(self._gauge_lat,
+                          float), f"gauge_lat should be float, is type {type(self._gauge_lat)} instead."
+        return self._gauge_lat
+
+    @gauge_lat.setter
+    def gauge_lat(self, value: float):
+        assert isinstance(value, float), f"gauge_lat should be float, is type {type(value)} instead."
+        self._gauge_lat = value
+
+    @property
+    def gauge_lon(self) -> float:
+        """Returns gauge_lon."""
+        assert isinstance(self._gauge_lon,
+                          float), f"gauge_lon should be float, is type {type(self._gauge_lon)} instead."
+        return self._gauge_lon
+
+    @gauge_lon.setter
+    def gauge_lon(self, value: float):
+        assert isinstance(value, float), f"gauge_lon should be float, is type {type(value)} instead."
+        self._gauge_lon = value
 
     @property
     def attribute_csv(self) -> str:
@@ -348,7 +392,9 @@ class RavenModel:
                       f"Destination: {dst}")
             except FileExistsError:
                 logger.exception("Error creating symlink: File already exists")
-        src = Path(self.data_dir, "Discharge", "BroPay_Q_2034_daily.rvt")
+        discharge_filename = f"CAMELS_CH_obs_based_{self.ctm_info}.txt"
+        src = Path(self.data_dir, "Discharge", discharge_filename)
+        dst = Path(self.model_dir, self.model_sub_dir, "data_obs", discharge_filename)
         logger.debug("Source Path created.")
         logger.debug(f"Symlink src: {src}")
         logger.debug(f"Symlink dst: {dst}")
@@ -422,3 +468,20 @@ class RavenModel:
         rpe.netcdf_to_dataset()
         if merge:
             pass
+
+    def write_rvt(self):
+        rr.write_rvt(start_year=self.start_year,
+                     end_year=self.end_year,
+                     model_dir=self.model_dir,
+                     project_dir=self.root_dir,
+                     catchment=self.catchment,
+                     catchment_id=self.catchment_id,
+                     gauge_lat=self.gauge_lat,
+                     gauge_lon=self.gauge_lon,
+                     model_sub_dir=self.model_sub_dir)
+
+
+def ch1903_to_wgs84(lat_1903, lon_1903):
+    transformer = Transformer.from_crs("EPSG:21781", "EPSG:4326")
+    lat_wgs84, lon_wgs84 = transformer.transform(lat_1903, lon_1903)
+    return lat_wgs84, lon_wgs84

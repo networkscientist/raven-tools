@@ -22,6 +22,9 @@ try:
     data_dir = conf['DataDir']
     project_dir = conf['ProjectDir']
     catchment = conf['Catchment']
+    catchment_id = conf['CatchmentID']
+    gauge_lat = conf['GaugeLat']
+    gauge_lon = conf['GaugeLon']
     model_sub_dir = conf['ModelSubDir']
     grid_weights_file = conf['GridWeights']
 except:
@@ -34,6 +37,10 @@ except:
 
 subsection_header_line: str = "#-----------------------------------------------------------------"
 newline: str = "\n"
+
+
+def get_catchment_info(csv_file):
+    pandas.read_csv(csv_file)
 
 
 def create_header(author=conf['Author'], catchment=catchment, model=model_type):
@@ -113,8 +120,17 @@ def forcing_block(start: int, end: int):
     return forcing_data
 
 
-def write_rvt(start_year: int, end_year: int, model_dir=model_dir, model_type=model_type,
-              project_dir=project_dir, catchment=catchment, model_sub_dir=model_sub_dir, author=conf['Author']):
+def write_rvt(start_year: int,
+              end_year: int,
+              model_dir=model_dir,
+              model_type=model_type,
+              project_dir=project_dir,
+              catchment=catchment,
+              catchment_id=catchment_id,
+              gauge_lat=gauge_lat,
+              gauge_lon=gauge_lon,
+              model_sub_dir=model_sub_dir,
+              author=conf['Author']):
     """Write to Raven .rvt file.
 
     Args:
@@ -130,7 +146,7 @@ def write_rvt(start_year: int, end_year: int, model_dir=model_dir, model_type=mo
 
     """
     file_name: str = f"{catchment}_{model_type}.rvt"
-    file_path: Path = Path(project_dir, model_dir, catchment, model_type, model_sub_dir, file_name)
+    file_path: Path = Path(model_dir, model_sub_dir, file_name)
 
     gauge = [
         ":Gauge PYR2034\n",
@@ -1948,11 +1964,14 @@ def write_rvx(model_dir: str = model_dir,
     logger.debug("Arrived in function write_rvx().")
     assert model_type in config.variables.supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
                                                             f"supported_models."
-    logger.debug(
-        f"Trying to read catchment attribute CSV file {Path(project_dir, data_dir, attribute_csv_dir, attribute_csv_name)}...")
-    csv_file = pandas.read_csv(Path(project_dir, data_dir, attribute_csv_dir, attribute_csv_name), sep=",",
-                               skiprows=[8],
-                               index_col='attribute_names', usecols=[0, 1])
+    try:
+        logger.debug(
+            f"Trying to read catchment attribute CSV file {Path(project_dir, data_dir, attribute_csv_dir, attribute_csv_name)}...")
+        csv_file = pandas.read_csv(Path(project_dir, data_dir, attribute_csv_dir, attribute_csv_name), sep=",",
+                                   skiprows=[8],
+                                   index_col='attribute_names', usecols=[0, 1])
+    except:
+        logger.exception()
     logger.debug("Attribute catchment attribute CSV file read.")
     file_name: str = f"{catchment}_{model_type}.{rvx_type}"
     logger.debug(f".{rvx_type} filename set to {file_name}.")
