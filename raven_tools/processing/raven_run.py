@@ -32,22 +32,25 @@ try:
 except:
     logger.exception("Error getting default_params from config.py")
 
-try:
-
-    header_line = "#########################################################################"
-    file_type = ":FileType          rvt ASCII Raven 3.5"
-    author = f":WrittenBy         {conf['Author']}"
-    creation_date = ":CreationDate      April 2022"
-    description = [
-        "#",
-        "# Emulation of GR4J simulation of Broye",
-        "#------------------------------------------------------------------------"]
-    header = [header_line, file_type, author, creation_date, *description]
-except NameError:
-    print("Probably project_config file could not be found...")
-    pass
 subsection_header_line: str = "#-----------------------------------------------------------------"
 newline: str = "\n"
+
+
+def create_header(author=conf['Author'], catchment=catchment, model=model_type):
+    try:
+        header_line = "#########################################################################"
+        file_type = ":FileType          rvt ASCII Raven 3.5"
+        author_line = f":WrittenBy         {author}"
+        creation_date = ":CreationDate      April 2022"
+        description = [
+            "#",
+            f"# Emulation of {model} simulation of {catchment}",
+            "#------------------------------------------------------------------------"]
+        header = [header_line, file_type, author_line, creation_date, *description]
+        return header
+    except NameError:
+        print("Probably project_config file could not be found...")
+        pass
 
 
 def forcing_block(start: int, end: int):
@@ -111,7 +114,7 @@ def forcing_block(start: int, end: int):
 
 
 def write_rvt(start_year: int, end_year: int, model_dir=model_dir, model_type=model_type,
-              project_dir=project_dir, catchment=catchment, model_sub_dir=model_sub_dir):
+              project_dir=project_dir, catchment=catchment, model_sub_dir=model_sub_dir, author=conf['Author']):
     """Write to Raven .rvt file.
 
     Args:
@@ -142,7 +145,7 @@ def write_rvt(start_year: int, end_year: int, model_dir=model_dir, model_type=mo
         ":RedirectToFile data_obs/BroPay_Q_2034_daily.rvt"
     ]
     with open(file_path, 'w') as ff:
-        ff.writelines(header)
+        ff.writelines(create_header(author, catchment, model_type))
         ff.write(f"# meteorological forcings\n")
         for f in forcing_block(start_year, end_year).values():
             for t in f:
@@ -1923,7 +1926,8 @@ def write_rvx(model_dir: str = model_dir,
               template_type: str = "Raven",
               attribute_csv_name: str = "CH-0057_attributes.csv",
               attribute_csv_dir: str = "Hydromap Attributes",
-              rvx_type: str = "rvi"):
+              rvx_type: str = "rvi",
+              author=conf['Author']):
     """Writes .rvX file(s), either as an Ostrich or Raven template.
     Args:
         model_dir (str): The directory where the model files are stored. Default is "model_dir".
@@ -1978,7 +1982,7 @@ def write_rvx(model_dir: str = model_dir,
 
     logger.debug(f"Trying to write to file {file_path}")
     with open(file_path, 'w') as ff:
-        ff.writelines(f"{line}{newline}" for line in header)
+        ff.writelines(f"{line}{newline}" for line in create_header(author, catchment, model_type))
         logger.debug("Header lines written.")
         ff.write(newline)
         logger.debug("Entering template_sections for-loop...")
