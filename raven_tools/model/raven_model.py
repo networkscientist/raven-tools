@@ -388,7 +388,7 @@ class RavenModel:
     def gauge_short_code(self, value: str):
         assert isinstance(value, str), f"gauge_short_code should be str, is type {type(value)} instead."
         self._gauge_short_code = value
-        
+
     @property
     def station_elevation(self) -> str:
         """Returns station_elevation."""
@@ -505,6 +505,7 @@ class RavenModel:
         rr.write_rvt(start_year=self.start_year,
                      end_year=self.end_year,
                      model_dir=self.model_dir,
+                     model_type=self.model_type,
                      project_dir=self.root_dir,
                      catchment=self.catchment,
                      catchment_id=self.catchment_id,
