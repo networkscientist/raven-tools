@@ -9,7 +9,7 @@ import raven_tools as rt
 # gr4j_broye = rm.RavenModel(model_type="GR4J", catchment="Broye")
 # gr4j_broye.create_dirs()
 suffix = [
-    "rvi", "rvh", "rvp", "rvc", "rvt"
+    "rvi", "rvh", "rvp", "rvc"
 ]
 # gr4j_broye.write_rvh()
 # gr4j_broye.write_rvx()
