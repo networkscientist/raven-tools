@@ -62,7 +62,12 @@ class RavenModel:
         logger.debug("Setting self.catchment...")
         self.catchment = catchment
         logger.debug("Setting self.catchment_id...")
-        self.catchment_id = catchment_id
+        self.catchment_id = config.variables.catchments[self.catchment]['ID']
+        self.gauge_short_code = config.variables.catchments[self.catchment]['short_code']
+        logger.debug(f"Self.catchment_id set to {self.catchment_id}.")
+        logger.debug(f"Self.gauge_short_code set to {self.gauge_short_code}.")
+        self.station_elevation = config.variables.catchments[self.catchment]['station_elevation']
+        logger.debug(f"Self.station_elevation set to {self.station_elevation}.")
         logger.debug("Setting self.attribute_csv_name (file name with catchment attributes...")
         self.attribute_csv = f"{self.catchment_id}_attributes.csv"
         logger.debug("Setting self.model_dir...")
@@ -342,15 +347,15 @@ class RavenModel:
         self._raven_filetypes = value
 
     @property
-    def catchment_id(self) -> str:
+    def catchment_id(self) -> int:
         """Returns catchment_id."""
         assert isinstance(self._catchment_id,
-                          str), f"catchment_id should be str, is type {type(self._catchment_id)} instead."
+                          int), f"catchment_id should be int, is type {type(self._catchment_id)} instead."
         return self._catchment_id
 
     @catchment_id.setter
-    def catchment_id(self, value: str):
-        assert isinstance(value, str), f"catchment_id should be str, is type {type(value)} instead."
+    def catchment_id(self, value: int):
+        assert isinstance(value, int), f"catchment_id should be int, is type {type(value)} instead."
         self._catchment_id = value
 
     def create_dirs(self):
@@ -372,40 +377,67 @@ class RavenModel:
                 print("Directory already exists...")
                 pass
 
-    def create_symlinks(self):
-        logger.debug("Trying to create data symlinks...")
-        src = ["RhiresD_v2.0_swiss.lv95",
-               "SrelD_v2.0_swiss.lv95",
-               "TabsD_v2.0_swiss.lv95",
-               "TmaxD_v2.0_swiss.lv95",
-               "TminD_v2.0_swiss.lv95"]
-        logger.debug("List with source folders created.")
-        for s in src:
-            dst = Path(self.model_dir, self.model_sub_dir, "data_obs", s)
-            logger.debug(f"Symlink src: MeteoSwiss_gridded_products/{s}")
+    @property
+    def gauge_short_code(self) -> str:
+        """Returns gauge_short_code."""
+        assert isinstance(self._gauge_short_code,
+                          str), f"gauge_short_code should be str, is type {type(self._gauge_short_code)} instead."
+        return self._gauge_short_code
+
+    @gauge_short_code.setter
+    def gauge_short_code(self, value: str):
+        assert isinstance(value, str), f"gauge_short_code should be str, is type {type(value)} instead."
+        self._gauge_short_code = value
+        
+    @property
+    def station_elevation(self) -> str:
+        """Returns station_elevation."""
+        assert isinstance(self._station_elevation,
+                          str), f"station_elevation should be str, is type {type(self._station_elevation)} instead."
+        return self._station_elevation
+
+    @station_elevation.setter
+    def station_elevation(self, value: str):
+        assert isinstance(value, str), f"station_elevation should be str, is type {type(value)} instead."
+        self._station_elevation = value
+
+    def create_symlinks(self, forcings: bool = True, discharge: bool = True):
+        logger.debug("Entered function create_symlinks.")
+        if forcings:
+            logger.debug("Trying to create data symlinks...")
+            src = ["RhiresD_v2.0_swiss.lv95",
+                   "SrelD_v2.0_swiss.lv95",
+                   "TabsD_v2.0_swiss.lv95",
+                   "TmaxD_v2.0_swiss.lv95",
+                   "TminD_v2.0_swiss.lv95"]
+            logger.debug("List with source folders created.")
+            for s in src:
+                dst = Path(self.model_dir, self.model_sub_dir, "data_obs", s)
+                logger.debug(f"Symlink src: MeteoSwiss_gridded_products/{s}")
+                logger.debug(f"Symlink dst: {dst}")
+                try:
+                    os.symlink(Path(self.data_dir, "MeteoSwiss_gridded_products", s), dst, target_is_directory=True)
+                    logger.debug(f"Symlink created")
+                    print(f"Symlink created:\n"
+                          f"Source: MeteoSwiss_gridded_products/{s}\n"
+                          f"Destination: {dst}")
+                except FileExistsError:
+                    logger.exception("Error creating symlink: File already exists")
+        if discharge:
+            discharge_filename = f"{self.gauge_short_code}_Q_{self.catchment_id}_daily.rvt"
+            src = Path(self.data_dir, "Discharge", discharge_filename)
+            dst = Path(self.model_dir, self.model_sub_dir, "data_obs", discharge_filename)
+            logger.debug("Source Path created.")
+            logger.debug(f"Symlink src: {src}")
             logger.debug(f"Symlink dst: {dst}")
             try:
-                os.symlink(Path(self.data_dir, "MeteoSwiss_gridded_products", s), dst, target_is_directory=True)
+                os.symlink(src, dst)
                 logger.debug(f"Symlink created")
                 print(f"Symlink created:\n"
-                      f"Source: MeteoSwiss_gridded_products/{s}\n"
+                      f"Source: {src}\n"
                       f"Destination: {dst}")
             except FileExistsError:
                 logger.exception("Error creating symlink: File already exists")
-        discharge_filename = f"CAMELS_CH_obs_based_{self.ctm_info}.txt"
-        src = Path(self.data_dir, "Discharge", discharge_filename)
-        dst = Path(self.model_dir, self.model_sub_dir, "data_obs", discharge_filename)
-        logger.debug("Source Path created.")
-        logger.debug(f"Symlink src: {src}")
-        logger.debug(f"Symlink dst: {dst}")
-        try:
-            os.symlink(src, dst)
-            logger.debug(f"Symlink created")
-            print(f"Symlink created:\n"
-                  f"Source: {src}\n"
-                  f"Destination: {dst}")
-        except FileExistsError:
-            logger.exception("Error creating symlink: File already exists")
 
     def write_rvx(self, ostrich_template: bool = False, raven_template: bool = True, rvx_type: str = "rvi"):
         """Write .rvX file for Raven and/or Ostrich
@@ -478,7 +510,14 @@ class RavenModel:
                      catchment_id=self.catchment_id,
                      gauge_lat=self.gauge_lat,
                      gauge_lon=self.gauge_lon,
-                     model_sub_dir=self.model_sub_dir)
+                     model_sub_dir=self.model_sub_dir,
+                     gauge_short_code=self.gauge_short_code,
+                     station_elevation=self.station_elevation)
+
+    def camels_to_rvt(self):
+        rpe.camels_to_rvt(data_dir=self.data_dir, catchment_id=self.catchment_id,
+                          gauge_short_code=self.gauge_short_code, start_date=f"{self.start_year}-01-01",
+                          end_date=f"{self.end_year}-01-01")
 
 
 def ch1903_to_wgs84(lat_1903, lon_1903):

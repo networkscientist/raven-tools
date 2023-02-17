@@ -11,8 +11,10 @@ Functions:
 """
 
 import glob
+import logging
 import shutil
 import subprocess
+from datetime import datetime
 from pathlib import Path
 
 import geopandas as gpd
@@ -24,6 +26,11 @@ from geopandas import GeoDataFrame
 from netCDF4 import Dataset
 from numpy import exp
 from shapely.geometry import Polygon, mapping
+
+from raven_tools import config
+
+logger = logging.getLogger(__name__)
+logger.debug("Entered raven_preprocess.py.")
 
 
 def create_bbox_geometry(extent_shape_path: Path):
@@ -432,6 +439,84 @@ def copy_rel_area_from_union_to_grid(uni: GeoDataFrame, grd: GeoDataFrame) -> Ge
         ind = grd[grd['cell_id'] == cell_id_old_value].index.tolist()
         grd.at[ind[0], "area_rel"] = area_rel_old_value
     return grd
+
+
+def camels_to_rvt(data_dir, catchment_id, gauge_short_code, start_date="2000-01-01", end_date="2000-12-31"):
+    """Reads CAMELS CSV discharge file and creates RAVEN .rvt file.
+
+    Reads a daily CAMELS discharge CSV file, with the file path read from a global parameter and converts it to a daily
+    discharge .rvt file compatible with RAVEN. It takes start and end date as arguments to only use a selected date
+    range.
+
+    :param str start_date: Start date as YYYY-MM-DD formatted string
+    :param str end_date: End date as YYYY-MM-DD formatted string
+
+    """
+    logger.debug("Entered function camels_to_rvt.")
+    # Read in the discharge data from .txt file
+    camels_filename = f"CAMELS_CH_obs_based_{catchment_id}.txt"
+    logger.debug(f"camels_filename = {camels_filename}")
+    df_meteo: pd.DataFrame = pd.read_csv(Path(data_dir, "Discharge", camels_filename), sep=";")
+    # Rename the column for easier keyboard typing
+    df_meteo = df_meteo.rename(columns=config.variables.camels_column_names)
+
+    # Convert time columns to datetime format
+    df_meteo['date'] = pd.to_datetime(df_meteo['date'], format="%Y-%m-%d")
+    logger.debug("Converted date column to datetime format")
+    # Set the start time
+    start_time = "0:00:00"
+    # Subset according to start and end date
+    df_meteo = subset_dataframe_time(df_meteo, start_date, end_date)
+    # Uncomment the following line, if you want to get daily means. Otherwise, RAVEN will do it for you
+    # df_meteo = df_meteo.resample('d', on='time').mean().dropna(how="all")
+    # Invoke export_to_rvt_file to export
+    out_filename = f"{gauge_short_code}_Q_{catchment_id}_daily.rvt"
+    out_path = Path(data_dir, "Discharge", out_filename)
+    export_to_rvt_file(start_date, start_time, df_meteo, out_path)
+
+
+def subset_dataframe_time(dataframe: pd.DataFrame, start_date: str, end_date: str) -> pd.DataFrame:
+    """Subsetting a dataframe using a time interval.
+
+    :param DataFrame dataframe: Original DataFrame to subset.
+    :param str start_date: Start date (inclusive)
+    :param str end_date: End date (inclusive)
+    :return subset_dataframe: Subset DataFrame
+    :rtype subset_dataframe: DataFrame
+
+    """
+    # Date to string conversion
+    logger.debug("Entered function subset_dataframe_time.")
+    start_date = datetime.strptime(start_date, "%Y-%m-%d")
+    end_date = datetime.strptime(end_date, "%Y-%m-%d")
+    logger.debug("Did strptime on start_date and end_date.")
+    # Create data interval mask. Offsetting by 1 day to include end date.
+    # TODO: Is this offsetting still necessary, since changing to the CAMEL files?
+    mask = dataframe['date'].between(start_date, end_date + pd.DateOffset(days=1), inclusive="left")
+    logger.debug("Created data interval mask.")
+    # Apply the mask
+    subset_dataframe = dataframe[mask]
+    logger.debug("Applied data interval mask on dataframe -> return result.")
+    return subset_dataframe
+
+
+def export_to_rvt_file(start_date, start_time, df, out_path):
+    """Writes RVT file from DataFrame
+
+    :param str start_date: Start date
+    :param str start_time: Time step in days
+    :param DataFrame df: DataFrame with values to export
+
+    """
+    with open(out_path, 'w') as f:
+        # print(rvt_filename)
+        f.write(f":ObservationData\tHYDROGRAPH\t1\tm3/s\n{start_date}\t{start_time}\t1\t{len(df)}\n")
+        # For gauged precipitation data
+        df_as_string = df.to_string(justify="right", header=False, index=False,
+                                    columns=['discharge'])
+        f.write(df_as_string)
+        # f.write(df_as_string)
+        f.write("\n:EndObservationData")
 
 
 if __name__ == '__main__':

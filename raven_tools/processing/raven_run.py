@@ -9,11 +9,14 @@ import pandas
 
 from raven_tools import config
 
-logger = logging.getLogger(__name__)
-logging.debug("TEEEST")
+try:
+    logger = logging.getLogger(__name__)
+    logger.debug("TEEEST")
 
-logger.debug(f"CWD: {os.getcwd()}")
-logger.debug('Trying to read project_config.yaml file')
+    logger.debug(f"CWD: {os.getcwd()}")
+    logger.debug('Trying to read project_config.yaml file')
+except:
+    pass
 
 try:
     conf = config.variables.project_config
@@ -130,7 +133,9 @@ def write_rvt(start_year: int,
               gauge_lat=gauge_lat,
               gauge_lon=gauge_lon,
               model_sub_dir=model_sub_dir,
-              author=conf['Author']):
+              author=conf['Author'],
+              gauge_short_code="DefAult",
+              station_elevation="100"):
     """Write to Raven .rvt file.
 
     Args:
@@ -145,14 +150,17 @@ def write_rvt(start_year: int,
         model_type: Name of the .rvt file to be written
 
     """
+    logger.debug("Entered write_rvt function.")
     file_name: str = f"{catchment}_{model_type}.rvt"
     file_path: Path = Path(model_dir, model_sub_dir, file_name)
+    logger.debug(f"file_name = {file_name}")
+    logger.debug(f"file_path = {file_path}")
 
     gauge = [
-        ":Gauge PYR2034\n",
-        "  :Latitude    46.835913\n",
-        "  :Longitude 6.9360708\n",
-        "  :Elevation  441.0\n",
+        f":Gauge {gauge_short_code}\n",
+        f"  :Latitude    {gauge_lat}\n",
+        f"  :Longitude {gauge_lon}\n",
+        f"  :Elevation  {station_elevation}\n",
         ":EndGauge\n"
     ]
 
