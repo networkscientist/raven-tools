@@ -150,8 +150,8 @@ def write_rvt(start_year: int,
 
     gauge = [
         ":Gauge PYR2034\n",
-        "  :Latitude    46.835913\n",
-        "  :Longitude 6.9360708\n",
+        f"  :Latitude    {gauge_lat}\n",
+        f"  :Longitude {gauge_lon}\n",
         "  :Elevation  441.0\n",
         ":EndGauge\n"
     ]

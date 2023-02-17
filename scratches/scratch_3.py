@@ -33,10 +33,11 @@ for c in catchments:
         model_instance = rt.model.raven_model.RavenModel(model_type=m, catchment=c)
         print(model_instance.start_year)
         model_instance.create_dirs()
-        model_instance.create_symlinks()
         model_instance.start_year = 1980
         model_instance.end_year = 1989
         model_instance.write_rvt()
+        model_instance.camels_to_rvt()
+        model_instance.create_symlinks()
         for s in suffix:
             model_instance.write_rvx(ostrich_template=True, rvx_type=s)
             model_instance.write_ost()
