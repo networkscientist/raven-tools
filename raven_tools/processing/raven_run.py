@@ -133,7 +133,9 @@ def write_rvt(start_year: int,
               gauge_lat=gauge_lat,
               gauge_lon=gauge_lon,
               model_sub_dir=model_sub_dir,
-              author=conf['Author']):
+              author=conf['Author'],
+              gauge_short_code="DefAult",
+              station_elevation="100"):
     """Write to Raven .rvt file.
 
     Args:
@@ -155,10 +157,10 @@ def write_rvt(start_year: int,
     logger.debug(f"file_path = {file_path}")
 
     gauge = [
-        ":Gauge PYR2034\n",
+        f":Gauge {gauge_short_code}\n",
         f"  :Latitude    {gauge_lat}\n",
         f"  :Longitude {gauge_lon}\n",
-        "  :Elevation  441.0\n",
+        f"  :Elevation  {station_elevation}\n",
         ":EndGauge\n"
     ]
 

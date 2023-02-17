@@ -64,6 +64,10 @@ class RavenModel:
         logger.debug("Setting self.catchment_id...")
         self.catchment_id = config.variables.catchments[self.catchment]['ID']
         self.gauge_short_code = config.variables.catchments[self.catchment]['short_code']
+        logger.debug(f"Self.catchment_id set to {self.catchment_id}.")
+        logger.debug(f"Self.gauge_short_code set to {self.gauge_short_code}.")
+        self.station_elevation = config.variables.catchments[self.catchment]['station_elevation']
+        logger.debug(f"Self.station_elevation set to {self.station_elevation}.")
         logger.debug("Setting self.attribute_csv_name (file name with catchment attributes...")
         self.attribute_csv = f"{self.catchment_id}_attributes.csv"
         logger.debug("Setting self.model_dir...")
@@ -384,6 +388,18 @@ class RavenModel:
     def gauge_short_code(self, value: str):
         assert isinstance(value, str), f"gauge_short_code should be str, is type {type(value)} instead."
         self._gauge_short_code = value
+        
+    @property
+    def station_elevation(self) -> str:
+        """Returns station_elevation."""
+        assert isinstance(self._station_elevation,
+                          str), f"station_elevation should be str, is type {type(self._station_elevation)} instead."
+        return self._station_elevation
+
+    @station_elevation.setter
+    def station_elevation(self, value: str):
+        assert isinstance(value, str), f"station_elevation should be str, is type {type(value)} instead."
+        self._station_elevation = value
 
     def create_symlinks(self, forcings: bool = True, discharge: bool = True):
         logger.debug("Entered function create_symlinks.")
@@ -494,7 +510,9 @@ class RavenModel:
                      catchment_id=self.catchment_id,
                      gauge_lat=self.gauge_lat,
                      gauge_lon=self.gauge_lon,
-                     model_sub_dir=self.model_sub_dir)
+                     model_sub_dir=self.model_sub_dir,
+                     gauge_short_code=self.gauge_short_code,
+                     station_elevation=self.station_elevation)
 
     def camels_to_rvt(self):
         rpe.camels_to_rvt(data_dir=self.data_dir, catchment_id=self.catchment_id,

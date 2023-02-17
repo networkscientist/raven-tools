@@ -45,37 +45,43 @@ catchments = {
         {"ID": 2020,
          "lat": 721245,
          "lon": 117025,
-         "short_code": "TicBel"
+         "short_code": "TicBel",
+         "station_elevation": "220"
          },
     "Broye":
         {"ID": 2034,
          "lat": 561660,
          "lon": 187320,
-         "short_code": "BroPay"
+         "short_code": "BroPay",
+         "station_elevation": "441"
          },
     "Thur":
         {"ID": 2044,
          "lat": 693510,
          "lon": 272500,
-         "short_code": "ThuAnd"
+         "short_code": "ThuAnd",
+         "station_elevation": "356"
          },
     "Massa":
         {"ID": 2161,
          "lat": 643700,
          "lon": 137290,
-         "short_code": "MasBla"
+         "short_code": "MasBla",
+         "station_elevation": "1446"
          },
     "Weisse Lütschine":
         {"ID": 2200,
          "lat": 635310,
          "lon": 164550,
-         "short_code": "WLuZwe"
+         "short_code": "WLuZwe",
+         "station_elevation": "650"
          },
     "Dischmabach":
         {"ID": 2327,
          "lat": 786220,
          "lon": 183370,
-         "short_code": "DisDav"
+         "short_code": "DisDav",
+         "station_elevation": "1668"
          }
 }
 
