@@ -71,18 +71,19 @@ def create_bounding_shape(extent_shape_file_path: Path, bb_file_path: Path):
             Bounding box as a GeoDataFrame.
         ext_gdf : GeoDataFrame
             The GeoDataFrame with the data from the extent shape file
-
+        bb_file_path: str
+            Path to the bounding box shape file
     """
 
     # Create the bounding box Polygon
     bbox_poly, ext_gdf = create_bbox_geometry(extent_shape_file_path)
     # Create the bounding shape in a GeoDataFrame
     bbox_gdf: GeoDataFrame = gpd.GeoDataFrame(pd.DataFrame(['p1'], columns=['geom']),
-                                              crs={'init': 'epsg:21781'},
+                                              crs={'init': 'epsg:4326'},
                                               geometry=[bbox_poly])
     # This writes the bounding box as a shape file
     bbox_gdf.to_file(str(bb_file_path))
-    return bbox_gdf, ext_gdf
+    return bbox_gdf, ext_gdf, bb_file_path
 
 
 def netcdf_to_dataset(netcdf_file_path: Path) -> xr.Dataset:
@@ -112,7 +113,7 @@ def netcdf_to_dataset(netcdf_file_path: Path) -> xr.Dataset:
     return xds
 
 
-def dataset_to_netcdf(xds_to_write: xr.Dataset, netcdf_file_path: Path):
+def dataset_to_netcdf(xds_to_write: xr.Dataset, netcdf_file_path: Path, model_type: str, catchment: str):
     """ Writes xarray dataset to netCDF
 
     Args:
@@ -125,10 +126,12 @@ def dataset_to_netcdf(xds_to_write: xr.Dataset, netcdf_file_path: Path):
 
     # Write the clipped netCDF file
     xds_to_write.to_netcdf(
-        f"{netcdf_file_path.parent.parent}/out/{netcdf_file_path.stem}_clipped{netcdf_file_path.suffix}", "w")
+        f"{netcdf_file_path.parent.parent}/out/{netcdf_file_path.stem}_{model_type}_{catchment}_clipped{netcdf_file_path.suffix}",
+        "w")
 
 
-def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, ext_gdf: GeoDataFrame) -> xr.Dataset:
+def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, ext_gdf: GeoDataFrame, model_type: str,
+                   catchment: str) -> xr.Dataset:
     """Clips a netCDF file according to a bounding box.
 
     For one netCDF file in a directory, clips it according to a bounding box shape file.
@@ -152,11 +155,12 @@ def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, ext_gdf: GeoDat
     # Clip the xarray Dataset according to the bounding box GeoDataFrame
     xds_clipped = xds.rio.clip(bbox_gdf.geometry.apply(mapping), ext_gdf.crs)
     # Saves the clipped file as shape file
-    dataset_to_netcdf(xds_clipped, netcdf_file_path)
+    dataset_to_netcdf(xds_clipped, netcdf_file_path, model_type=model_type, catchment=catchment)
     return xds_clipped
 
 
-def netcdf_clipper_multi(netcdf_dir_path: Path, bbox_file_path: Path, bbox_gdf: GeoDataFrame):
+def netcdf_clipper_multi(netcdf_dir_path: Path, model_type: str,
+                         catchment: str, data_dir):
     """ Clips multiple netCDF files in a directory
 
     Args:
@@ -168,9 +172,12 @@ def netcdf_clipper_multi(netcdf_dir_path: Path, bbox_file_path: Path, bbox_gdf: 
             Bounding box GeoDataFrame created with create_bounding_shape()
 
     """
-
+    bbox_gdf, ext_gdf, bbox_file_path = create_bounding_shape(
+        extent_shape_file_path=Path(data_dir, "Catchment",
+                                    f"{config.variables.catchments[catchment]['catchment_id']}.shp"),
+        bb_file_path=Path(data_dir, "Catchment", f"{catchment}_bbox.shp"))
     for f in glob.glob(f"{netcdf_dir_path}/original_files/*.nc"):
-        netcdf_clipper(Path(f), bbox_file_path, bbox_gdf)
+        netcdf_clipper(Path(f), bbox_file_path, bbox_gdf, model_type=model_type, catchment=catchment)
 
 
 def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):

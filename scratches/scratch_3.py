@@ -1,5 +1,6 @@
 # import raven_model as rm
 # import model.raven_model
+import config.variables
 import raven_tools as rt
 
 # import raven_tools.model as rm
@@ -38,6 +39,8 @@ for c in catchments:
         model_instance.write_rvt()
         model_instance.camels_to_rvt()
         model_instance.create_symlinks()
+        for n in config.variables.forcings_dirs:
+            model_instance.create_netcdf(forcing_dir=n)
         for s in suffix:
             model_instance.write_rvx(ostrich_template=True, rvx_type=s)
             model_instance.write_ost()

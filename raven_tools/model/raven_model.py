@@ -492,12 +492,12 @@ class RavenModel:
                          ost_raven=ost_raven)
         logger.debug(f"ostIn.txt for Raven created by rr.write_rvx function")
 
-    def create_netcdf(self, merge=True):
+    def create_netcdf(self, forcing_dir, merge=True):
         """Create the netCDF files for the chosen catchment
 
         """
-        rpe.netcdf_clipper_multi()
-        rpe.netcdf_to_dataset()
+        rpe.netcdf_clipper_multi(netcdf_dir_path=(self.data_dir, "MeteoSwiss_gridded_products", forcing_dir),
+                                 model_type=self.model_type, catchment=self.catchment, data_dir=self.data_dir)
         if merge:
             pass
 
