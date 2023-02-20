@@ -496,8 +496,13 @@ class RavenModel:
         """Create the netCDF files for the chosen catchment
 
         """
-        rpe.netcdf_clipper_multi(netcdf_dir_path=(self.data_dir, "MeteoSwiss_gridded_products", forcing_dir),
-                                 model_type=self.model_type, catchment=self.catchment, data_dir=self.data_dir)
+        try:
+            netcdf_dir_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_dir)
+            logger.debug(f"netcdf_dir_path = {netcdf_dir_path}")
+            rpe.netcdf_clipper_multi(netcdf_dir_path=netcdf_dir_path,
+                                     catchment=self.catchment, data_dir=self.data_dir)
+        except:
+            logger.exception(f"Error creating netCDF file {netcdf_dir_path}")
         if merge:
             pass
 

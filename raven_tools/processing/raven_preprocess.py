@@ -29,6 +29,9 @@ from shapely.geometry import Polygon, mapping
 
 from raven_tools import config
 
+# from functools import partial
+# from itertools import repeat
+
 logger = logging.getLogger(__name__)
 logger.debug("Entered raven_preprocess.py.")
 
@@ -108,12 +111,19 @@ def netcdf_to_dataset(netcdf_file_path: Path) -> xr.Dataset:
     xds.rio.write_crs("EPSG:2056", inplace=True)
     # delete the attribute 'grid_mapping' to prevent an error
     vars_list = list(xds.data_vars)
-    for var in vars_list:
-        del xds[var].attrs['grid_mapping']
+    try:
+        for var in vars_list:
+            del xds[var].attrs['grid_mapping']
+    except KeyError:
+        logger.exception(f"KeyError {xds}")
     return xds
 
 
-def dataset_to_netcdf(xds_to_write: xr.Dataset, netcdf_file_path: Path, model_type: str, catchment: str):
+def del_attr(xds, var):
+    del xds[var].attrs['grid_mapping']
+
+
+def dataset_to_netcdf(xds_to_write: xr.Dataset, netcdf_file_path: Path, catchment: str):
     """ Writes xarray dataset to netCDF
 
     Args:
@@ -126,11 +136,11 @@ def dataset_to_netcdf(xds_to_write: xr.Dataset, netcdf_file_path: Path, model_ty
 
     # Write the clipped netCDF file
     xds_to_write.to_netcdf(
-        f"{netcdf_file_path.parent.parent}/out/{netcdf_file_path.stem}_{model_type}_{catchment}_clipped{netcdf_file_path.suffix}",
+        f"{netcdf_file_path.parent.parent}/out/{netcdf_file_path.stem}_{catchment}_clipped{netcdf_file_path.suffix}",
         "w")
 
 
-def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, ext_gdf: GeoDataFrame, model_type: str,
+def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, ext_gdf: GeoDataFrame,
                    catchment: str) -> xr.Dataset:
     """Clips a netCDF file according to a bounding box.
 
@@ -155,11 +165,15 @@ def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, ext_gdf: GeoDat
     # Clip the xarray Dataset according to the bounding box GeoDataFrame
     xds_clipped = xds.rio.clip(bbox_gdf.geometry.apply(mapping), ext_gdf.crs)
     # Saves the clipped file as shape file
-    dataset_to_netcdf(xds_clipped, netcdf_file_path, model_type=model_type, catchment=catchment)
+    try:
+        dataset_to_netcdf(xds_clipped, netcdf_file_path, catchment=catchment)
+        logger.debug(f"File {netcdf_file_path} successfully clipped.")
+    except:
+        logger.exception(f"Error clipping file: {netcdf_file_path}")
     return xds_clipped
 
 
-def netcdf_clipper_multi(netcdf_dir_path: Path, model_type: str,
+def netcdf_clipper_multi(netcdf_dir_path: Path,
                          catchment: str, data_dir):
     """ Clips multiple netCDF files in a directory
 
@@ -176,8 +190,11 @@ def netcdf_clipper_multi(netcdf_dir_path: Path, model_type: str,
         extent_shape_file_path=Path(data_dir, "Catchment",
                                     f"{config.variables.catchments[catchment]['catchment_id']}.shp"),
         bb_file_path=Path(data_dir, "Catchment", f"{catchment}_bbox.shp"))
+    file_list = glob.glob(f"{netcdf_dir_path}/original_files/*.nc")
+    # with Pool() as pool:
+    #     pool.map(partial(netcdf_clipper,bbox_file_path=bbox_file_path,bbox_gdf=bbox_gdf,catchment=catchment), file_list)
     for f in glob.glob(f"{netcdf_dir_path}/original_files/*.nc"):
-        netcdf_clipper(Path(f), bbox_file_path, bbox_gdf, model_type=model_type, catchment=catchment)
+        netcdf_clipper(Path(f), bbox_file_path, bbox_gdf, catchment=catchment)
 
 
 def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
