@@ -1,14 +1,15 @@
 #!/bin/bash
 #### Script that merges netCDF files of different years into 1 file.
 FORCING_DIR=$3
-RAIN_DIR="${FORCING_DIR}RhiresD_v2.0_swiss.lv95/"
+CATCHMENT=$4
+RAIN_DIR="${FORCING_DIR}/RhiresD_v2.0_swiss.lv95/"
 RAIN_FILE="RhiresD_ch01h.swiss.lv95_"
 T_MEAN_FILE="TabsD_ch01r.swiss.lv95_"
 T_MAX_FILE="TmaxD_ch01r.swiss.lv95_"
 T_MIN_FILE="TminD_ch01r.swiss.lv95_"
-T_MEAN_DIR="${FORCING_DIR}TabsD_v2.0_swiss.lv95/"
-T_MAX_DIR="${FORCING_DIR}TmaxD_v2.0_swiss.lv95/"
-T_MIN_DIR="${FORCING_DIR}TminD_v2.0_swiss.lv95/"
+T_MEAN_DIR="${FORCING_DIR}/TabsD_v2.0_swiss.lv95/"
+T_MAX_DIR="${FORCING_DIR}/TmaxD_v2.0_swiss.lv95/"
+T_MIN_DIR="${FORCING_DIR}/TminD_v2.0_swiss.lv95/"
 
 DIRS=($RAIN_DIR $T_MEAN_DIR $T_MAX_DIR $T_MIN_DIR)
 FILES=($RAIN_FILE $T_MEAN_FILE $T_MAX_FILE $T_MIN_FILE)
@@ -53,11 +54,11 @@ function merge_netcdf(){
       # Appends the year to the DATE_RANGE array
       DATE_RANGE+=("$d")
       # Appends created filename to the input file paths array IN_PATHS
-      IN_PATHS+=("${i}out/${FILES[$COUNTER]}${d}01010000_${d}12310000_clipped.nc")
+      IN_PATHS+=("${i}out/${FILES[$COUNTER]}${d}01010000_${d}12310000_${CATCHMENT}_clipped.nc")
     done
     echo ${FILES[$COUNTER]}
     # uses the cdo command and expands the IN_PATHS to use every value as arguments
-    cdo -mergetime "${IN_PATHS[@]}" "${i}merged/${FILES[$COUNTER]}${DATE_RANGE[0]}01010000_${DATE_RANGE[-1]}12310000_clipped.nc"
+    cdo -mergetime "${IN_PATHS[@]}" "${i}merged/${FILES[$COUNTER]}${DATE_RANGE[0]}01010000_${DATE_RANGE[-1]}12310000_${CATCHMENT}_clipped.nc"
     ((COUNTER=COUNTER+1))
     unset DATE_RANGE
     unset IN_PATHS

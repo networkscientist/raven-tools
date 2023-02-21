@@ -34,16 +34,17 @@ for c in catchments:
         model_instance = rt.model.raven_model.RavenModel(model_type=m, catchment=c)
         print(model_instance.start_year)
         model_instance.create_dirs()
-        model_instance.start_year = 1980
+        model_instance.start_year = 1982
         model_instance.end_year = 1989
         model_instance.write_rvt()
         model_instance.camels_to_rvt()
         model_instance.create_symlinks()
         for n in config.variables.forcings_dirs:
-            model_instance.create_netcdf(forcing_dir=n)
+            model_instance.create_netcdf(forcing_dir=n, clip=False, merge=False)
         for s in suffix:
             model_instance.write_rvx(ostrich_template=True, rvx_type=s)
             model_instance.write_ost()
+    model_instance.create_netcdf(clip=False, merge=True)
 # gr4j_broye.write_rvx(rvx_type="rvi")
 # gr4j_broye.write_rvx(rvx_type="rvh")
 # gr4j_broye.write_rvx(rvx_type="rvp")

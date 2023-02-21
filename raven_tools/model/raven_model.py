@@ -492,19 +492,21 @@ class RavenModel:
                          ost_raven=ost_raven)
         logger.debug(f"ostIn.txt for Raven created by rr.write_rvx function")
 
-    def create_netcdf(self, forcing_dir, merge=True):
+    def create_netcdf(self, forcing_dir="TabsD_v2.0_swiss.lv95", clip=True, merge=True):
         """Create the netCDF files for the chosen catchment
 
         """
-        try:
-            netcdf_dir_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_dir)
-            logger.debug(f"netcdf_dir_path = {netcdf_dir_path}")
-            rpe.netcdf_clipper_multi(netcdf_dir_path=netcdf_dir_path,
-                                     catchment=self.catchment, data_dir=self.data_dir)
-        except:
-            logger.exception(f"Error creating netCDF file {netcdf_dir_path}")
+        netcdf_dir_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_dir)
+        if clip:
+            try:
+                logger.debug(f"netcdf_dir_path = {netcdf_dir_path}")
+                rpe.netcdf_clipper_multi(netcdf_dir_path=netcdf_dir_path,
+                                         catchment=self.catchment, data_dir=self.data_dir)
+            except:
+                logger.exception(f"Error creating netCDF file {netcdf_dir_path}")
         if merge:
-            pass
+            rpe.nc_merge(start_year=self.start_year, end_year=self.end_year,
+                         forcing_dir=Path(self.data_dir, "MeteoSwiss_gridded_products"), catchment=self.catchment)
 
     def write_rvt(self):
         rr.write_rvt(start_year=self.start_year,

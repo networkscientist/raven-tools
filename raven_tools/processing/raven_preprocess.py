@@ -136,7 +136,7 @@ def dataset_to_netcdf(xds_to_write: xr.Dataset, netcdf_file_path: Path, catchmen
 
     # Write the clipped netCDF file
     xds_to_write.to_netcdf(
-        f"{netcdf_file_path.parent.parent}/out/{netcdf_file_path.stem}_{catchment}_clipped{netcdf_file_path.suffix}",
+        f"{netcdf_file_path.parent.parent}/out/{catchment}/{netcdf_file_path.stem}_{catchment}_clipped{netcdf_file_path.suffix}",
         "w")
 
 
@@ -244,7 +244,7 @@ def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
     cdf_dataset_out.close()
 
 
-def nc_merge(start_year: int, end_year: int, forcing_dir: str):
+def nc_merge(start_year: int, end_year: int, forcing_dir: Path, catchment: str):
     """
 
     Args:
@@ -256,7 +256,7 @@ def nc_merge(start_year: int, end_year: int, forcing_dir: str):
             Root directory where forcing files are located
 
     """
-    subprocess.call(['raven_tools/nc_combine.sh', str(start_year), str(end_year), forcing_dir])
+    subprocess.call(['raven_tools/nc_combine.sh', str(start_year), str(end_year), str(forcing_dir), catchment])
 
 
 def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, export_shp: bool = True):
