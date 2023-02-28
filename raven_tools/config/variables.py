@@ -73,7 +73,7 @@ catchments = {
          "station_elevation": "1446",
          "catchment_id": "CH-0105"
          },
-    "Weisse Lütschine":
+    "Weisse_Luetschine":
         {"ID": 2200,
          "lat": 635310,
          "lon": 164550,
@@ -102,4 +102,12 @@ forcings_dirs = [
     "TabsD_v2.0_swiss.lv95",
     "TmaxD_v2.0_swiss.lv95",
     "TminD_v2.0_swiss.lv95"
+]
+
+forcing_netcdf_names = [
+    "RhiresD",
+    "SrelD",
+    "TabsD",
+    "TmaxD",
+    "TminD"
 ]

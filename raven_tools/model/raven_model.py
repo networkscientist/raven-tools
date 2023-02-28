@@ -4,6 +4,7 @@ Work with a Raven class.
 
 import logging
 import os
+import re
 from pathlib import Path
 
 # import raven_tools as rt
@@ -32,6 +33,7 @@ class RavenModel:
             model_type (str): Name of model_type (GR4J, HYMOD, HMETS, HBV or MOHYSE)
             catchment (str): Name of catchment
         """
+        self.bbox_filepath = Path(os.getcwd())
         logger.debug(f"Starting __init__ of {__name__}...")
         assert isinstance(model_type, str), f"model_type expected a string, got {type(model_type)} instead"
         assert isinstance(catchment, str), f"catchment expected a string, got {type(catchment)} instead"
@@ -401,6 +403,18 @@ class RavenModel:
         assert isinstance(value, str), f"station_elevation should be str, is type {type(value)} instead."
         self._station_elevation = value
 
+    @property
+    def bbox_filepath(self) -> Path:
+        """Returns bbox_filepath."""
+        assert isinstance(self._bbox_filepath,
+                          Path), f"bbox_filepath should be Path, is type {type(self._bbox_filepath)} instead."
+        return self._bbox_filepath
+
+    @bbox_filepath.setter
+    def bbox_filepath(self, value: Path):
+        assert isinstance(value, Path), f"bbox_filepath should be Path, is type {type(value)} instead."
+        self._bbox_filepath = value
+
     def create_symlinks(self, forcings: bool = True, discharge: bool = True):
         logger.debug("Entered function create_symlinks.")
         if forcings:
@@ -526,6 +540,21 @@ class RavenModel:
         rpe.camels_to_rvt(data_dir=self.data_dir, catchment_id=self.catchment_id,
                           gauge_short_code=self.gauge_short_code, start_date=f"{self.start_year}-01-01",
                           end_date=f"{self.end_year}-01-01")
+
+    def create_grid_weights(self, forcing_name):
+        if forcing_name == "RhiresD_v2.0_swiss.lv95":
+            forcing_suffix = "ch01h.swiss.lv95"
+        else:
+            forcing_suffix = "ch01r.swiss.lv95"
+        forcing_name_root = re.findall("[A-Za-z]+", forcing_name)[0]
+        netcdf_file_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "merged",
+                                f"{forcing_name_root}_{forcing_suffix}_{self.start_year}01010000_{self.end_year}12310000_{self.catchment}_clipped.nc")
+        out_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "out",
+                        f"grid_weights_{self.catchment}")
+        grid = rpe.create_grid(netcdf_filepath=netcdf_file_path, bounding_box_filename=self.bbox_filepath,
+                               out_path=out_path,
+                               forcing_name=forcing_name, start_year=self.start_year)
+        rpe.write_weights_to_file(grd=grid, grid_dir_path=out_path, catchment=self.catchment)
 
 
 def ch1903_to_wgs84(lat_1903, lon_1903):

@@ -12,9 +12,13 @@ Functions:
 
 import glob
 import logging
+import os
+import re
 import shutil
 import subprocess
+# import datetime
 from datetime import datetime
+from datetime import timedelta
 from pathlib import Path
 
 import geopandas as gpd
@@ -133,11 +137,14 @@ def dataset_to_netcdf(xds_to_write: xr.Dataset, netcdf_file_path: Path, catchmen
             netCDF file path to write to.
 
     """
-
+    try:
+        os.mkdir(f"{netcdf_file_path.parent.parent}/out/{catchment}")
+    except FileExistsError:
+        pass
     # Write the clipped netCDF file
     xds_to_write.to_netcdf(
         f"{netcdf_file_path.parent.parent}/out/{catchment}/{netcdf_file_path.stem}_{catchment}_clipped{netcdf_file_path.suffix}",
-        "w")
+        mode="w")
 
 
 def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, ext_gdf: GeoDataFrame,
@@ -256,10 +263,13 @@ def nc_merge(start_year: int, end_year: int, forcing_dir: Path, catchment: str):
             Root directory where forcing files are located
 
     """
-    subprocess.call(['raven_tools/nc_combine.sh', str(start_year), str(end_year), str(forcing_dir), catchment])
+    logger.debug("Trying to call nc_combine.sh...")
+    rcode = subprocess.call(['raven_tools/nc_combine.sh', str(start_year), str(end_year), str(forcing_dir), catchment])
+    logger.debug(f"nc_combine.sh executed with return code: {rcode}")
 
 
-def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, export_shp: bool = True):
+def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Path, forcing_name: str, start_year,
+                export_shp: bool = True):
     """Creates a grid GeoDataFrame and optionally exports to shape file
 
     Args:
@@ -276,22 +286,29 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, export_shp: 
 
     """
     # Read in the bounding box shape file from the clipping folder as a GeoPandas DataFrame
+    logger.debug(f"bbox_filename: {bounding_box_filename}")
     bbox: GeoDataFrame = gpd.read_file(bounding_box_filename)
-    bbox.set_crs(21781, allow_override=True)
+    bbox.set_crs(4326, allow_override=True)
     bbox = bbox.to_crs("EPSG:2056")
 
     # Read in the clipped netCDF file into a xarray Dataset
     ds: Dataset = xr.open_dataset(netcdf_filepath, engine="netcdf4")
 
     # Since we're only interested in the grid (not the actual cell values), only use 1 day
-    ds = ds.sel(time=slice('1962-01-01', '1962-01-02'))
+    # Try to use 0-1 instead of strings to avoid having to use concrete date values.
+    # ds = ds.sel(time=slice('1962-01-01', '1962-01-02'))
+    start_date = f"01-01-{start_year}"
+    start_date = datetime.strptime(str(start_date), "%d-%m-%Y")
+    ds = ds.sel(time=slice(start_date, (start_date + timedelta(days=1))))
     # Select the actual data value column
-    xarr: xr.DataArray = ds['RhiresD']
+    column_name = re.findall("[A-Za-z]+", forcing_name)[0]
+    xarr: xr.DataArray = ds[column_name]
     # Convert Dataset to DataFrame and reset the index
     df: pd.DataFrame = xarr.to_dataframe().reset_index()
     # Convert the DataFrame to a GeoDataFrame, using the northing and easting provided by the netCDF. Furthermore,
     # change the projection to LV95
-    combi_catchment_grid: GeoDataFrame = gpd.GeoDataFrame(df.RhiresD, geometry=gpd.points_from_xy(df.E, df.N),
+    data_column = pd.Series(df[column_name])
+    combi_catchment_grid: GeoDataFrame = gpd.GeoDataFrame(data_column, geometry=gpd.points_from_xy(df.E, df.N),
                                                           crs="EPSG:2056")
 
     # From the GeoDataFrame that contains the netCDF grid, get the extent as points
@@ -329,7 +346,7 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, export_shp: 
 
     if export_shp:
         # Export the grid to a shape file
-        grid.to_file("/media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/grid.shp")
+        grid.to_file(str(str(out_path) + ".shp"))
     return grid
 
 
@@ -392,13 +409,13 @@ def calc_relative_area(gdf: GeoDataFrame) -> GeoDataFrame:
     return gdf
 
 
-def write_weights_to_file(grd: GeoDataFrame, filename: Path):
+def write_weights_to_file(grd: GeoDataFrame, grid_dir_path: Path, catchment):
     """Write grid weights to Raven compatible file
 
     Args:
         grd : GeoDataFrame
             Grid derived from the netCDF file
-        filename : Path
+        grid_dir_path : Path
             Path to the grid weights text file
 
     """
@@ -406,7 +423,8 @@ def write_weights_to_file(grd: GeoDataFrame, filename: Path):
     data = write_grid_data(grd)
     # The following section has been adapted from Juliane Mai's derive_grid_weights.py script. It writes to a file
     # that is compatible with RAVEN
-    with open(filename, 'w') as ff:
+    grid_filepath = Path(str(grid_dir_path) + ".txt")
+    with open(grid_filepath, 'w') as ff:
         ff.write(':GridWeights                     \n')
         ff.write('   #                                \n')
         ff.write('   # [# HRUs]                       \n')

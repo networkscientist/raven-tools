@@ -7,12 +7,14 @@ RAIN_FILE="RhiresD_ch01h.swiss.lv95_"
 T_MEAN_FILE="TabsD_ch01r.swiss.lv95_"
 T_MAX_FILE="TmaxD_ch01r.swiss.lv95_"
 T_MIN_FILE="TminD_ch01r.swiss.lv95_"
+S_REL_FILE="SrelD_ch01r.swiss.lv95_"
 T_MEAN_DIR="${FORCING_DIR}/TabsD_v2.0_swiss.lv95/"
 T_MAX_DIR="${FORCING_DIR}/TmaxD_v2.0_swiss.lv95/"
 T_MIN_DIR="${FORCING_DIR}/TminD_v2.0_swiss.lv95/"
+S_REL_DIR="${FORCING_DIR}/SrelD_v2.0_swiss.lv95/"
 
-DIRS=($RAIN_DIR $T_MEAN_DIR $T_MAX_DIR $T_MIN_DIR)
-FILES=($RAIN_FILE $T_MEAN_FILE $T_MAX_FILE $T_MIN_FILE)
+DIRS=($RAIN_DIR $T_MEAN_DIR $T_MAX_DIR $T_MIN_DIR $S_REL_DIR)
+FILES=($RAIN_FILE $T_MEAN_FILE $T_MAX_FILE $T_MIN_FILE $S_REL_FILE)
 
 #### merge_netcdf BEGIN
 # Merges netCDF files of different years into one file.
@@ -23,9 +25,11 @@ FILES=($RAIN_FILE $T_MEAN_FILE $T_MAX_FILE $T_MIN_FILE)
 #        T_MEAN_FILE
 #        T_MAX_FILE
 #        T_MIN_FILE
+#        S_REL_FILE
 #        T_MEAN_DIR
 #        T_MAX_DIR
 #        T_MIN_DIR
+#        S_REL_DIR
 # ARGUMENTS:
 #        Start year as an integer
 #        End year as an integer
@@ -54,7 +58,7 @@ function merge_netcdf(){
       # Appends the year to the DATE_RANGE array
       DATE_RANGE+=("$d")
       # Appends created filename to the input file paths array IN_PATHS
-      IN_PATHS+=("${i}out/${FILES[$COUNTER]}${d}01010000_${d}12310000_${CATCHMENT}_clipped.nc")
+      IN_PATHS+=("${i}out/${CATCHMENT}/${FILES[$COUNTER]}${d}01010000_${d}12310000_${CATCHMENT}_clipped.nc")
     done
     echo ${FILES[$COUNTER]}
     # uses the cdo command and expands the IN_PATHS to use every value as arguments

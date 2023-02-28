@@ -63,7 +63,7 @@ def create_header(author=conf['Author'], catchment=catchment, model=model_type):
         pass
 
 
-def forcing_block(start_year: int, end_year: int):
+def forcing_block(start_year: int, end_year: int, catchment: str):
     """Create Dictionary of forcing data to write in RVT file.
 
     This function creates a Dictionary of forcing data to be written into an RVT file. From a start and end year,
@@ -86,7 +86,7 @@ def forcing_block(start_year: int, end_year: int):
         'Rainfall': [
             ":GriddedForcing           Rainfall",
             "    :ForcingType          RAINFALL",
-            f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/merged/RhiresD_ch01h.swiss.lv95_{start_year}01010000_{end_year}12310000_clipped.nc",
+            f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/merged/RhiresD_ch01h.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment}_clipped.nc",
             "    :VarNameNC            RhiresD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
             f"    :RedirectToFile       data_obs/{grid_weights_file}",
@@ -94,7 +94,7 @@ def forcing_block(start_year: int, end_year: int):
         'Average Temperature': [
             ":GriddedForcing           Average Temperature",
             "    :ForcingType          TEMP_AVE",
-            f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/merged/TabsD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_clipped.nc",
+            f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/merged/TabsD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment}_clipped.nc",
             "    :VarNameNC            TabsD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
             f"    :RedirectToFile       data_obs/{grid_weights_file}",
@@ -102,7 +102,7 @@ def forcing_block(start_year: int, end_year: int):
         'Maximum Temperature': [
             ":GriddedForcing           Maximum Temperature",
             "    :ForcingType          TEMP_MAX",
-            f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/merged/TmaxD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_clipped.nc",
+            f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/merged/TmaxD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment}_clipped.nc",
             "    :VarNameNC            TmaxD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
             f"    :RedirectToFile       data_obs/{grid_weights_file}",
@@ -110,7 +110,7 @@ def forcing_block(start_year: int, end_year: int):
         'Minimum Temperature': [
             ":GriddedForcing           Minimum Temperature",
             "    :ForcingType          TEMP_MIN",
-            f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/merged/TminD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_clipped.nc",
+            f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/merged/TminD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment}_clipped.nc",
             "    :VarNameNC            TminD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
             f"    :RedirectToFile       data_obs/{grid_weights_file}",
@@ -169,9 +169,9 @@ def write_rvt(start_year: int,
         ":RedirectToFile data_obs/BroPay_Q_2034_daily.rvt"
     ]
     with open(file_path, 'w') as ff:
-        ff.writelines(create_header(author, catchment, model_type))
+        ff.writelines(f"{line}{newline}" for line in create_header(author, catchment, model_type))
         ff.write(f"# meteorological forcings\n")
-        for f in forcing_block(start_year, end_year).values():
+        for f in forcing_block(start_year, end_year, catchment).values():
             for t in f:
                 ff.write(f"{t}\n")
 
