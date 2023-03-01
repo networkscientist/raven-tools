@@ -471,14 +471,14 @@ class RavenModel:
             logger.debug(f"Trying to call rr.write_rvx function to create .{rvx_type} for Raven...")
             rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
                          catchment=self.catchment, params=self.default_params, template_type="Raven",
-                         rvx_type=rvx_type)
+                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year)
             logger.debug(f".{rvx_type} for Raven created by rr.write_rvx function")
         if ostrich_template is True:
             logger.debug("Variable ostrich_template is True...")
             logger.debug(f"Trying to call rr.write_rvx function to create .{rvx_type}.tpl for Ostrich...")
             rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
                          catchment=self.catchment, params=self.default_params, template_type="Ostrich",
-                         rvx_type=rvx_type)
+                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year)
             logger.debug(f".{rvx_type}.tpl for Ostrich created by rr.write_rvx function")
         if ostrich_template is False and raven_template is False:
             logger.debug("Variables ostrich_template and raven_template set to False.")

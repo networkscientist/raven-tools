@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas
 
+import raven_tools.config.variables
 from raven_tools import config
 
 try:
@@ -33,6 +34,9 @@ try:
     author = conf['Author']
     generation_date = conf['Date']
     poetry_location = conf['PoetryEnvLocation']
+    start_year = conf['StartYear']
+    end_year = conf['EndYear']
+    cali_end_year = conf['CaliEndYear']
 except:
     logger.exception("Error getting project_config from __init__.py!")
 
@@ -49,12 +53,13 @@ def get_catchment_info(csv_file):
     pandas.read_csv(csv_file)
 
 
-def create_header(author=conf['Author'], catchment=catchment, model=model_type):
+def create_header(author=conf['Author'], creation_date=generation_date, catchment=catchment, model=model_type,
+                  rvx_type: str = "rvi"):
     try:
         header_line = "#########################################################################"
         file_type = ":FileType          rvt ASCII Raven 3.5"
         author_line = f":WrittenBy         {author}"
-        creation_date = ":CreationDate      April 2022"
+        creation_date = f":CreationDate      {creation_date}"
         description = [
             "#",
             f"# Emulation of {model} simulation of {catchment}",
@@ -172,7 +177,8 @@ def write_rvt(start_year: int,
         ":RedirectToFile data_obs/BroPay_Q_2034_daily.rvt"
     ]
     with open(file_path, 'w') as ff:
-        ff.writelines(f"{line}{newline}" for line in create_header(author, catchment, model_type))
+        ff.writelines(f"{line}{newline}" for line in
+                      create_header(author=author, catchment=catchment, model=model_type, rvx_type="rvt"))
         ff.write(f"# meteorological forcings\n")
         for f in forcing_block(start_year, end_year, catchment).values():
             for t in f:
@@ -182,7 +188,9 @@ def write_rvt(start_year: int,
         ff.writelines(flow_observation)
 
 
-def generate_template_rvx(csv_file=None, model_type=model_type, params=default_params, param_or_name="names") -> dict:
+def generate_template_rvx(csv_file=None, model_type=model_type, params=default_params, param_or_name="names",
+                          start_year: str = start_year, end_year: str = end_year,
+                          cali_end_year: str = cali_end_year, catchment: str = catchment) -> dict:
     """Generates template text which can be written to .rvX file.
 
         Args:
@@ -278,7 +286,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ":SubBasins",
                                 "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
                                 "  :Units     ,          none,          none,   none,          km,         none",
-                                "            1,        Broye_Payerne,            -1,   NONE,       _AUTO,     1",
+                                f"            1,        {catchment},            -1,   NONE,       _AUTO,     1",
                                 ":EndSubBasins"
                             ],
                             "HRUs":
@@ -292,13 +300,13 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                     "rvi":
                         {"Model Organisation":
                             [
-                                ":StartDate             1981-01-01 00:00:00",
-                                ":EndDate               2019-09-30 00:00:00",
+                                f":StartDate             {start_year}-01-01 00:00:00",
+                                f":EndDate               {end_year}-12-31 00:00:00",
                                 ":TimeStep              1.0",
                                 ":Method                ORDERED_SERIES",
-                                ":RunName               Broye_GR4J",
-                                ":EvaluationPeriod CALIBRATION 1981-01-01 2000-01-01",
-                                ":EvaluationPeriod VALIDATION 2000-01-02 2019-09-30"
+                                f":RunName               {catchment}_GR4J",
+                                f":EvaluationPeriod CALIBRATION {start_year}-01-01 {cali_end_year}-12-31",
+                                f":EvaluationPeriod VALIDATION {int(cali_end_year) + 1}-01-01 {end_year}-12-31"
                             ],
                             "Model Options":
                                 [
@@ -434,7 +442,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ":SubBasins",
                                 "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
                                 "  :Units     ,          none,          none,   none,          km,         none",
-                                "            1,        Broye_Payerne,            -1,   NONE,       _AUTO,     1",
+                                f"            1,        {catchment},            -1,   NONE,       _AUTO,     1",
                                 ":EndSubBasins"
                             ],
                             "HRUs":
@@ -458,11 +466,11 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                     "rvi":
                         {"Model Organisation":
                             [
-                                ":StartDate          1981-01-01 00:00:00",
-                                ":EndDate            2019-09-30 00:00:00",
+                                f":StartDate          {start_year}-01-01 00:00:00",
+                                f":EndDate            {end_year}-12-31 00:00:00",
                                 ":TimeStep           1.0",
                                 ":Method             ORDERED_SERIES",
-                                ":RunName            Broye_HYMOD"
+                                f":RunName            {catchment}_HYMOD"
                             ],
                             "Model Options":
                                 [
@@ -477,8 +485,8 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                     ":PotentialMeltMethod POTMELT_DEGREE_DAY",
                                     ":PrecipIceptFract    PRECIP_ICEPT_NONE",
                                     ":SoilModel           SOIL_MULTILAYER 2",
-                                    ":EvaluationPeriod   CALIBRATION   1981-01-01   2000-01-01",
-                                    ":EvaluationPeriod   VALIDATION    2000-01-02   2019-09-30"
+                                    f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
+                                    f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
                                 ],
                             "Hydrologic Process Order":
                                 [
@@ -595,7 +603,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ":SubBasins",
                                 "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
                                 "  :Units     ,          none,          none,   none,          km,         none",
-                                "            1,        Broye_Payerne,            -1,   NONE,       _AUTO,     1",
+                                f"            1,        {catchment},            -1,   NONE,       _AUTO,     1",
                                 ":EndSubBasins"
                             ],
                             "HRUs":
@@ -610,13 +618,13 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                     "rvi":
                         {"Model Organisation":
                             [
-                                ":StartDate               1954-01-01 00:00:00",
-                                ":Duration                2010-12-31 00:00:00",
+                                f":StartDate               {start_year}-01-01 00:00:00",
+                                f":EndDate                {end_year}-12-31 00:00:00",
                                 ":TimeStep                1.0",
                                 ":Method                  ORDERED_SERIES",
-                                ":RunName                 raven_broye_hmets",
-                                ":EvaluationPeriod CALIBRATION 1981-01-01 2000-01-01",
-                                ":EvaluationPeriod VALIDATION 2000-01-02 2019-09-30"
+                                f":RunName                 {catchment}_HMETS",
+                                f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
+                                f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
                             ],
                             "Model Options":
                                 [
@@ -765,7 +773,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ":SubBasins",
                                 "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
                                 "  :Units     ,          none,          none,   none,          km,         none",
-                                "            1,        Broye_Payerne,            -1,   NONE,       _AUTO,     1",
+                                f"            1,        {catchment},            -1,   NONE,       _AUTO,     1",
                                 ":EndSubBasins"
                             ],
                             "HRUs":
@@ -790,12 +798,12 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                     "rvi":
                         {"Model Organisation":
                             [
-                                ":StartDate             1981-01-01 00:00:00",
-                                ":EndDate               2019-09-30 00:00:00",
+                                f":StartDate             {start_year}-01-01 00:00:00",
+                                f":EndDate               {end_year}-12-31 00:00:00",
                                 ":TimeStep              1.0",
-                                ":RunName               Broye_HBV",
-                                ":EvaluationPeriod CALIBRATION 1981-01-01 2000-01-01",
-                                ":EvaluationPeriod VALIDATION 2000-01-02 2019-09-30",
+                                f":RunName               {catchment}_HBV",
+                                f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
+                                f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
                             ],
                             "Model Options":
                                 [
@@ -957,7 +965,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ":SubBasins",
                                 "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
                                 "  :Units     ,          none,          none,   none,          km,         none",
-                                "            1,        Broye_Payerne,            -1,   NONE,       _AUTO,     1",
+                                f"            1,        {catchment},            -1,   NONE,       _AUTO,     1",
                                 ":EndSubBasins"
                             ],
                             "HRUs":
@@ -981,13 +989,13 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                     "rvi":
                         {"Model Organisation":
                             [
-                                ":StartDate               1954-01-01 00:00:00",
-                                ":Duration                2010-12-31 00:00:00",
+                                f":StartDate               {start_year}-01-01 00:00:00",
+                                f":EndDate                {end_year}-12-31 00:00:00",
                                 ":TimeStep                1.0",
                                 ":Method                  ORDERED_SERIES",
-                                ":RunName                 Broye_MOHYSE",
-                                ":EvaluationPeriod CALIBRATION 1981-01-01 2000-01-01",
-                                ":EvaluationPeriod VALIDATION 2000-01-02 2019-09-30"
+                                f":RunName                 {catchment}_MOHYSE",
+                                f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
+                                f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
                             ],
                             "Model Options":
                                 [
@@ -1994,10 +2002,11 @@ def write_rvx(model_dir: str = model_dir,
               model_sub_dir: str = model_sub_dir,
               params: dict = default_params,
               template_type: str = "Raven",
-              attribute_csv_name: str = "CH-0057_attributes.csv",
-              attribute_csv_dir: str = "Hydromap Attributes",
+              attribute_csv_dir: str = "Catchment",
               rvx_type: str = "rvi",
-              author=conf['Author']):
+              author=conf['Author'],
+              start_year: str = start_year,
+              end_year: str = end_year):
     """Writes .rvX file(s), either as an Ostrich or Raven template.
     Args:
         model_dir (str): The directory where the model files are stored. Default is "model_dir".
@@ -2018,6 +2027,7 @@ def write_rvx(model_dir: str = model_dir,
     logger.debug("Arrived in function write_rvx().")
     assert model_type in config.variables.supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
                                                             f"supported_models."
+    attribute_csv_name = f"{raven_tools.config.variables.catchments[catchment]['catchment_id']}_attributes.csv"
     try:
         logger.debug(
             f"Trying to read catchment attribute CSV file {Path(project_dir, data_dir, attribute_csv_dir, attribute_csv_name)}...")
@@ -2025,7 +2035,7 @@ def write_rvx(model_dir: str = model_dir,
                                    skiprows=[8],
                                    index_col='attribute_names', usecols=[0, 1])
     except:
-        logger.exception()
+        logger.exception("Error reading csv file into pandas...")
     logger.debug("Attribute catchment attribute CSV file read.")
     file_name: str = f"{catchment}_{model_type}.{rvx_type}"
     logger.debug(f".{rvx_type} filename set to {file_name}.")
@@ -2039,7 +2049,8 @@ def write_rvx(model_dir: str = model_dir,
         logger.debug(f"template_type is {template_type}.")
         logger.debug(f"Trying to generate .{rvx_type} template sections with function generate_template()...")
         template_sections = generate_template_rvx(model_type=model_type, csv_file=csv_file, params=params,
-                                                  param_or_name="params")
+                                                  param_or_name="params", start_year=start_year, end_year=end_year,
+                                                  catchment=catchment)
         logger.debug(f"Wrote .{rvx_type} template sections generated by generate_template() to dict template_sections")
     if template_type == "Ostrich":
         file_path: Path = Path(project_dir, model_dir, catchment, model_type, file_name)
@@ -2049,13 +2060,15 @@ def write_rvx(model_dir: str = model_dir,
         logger.debug(f"New file_path: {file_path}")
         logger.debug(f"Trying to generate .{rvx_type}.tpl template sections with function generate_template()...")
         template_sections = generate_template_rvx(model_type=model_type, csv_file=csv_file, params=params,
-                                                  param_or_name="names")
+                                                  param_or_name="names", start_year=start_year, end_year=end_year,
+                                                  catchment=catchment)
         logger.debug(
             f"Wrote .{rvx_type}.tpl template sections generated by generate_template() to dict template_sections")
 
     logger.debug(f"Trying to write to file {file_path}")
     with open(file_path, 'w') as ff:
-        ff.writelines(f"{line}{newline}" for line in create_header(author, catchment, model_type))
+        ff.writelines(f"{line}{newline}" for line in
+                      create_header(author=author, catchment=catchment, model=model_type, rvx_type=rvx_type))
         logger.debug("Header lines written.")
         ff.write(newline)
         logger.debug("Entering template_sections for-loop...")
