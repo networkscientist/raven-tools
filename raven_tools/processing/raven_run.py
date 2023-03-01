@@ -16,7 +16,7 @@ try:
     logger.debug(f"CWD: {os.getcwd()}")
     logger.debug('Trying to read project_config.yaml file')
 except:
-    pass
+    logger.exception("Error loading logger.")
 
 try:
     conf = config.variables.project_config
@@ -30,6 +30,9 @@ try:
     gauge_lon = conf['GaugeLon']
     model_sub_dir = conf['ModelSubDir']
     grid_weights_file = conf['GridWeights']
+    author = conf['Author']
+    generation_date = conf['Date']
+    poetry_location = conf['PoetryEnvLocation']
 except:
     logger.exception("Error getting project_config from __init__.py!")
 
@@ -1047,7 +1050,9 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
 
 def generate_template_ostrich(model_type: str = model_type,
                               params: dict = default_params,
-                              catchment: str = catchment) -> dict:
+                              catchment: str = catchment,
+                              author: str = author,
+                              generation_date: str = generation_date) -> dict:
     """
     Generates template text which can be written to .rvp file
 
@@ -1069,11 +1074,20 @@ def generate_template_ostrich(model_type: str = model_type,
     logger.debug("Entered generate_template() function.")
     assert model_type in config.variables.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
     logger.debug("model_type is in the list of supported models.")
+    module_root_dir: Path = Path().resolve()
     ost_params = {
         "GR4J":
             {
                 "ost_in":
                     {
+                        "Model Info":
+                            [
+                                f"# Model Type: {model_type}",
+                                f"# Catchment Name: {catchment}",
+                                f"# Catchment ID: {catchment_id}",
+                                f"# Author: {author}",
+                                f"# Generation Date: {generation_date}"
+                            ],
                         "General Options":
                             [
                                 f"ProgramType  	    ParaPADDS",
@@ -1206,7 +1220,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"#!/bin/bash{newline}",
                                 f"set -e{newline}",
                                 f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                                f"cp ~/PycharmProjects/raven-tools/raven_tools/raven_diag.py model/output/raven_diag.py{newline}",
+                                f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
                                 f"# Copy the latest model files to the model folder",
                                 f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
                                 f"## cd into the model folder",
@@ -1216,7 +1230,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"cd output",
                                 f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
                                 f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                                f"source /home/mainman/.cache/pypoetry/virtualenvs/raven-tools-jdqmA8hx-py3.10/bin/activate",
+                                f"source {poetry_location}",
                                 f"# shellcheck disable=SC2086",
                                 f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
                                 f"exit 0",
@@ -1227,6 +1241,14 @@ def generate_template_ostrich(model_type: str = model_type,
             {
                 "ost_in":
                     {
+                        "Model Info":
+                            [
+                                f"# Model Type: {model_type}",
+                                f"# Catchment Name: {catchment}",
+                                f"# Catchment ID: {catchment_id}",
+                                f"# Author: {author}",
+                                f"# Generation Date: {generation_date}"
+                            ],
                         "General Options":
                             [
                                 f"ProgramType  	    ParaPADDS",
@@ -1366,7 +1388,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"#!/bin/bash{newline}",
                                 f"set -e{newline}",
                                 f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                                f"cp ~/PycharmProjects/raven-tools/raven_tools/raven_diag.py model/output/raven_diag.py{newline}",
+                                f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
                                 f"# Copy the latest model files to the model folder",
                                 f"cp ./{file_name}.rvi model/{file_name}.rvi",
                                 f"cp ./{file_name}.rvh model/{file_name}.rvh",
@@ -1378,7 +1400,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"cd output",
                                 f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
                                 f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                                f"source /home/mainman/.cache/pypoetry/virtualenvs/raven-tools-jdqmA8hx-py3.10/bin/activate",
+                                f"source {poetry_location}",
                                 f"# shellcheck disable=SC2086",
                                 f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
                                 f"exit 0",
@@ -1389,6 +1411,14 @@ def generate_template_ostrich(model_type: str = model_type,
             {
                 "ost_in":
                     {
+                        "Model Info":
+                            [
+                                f"# Model Type: {model_type}",
+                                f"# Catchment Name: {catchment}",
+                                f"# Catchment ID: {catchment_id}",
+                                f"# Author: {author}",
+                                f"# Generation Date: {generation_date}"
+                            ],
                         "General Options":
                             [
                                 f"ProgramType  	    ParaPADDS",
@@ -1452,10 +1482,10 @@ def generate_template_ostrich(model_type: str = model_type,
                             [
                                 f"BeginTiedParams",
                                 f"# 1-parameter linear (TLIN = 2*XVAL) ",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_05b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # SNOW_SWI_MAX "
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_09b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # MAX_MELT_FACTOR "
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_20b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # :UniformInitialConditions SOIL[0] = HMETS_Param_20/2 "
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_21b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # :UniformInitialConditions SOIL[1] = HMETS_Param_21/2 "
+                                f"{params[param_or_name]['HMETS']['HMETS_Param_05b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # SNOW_SWI_MAX ",
+                                f"{params[param_or_name]['HMETS']['HMETS_Param_09b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # MAX_MELT_FACTOR ",
+                                f"{params[param_or_name]['HMETS']['HMETS_Param_20b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # :UniformInitialConditions SOIL[0] = HMETS_Param_20/2 ",
+                                f"{params[param_or_name]['HMETS']['HMETS_Param_21b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # :UniformInitialConditions SOIL[1] = HMETS_Param_21/2 ",
                                 f"EndTiedParams"
                             ],
                         "Response Variables":
@@ -1551,7 +1581,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"#!/bin/bash{newline}",
                                 f"set -e{newline}",
                                 f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                                f"cp ~/PycharmProjects/raven-tools/raven_tools/raven_diag.py model/output/raven_diag.py{newline}",
+                                f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
                                 f"# Copy the latest model files to the model folder",
                                 f"cp ./{file_name}.rvc model/{file_name}.rvc",
                                 f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
@@ -1562,7 +1592,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"cd output",
                                 f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
                                 f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                                f"source /home/mainman/.cache/pypoetry/virtualenvs/raven-tools-jdqmA8hx-py3.10/bin/activate",
+                                f"source {poetry_location}",
                                 f"# shellcheck disable=SC2086",
                                 f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
                                 f"exit 0",
@@ -1573,6 +1603,14 @@ def generate_template_ostrich(model_type: str = model_type,
             {
                 "ost_in":
                     {
+                        "Model Info":
+                            [
+                                f"# Model Type: {model_type}",
+                                f"# Catchment Name: {catchment}",
+                                f"# Catchment ID: {catchment_id}",
+                                f"# Author: {author}",
+                                f"# Generation Date: {generation_date}"
+                            ],
                         "General Options":
                             [
                                 f"ProgramType  	    ParaPADDS",
@@ -1633,8 +1671,8 @@ def generate_template_ostrich(model_type: str = model_type,
                             [
                                 f"BeginTiedParams",
                                 f"# 1-parameter linear (TLIN = 2*XVAL) ",
-                                f"{params[param_or_name]['HBV']['HBV_Param_11b']} 1 {params[param_or_name]['HBV']['HBV_Param_11b']} linear 0.5 0.00 free"
-                                f"{params[param_or_name]['HBV']['HBV_Param_17b']} 1 {params[param_or_name]['HBV']['HBV_Param_17']} linear 0.5 0.00 free"
+                                f"{params[param_or_name]['HBV']['HBV_Param_11b']} 1 {params[param_or_name]['HBV']['HBV_Param_11b']} linear 0.5 0.00 free",
+                                f"{params[param_or_name]['HBV']['HBV_Param_17b']} 1 {params[param_or_name]['HBV']['HBV_Param_17']} linear 0.5 0.00 free",
                                 f"EndTiedParams"
                             ],
                         "Response Variables":
@@ -1731,7 +1769,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"#!/bin/bash{newline}",
                                 f"set -e{newline}",
                                 f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                                f"cp ~/PycharmProjects/raven-tools/raven_tools/raven_diag.py model/output/raven_diag.py{newline}",
+                                f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
                                 f"# Copy the latest model files to the model folder",
                                 f"cp ./{file_name}.rvi model/{file_name}.rvi",
                                 f"cp ./{file_name}.rvh model/{file_name}.rvh",
@@ -1744,7 +1782,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"cd output",
                                 f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
                                 f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                                f"source /home/mainman/.cache/pypoetry/virtualenvs/raven-tools-jdqmA8hx-py3.10/bin/activate",
+                                f"source {poetry_location}",
                                 f"# shellcheck disable=SC2086",
                                 f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
                                 f"exit 0",
@@ -1755,6 +1793,14 @@ def generate_template_ostrich(model_type: str = model_type,
             {
                 "ost_in":
                     {
+                        "Model Info":
+                            [
+                                f"# Model Type: {model_type}",
+                                f"# Catchment Name: {catchment}",
+                                f"# Catchment ID: {catchment_id}",
+                                f"# Author: {author}",
+                                f"# Generation Date: {generation_date}"
+                            ],
                         "General Options":
                             [
                                 f"ProgramType  	    ParaPADDS",
@@ -1892,7 +1938,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"#!/bin/bash{newline}",
                                 f"set -e{newline}",
                                 f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                                f"cp ~/PycharmProjects/raven-tools/raven_tools/raven_diag.py model/output/raven_diag.py{newline}",
+                                f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
                                 f"# Copy the latest model files to the model folder",
                                 f"cp ./{file_name}.rvi model/{file_name}.rvi",
                                 f"cp ./{file_name}.rvh model/{file_name}.rvh",
@@ -1904,7 +1950,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"cd output",
                                 f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
                                 f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                                f"source /home/mainman/.cache/pypoetry/virtualenvs/raven-tools-jdqmA8hx-py3.10/bin/activate",
+                                f"source {poetry_location}",
                                 f"# shellcheck disable=SC2086",
                                 f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
                                 f"exit 0",
