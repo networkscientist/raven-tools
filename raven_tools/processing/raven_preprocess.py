@@ -54,8 +54,10 @@ def create_bbox_geometry(extent_shape_path: Path):
             The GeoDataFrame with the data from the extent shape file.
 
     """
-
+    logger.debug("Entered create_bbox_geometry function...")
     ext_gdf = gpd.read_file(extent_shape_path)
+    ext_gdf.set_crs("EPSG:4326", allow_override=True)
+    ext_gdf.to_crs("EPSG:2056", inplace=True)
     se = ext_gdf.geometry.total_bounds  # Get bounds and store in array
     bbox_poly = Polygon([[se[0], se[1]], [se[2], se[1]], [se[2], se[3]], [se[0], se[3]]])
     return bbox_poly, ext_gdf  # Return the Polygon and the GeoDataFrame
@@ -86,7 +88,7 @@ def create_bounding_shape(extent_shape_file_path: Path, bb_file_path: Path):
     bbox_poly, ext_gdf = create_bbox_geometry(extent_shape_file_path)
     # Create the bounding shape in a GeoDataFrame
     bbox_gdf: GeoDataFrame = gpd.GeoDataFrame(pd.DataFrame(['p1'], columns=['geom']),
-                                              crs={'init': 'epsg:4326'},
+                                              crs={'init': 'epsg:2056'},
                                               geometry=[bbox_poly])
     # This writes the bounding box as a shape file
     bbox_gdf.to_file(str(bb_file_path))
@@ -288,8 +290,8 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
     # Read in the bounding box shape file from the clipping folder as a GeoPandas DataFrame
     logger.debug(f"bbox_filename: {bounding_box_filename}")
     bbox: GeoDataFrame = gpd.read_file(bounding_box_filename)
-    bbox.set_crs(4326, allow_override=True)
-    bbox = bbox.to_crs("EPSG:2056")
+    bbox.set_crs(2056, allow_override=True)
+    # bbox = bbox.to_crs("EPSG:2056")
 
     # Read in the clipped netCDF file into a xarray Dataset
     ds: Dataset = xr.open_dataset(netcdf_filepath, engine="netcdf4")
@@ -342,7 +344,7 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
 
     # Every cell that is not within the catchment area will have area_rel set to zero
     grid["area_rel"] = 0
-    grid = grid.set_crs(2056)
+    grid = grid.set_crs(2056, allow_override=True)
 
     if export_shp:
         # Export the grid to a shape file
@@ -350,7 +352,7 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
     return grid
 
 
-def create_overlay(grd: GeoDataFrame, ctm: GeoDataFrame):
+def create_overlay(grd: GeoDataFrame, catchment_filepath: Path):
     """Overlays a GeoDataFrame over another to create overlay Polygons
 
     Overlays two GeoDataFrame over each other and returns two new GeoDataFrames, one for the mode 'intersection',
@@ -369,7 +371,10 @@ def create_overlay(grd: GeoDataFrame, ctm: GeoDataFrame):
             Grid cells outside the catchment area
 
     """
-
+    ctm = gpd.read_file(catchment_filepath)
+    ctm.to_crs("EPSG:2056", inplace=True)
+    print(grd.crs)
+    print(ctm.crs)
     res_u: GeoDataFrame = ctm.overlay(grd, how='intersection')
     res_d: GeoDataFrame = grd.overlay(ctm, how='difference')
     res_d = res_d.rename_geometry('geometry')
@@ -458,13 +463,13 @@ def write_grid_data(grd: GeoDataFrame) -> list[list[float]]:
     return data_to_write
 
 
-def copy_rel_area_from_union_to_grid(uni: GeoDataFrame, grd: GeoDataFrame) -> GeoDataFrame:
+def copy_rel_area_from_union_to_grid(res_union: GeoDataFrame, grid: GeoDataFrame) -> GeoDataFrame:
     """Takes grid weights from a union GeoDataFrame and writes the to the grid GeoDataFrame.
 
     Args:
-        uni : GeoDataFrame
+        res_union : GeoDataFrame
             GeoDataFrame containing the grid cells within the catchment.
-        grd : GeoDataFrame
+        grid : GeoDataFrame
             Grid GeoDataFrame as derived from netCDF file
 
     Returns:
@@ -475,12 +480,12 @@ def copy_rel_area_from_union_to_grid(uni: GeoDataFrame, grd: GeoDataFrame) -> Ge
 
     # Loop over the union GeoDataFrame, take relative area/grid weight and write it to corresponding cell in grid
     # GeoDataFrame.
-    for index, row in uni.iterrows():
-        cell_id_old_value = uni.at[index, "cell_id"]
-        area_rel_old_value = uni.at[index, "area_rel"]
-        ind = grd[grd['cell_id'] == cell_id_old_value].index.tolist()
-        grd.at[ind[0], "area_rel"] = area_rel_old_value
-    return grd
+    for index, row in res_union.iterrows():
+        cell_id_old_value = res_union.at[index, "cell_id"]
+        area_rel_old_value = res_union.at[index, "area_rel"]
+        ind = grid[grid['cell_id'] == cell_id_old_value].index.tolist()
+        grid.at[ind[0], "area_rel"] = area_rel_old_value
+    return grid
 
 
 def camels_to_rvt(data_dir, catchment_id, gauge_short_code, start_date="2000-01-01", end_date="2000-12-31"):

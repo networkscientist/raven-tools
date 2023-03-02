@@ -549,11 +549,21 @@ class RavenModel:
         forcing_name_root = re.findall("[A-Za-z]+", forcing_name)[0]
         netcdf_file_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "merged",
                                 f"{forcing_name_root}_{forcing_suffix}_{self.start_year}01010000_{self.end_year}12310000_{self.catchment}_clipped.nc")
+        catchment_filepath = Path(self.data_dir, "Catchment",
+                                  f"{config.variables.catchments[self.catchment]['catchment_id']}.shp")
         out_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "out",
                         f"grid_weights_{self.catchment}")
         grid = rpe.create_grid(netcdf_filepath=netcdf_file_path, bounding_box_filename=self.bbox_filepath,
                                out_path=out_path,
                                forcing_name=forcing_name, start_year=self.start_year)
+
+        # Create union and difference overlay GeoDataFrames
+        res_union, res_diff = rpe.create_overlay(grd=grid, catchment_filepath=catchment_filepath)
+
+        # Compute the relative area a.k.a grid weight and write to shape files
+        res_union = rpe.calc_relative_area(res_union)
+        grid.set_index("cell_id")
+        grid = rpe.copy_rel_area_from_union_to_grid(res_union=res_union, grid=grid)
         rpe.write_weights_to_file(grd=grid, grid_dir_path=out_path, catchment=self.catchment)
 
 
