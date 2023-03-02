@@ -98,6 +98,8 @@ class RavenModel:
             self.default_params = config.variables.default_params
         except:
             logger("Error getting default_params file from __init__.py")
+        self.raven_exe_path: Path = Path(self.conf['RavenExePath'])
+        logger.debug(f"Raven exe path set: {self.raven_exe_path}")
 
     def __getitem__(self, item):
         print(type(item), item)
@@ -415,7 +417,8 @@ class RavenModel:
         assert isinstance(value, Path), f"bbox_filepath should be Path, is type {type(value)} instead."
         self._bbox_filepath = value
 
-    def create_symlinks(self, forcings: bool = True, discharge: bool = True):
+    def create_symlinks(self, forcings: bool = True, discharge: bool = True, raven_executable: bool = True,
+                        ostrich_executable: bool = True):
         logger.debug("Entered function create_symlinks.")
         if forcings:
             logger.debug("Trying to create data symlinks...")
@@ -452,6 +455,22 @@ class RavenModel:
                       f"Destination: {dst}")
             except FileExistsError:
                 logger.exception("Error creating symlink: File already exists")
+
+        if raven_executable:
+            src = Path(self.raven_exe_path)
+            dst = Path(self.model_dir, self.model_sub_dir, "Raven.exe")
+            logger.debug("Source path created.")
+            logger.debug(f"Symlink src: {src}")
+            logger.debug(f"Symlink dst: {dst}")
+            try:
+                os.symlink(src, dst)
+                logger.debug(f"Symlink created")
+                print(f"Symlink created:\n"
+                      f"Source: {src}\n"
+                      f"Destination: {dst}")
+            except FileExistsError:
+                logger.exception("Error creating symlink: File already exists")
+                pass
 
     def write_rvx(self, ostrich_template: bool = False, raven_template: bool = True, rvx_type: str = "rvi"):
         """Write .rvX file for Raven and/or Ostrich
@@ -534,7 +553,8 @@ class RavenModel:
                      gauge_lon=self.gauge_lon,
                      model_sub_dir=self.model_sub_dir,
                      gauge_short_code=self.gauge_short_code,
-                     station_elevation=self.station_elevation)
+                     station_elevation=self.station_elevation,
+                     catchment_gauge_id=str(self.ctm_info))
 
     def camels_to_rvt(self):
         rpe.camels_to_rvt(data_dir=self.data_dir, catchment_id=self.catchment_id,

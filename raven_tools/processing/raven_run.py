@@ -97,7 +97,7 @@ def forcing_block(start_year: int, end_year: int, catchment: str):
             f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/merged/RhiresD_ch01h.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment}_clipped.nc",
             "    :VarNameNC            RhiresD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            f"    :RedirectToFile       data_obs/{grid_weights_file}",
+            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment}.txt",
             ":EndGriddedForcing"],
         'Average Temperature': [
             ":GriddedForcing           Average Temperature",
@@ -105,7 +105,7 @@ def forcing_block(start_year: int, end_year: int, catchment: str):
             f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/merged/TabsD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment}_clipped.nc",
             "    :VarNameNC            TabsD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            f"    :RedirectToFile       data_obs/{grid_weights_file}",
+            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment}.txt",
             ":EndGriddedForcing"],
         'Maximum Temperature': [
             ":GriddedForcing           Maximum Temperature",
@@ -113,7 +113,7 @@ def forcing_block(start_year: int, end_year: int, catchment: str):
             f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/merged/TmaxD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment}_clipped.nc",
             "    :VarNameNC            TmaxD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            f"    :RedirectToFile       data_obs/{grid_weights_file}",
+            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment}.txt",
             ":EndGriddedForcing"],
         'Minimum Temperature': [
             ":GriddedForcing           Minimum Temperature",
@@ -121,7 +121,7 @@ def forcing_block(start_year: int, end_year: int, catchment: str):
             f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/merged/TminD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment}_clipped.nc",
             "    :VarNameNC            TminD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            f"    :RedirectToFile       data_obs/{grid_weights_file}",
+            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment}.txt",
             ":EndGriddedForcing"
         ]
     }
@@ -143,7 +143,8 @@ def write_rvt(start_year: int,
               model_sub_dir=model_sub_dir,
               author=conf['Author'],
               gauge_short_code="DefAult",
-              station_elevation="100"):
+              station_elevation="100",
+              catchment_gauge_id="1000"):
     """Write to Raven .rvt file.
 
     Args:
@@ -174,7 +175,7 @@ def write_rvt(start_year: int,
 
     flow_observation = [
         "# observed streamflow\n",
-        ":RedirectToFile data_obs/BroPay_Q_2034_daily.rvt"
+        f":RedirectToFile data_obs/{gauge_short_code}_Q_{catchment_gauge_id}_daily.rvt"
     ]
     with open(file_path, 'w') as ff:
         ff.writelines(f"{line}{newline}" for line in
@@ -788,7 +789,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 [
                                     ":SubBasinProperties",
                                     "#                       HBV_PARA_11, DERIVED FROM HBV_PARA_11,",
-                                    "#                            MAXBAS,                 MAXBAS/2,"
+                                    "#                            MAXBAS,                 MAXBAS/2,",
                                     "   :Parameters,           TIME_CONC,             TIME_TO_PEAK,",
                                     "   :Units,                        d,                        d,",
                                     f"              1,          {params[param_or_name]['HBV']['HBV_Param_11']},                  {params[param_or_name]['HBV']['HBV_Param_11']},",
