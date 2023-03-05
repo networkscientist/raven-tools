@@ -52,7 +52,7 @@ for c in catchments:
         model_instance.start_year = 1981
         model_instance.end_year = 2020
         #         #         # model_instance.camels_to_rvt()
-        # model_instance.create_symlinks()
+        model_instance.create_symlinks()
         #         model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment",
         #                                             f"{model_instance.catchment}_bbox.shp")
         model_instance.data_dir = Path("/media/mainman/Work/RAVEN/data")
@@ -64,7 +64,7 @@ for c in catchments:
         #         #     model_instance.create_grid_weights(forcing_name=n)
         for s in suffix:
             model_instance.write_rvx(ostrich_template=True, rvx_type=s)
-#             model_instance.write_ost()
+            model_instance.write_ost()
 #         # model_instance.create_netcdf(clip=False, merge=True)
 #         # model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment", f"{model_instance.catchment}_bbox.shp")
 #         # print(model_instance.bbox_filepath)

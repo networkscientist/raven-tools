@@ -1,37 +1,37 @@
 names:
   GR4J:
     Airsnow_Coeff: Airsnow_Coeff
-    Cemaneige_X1: Cemaneige_x1
-    Cemaneige_X2: Cemaneige_x2
+    Cemaneige_X1: Cemaneige_X1
+    Cemaneige_X2: Cemaneige_X2
     GR4J_X1: GR4J_x1
     GR4J_X2: GR4J_x2
     GR4J_X3: GR4J_x3
     GR4J_X4: GR4J_x4
     Melt_Factor: Melt_Factor
   HBV:
-    HBV_Param_01: RAINSNOW_TEMP
-    HBV_Param_02: MELT_FACTOR
-    HBV_Param_03: REFREEZE_FACTOR
-    HBV_Param_04: SNOW_SWI
-    HBV_Param_05: POROSITY
-    HBV_Param_06: FIELD_CAPACITY
-    HBV_Param_07: HBV_BETA
-    HBV_Param_08: MAX_PERC_RATE_FAST_RES
-    HBV_Param_09: BASEFLOW_COEFF_FAST_RES
-    HBV_Param_10: BASEFLOW_COEFF_SLOW_RES
-    HBV_Param_11: TIME_CONC_MAX_BAS
-    HBV_Param_11b: HBV_Param_11b
-    HBV_Param_12: PRECIP_LAPSE_PCALT
-    HBV_Param_13: ADIABATIC_LAPSE_TCALT
-    HBV_Param_14: SAT_WILT
-    HBV_Param_15: 1_PLUS_ALPHA
-    HBV_Param_16: MAX_CAP_RISE_RATE
-    HBV_Param_17: THICKNESS_TOPSOIL
-    HBV_Param_17b: HBV_Param_17b
-    HBV_Param_18: HBV_MELT_FOR_CORR
-    HBV_Param_19: GLAC_STORAGE_COEFF
-    HBV_Param_20: RAIN_CORRECTION_RFCF
-    HBV_Param_21: SNOW_CORRECTION_SFCF
+    HBV_Param_01: RainSnow_Temp
+    HBV_Param_02: Melt_Fact
+    HBV_Param_03: Refreeze_Fact
+    HBV_Param_04: Snow_SWI
+    HBV_Param_05: Porosity
+    HBV_Param_06: Field_Cap
+    HBV_Param_07: HBV_Beta
+    HBV_Param_08: Max_Perc_Rate_Fast_Res
+    HBV_Param_09: BaseFlow_Coeff_Fast_Res
+    HBV_Param_10: BaseFlow_Coeff_Slow_Res
+    HBV_Param_11: T_Conc_Max_Bas
+    HBV_Param_11b: HBV_Para_11b
+    HBV_Param_12: Prec_Lapse_PCALT
+    HBV_Param_13: Adiab_Lapse_TCALT
+    HBV_Param_14: Sat_Wilt
+    HBV_Param_15: 1_Plus_Alpha
+    HBV_Param_16: Max_Cap_Rise_Rate
+    HBV_Param_17: Thickness_Topsoil
+    HBV_Param_17b: HBV_Para_17b
+    HBV_Param_18: HBV_Melt_For_Corr
+    HBV_Param_19: Glac_Storage_Effect
+    HBV_Param_20: Rain_Correction_RFCF
+    HBV_Param_21: Snow_Correction_SFCF
   HMETS:
     HMETS_Param_01: GAMMA_SHAPE
     HMETS_Param_02: GAMMA_SCALE

@@ -253,6 +253,34 @@ def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
     cdf_dataset_out.close()
 
 
+def pet_monthly_ave(pet_filepath: Path):
+    import pandas as pd
+    from pathlib import Path
+    pet_filepath = Path("/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_ets150m0_1_data.txt")
+    pet_monthly_from_order = pd.read_csv(pet_filepath, sep=";")
+    pet_monthly_from_order['time'] = pd.to_datetime(pet_monthly_from_order['time'], format='%Y%m')
+    pet_monthly_from_order['month'] = pet_monthly_from_order['time'].dt.month
+    print(pet_monthly_from_order.values)
+
+    temp_filepath = Path("/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_tre200h0_1_data.txt")
+    temp_hourly_from_order = pd.read_csv(temp_filepath, sep=";")
+    temp_hourly_from_order['time'] = pd.to_datetime(temp_hourly_from_order['time'], format='%Y%m%d%H')
+    temp_monthly = temp_hourly_from_order.groupby(temp_hourly_from_order.time.dt.month)['tre200h0'].mean()
+    print(temp_monthly.values)
+    return pet_monthly_from_order
+
+
+def resample_netcdf_monthly():
+    import xarray as xr
+    ds = xr.open_dataset(
+        "/media/mainman/Work/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/merged/RhiresD_ch01h.swiss.lv95_198101010000_202012310000_Dischmabach_clipped.nc")
+    ds_resampled = ds.resample(time='m').mean()
+    netcdf_file_path = "/media/mainman/Work/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/merged/resampled.nc"
+    dataset_to_netcdf(ds_resampled, Path(netcdf_file_path), catchment="Dischmabach")
+
+    monthly_data = ds.resample(freq='m', dim='time', how='mean')
+
+
 def nc_merge(start_year: int, end_year: int, forcing_dir: Path, catchment: str):
     """
 

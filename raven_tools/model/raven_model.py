@@ -99,6 +99,7 @@ class RavenModel:
         except:
             logger("Error getting default_params file from __init__.py")
         self.raven_exe_path: Path = Path(self.conf['RavenExePath'])
+        self.ost_exe_path: Path = Path(self.conf['OstrichExePath'])
         logger.debug(f"Raven exe path set: {self.raven_exe_path}")
 
     def __getitem__(self, item):
@@ -417,6 +418,18 @@ class RavenModel:
         assert isinstance(value, Path), f"bbox_filepath should be Path, is type {type(value)} instead."
         self._bbox_filepath = value
 
+    @property
+    def ost_exe_path(self) -> Path:
+        """Returns ost_exe_path."""
+        assert isinstance(self._ost_exe_path,
+                          Path), f"ost_exe_path should be Path, is type {type(self._ost_exe_path)} instead."
+        return self._ost_exe_path
+
+    @ost_exe_path.setter
+    def ost_exe_path(self, value: Path):
+        assert isinstance(value, Path), f"ost_exe_path should be Path, is type {type(value)} instead."
+        self._ost_exe_path = value
+
     def create_symlinks(self, forcings: bool = True, discharge: bool = True, raven_executable: bool = True,
                         ostrich_executable: bool = True):
         logger.debug("Entered function create_symlinks.")
@@ -472,6 +485,22 @@ class RavenModel:
                 logger.exception("Error creating symlink: File already exists")
                 pass
 
+        if ostrich_executable:
+            src = Path(self.ost_exe_path)
+            dst = Path(self.model_dir, "OstrichMPI")
+            logger.debug("Source path created.")
+            logger.debug(f"Symlink src: {src}")
+            logger.debug(f"Symlink dst: {dst}")
+            try:
+                os.symlink(src, dst)
+                logger.debug(f"Symlink created")
+                print(f"Symlink created:\n"
+                      f"Source: {src}\n"
+                      f"Destination: {dst}")
+            except FileExistsError:
+                logger.exception("Error creating symlink: File already exists")
+                pass
+
     def write_rvx(self, ostrich_template: bool = False, raven_template: bool = True, rvx_type: str = "rvi"):
         """Write .rvX file for Raven and/or Ostrich
 
@@ -508,7 +537,8 @@ class RavenModel:
     def write_ost(self,
                   ost_in=True,
                   save_best=True,
-                  ost_raven=True):
+                  ost_raven=True,
+                  ost_mpi_script: bool = True):
         """Write Ostrich files ostIn.txt, save_best.sh and ost-raven.sh
 
         :param ost_raven:
@@ -522,7 +552,8 @@ class RavenModel:
         rr.write_ostrich(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
                          catchment=self.catchment, params=self.default_params, ost_in=ost_in,
                          save_best=save_best,
-                         ost_raven=ost_raven)
+                         ost_raven=ost_raven,
+                         ost_mpi_script=ost_mpi_script)
         logger.debug(f"ostIn.txt for Raven created by rr.write_rvx function")
 
     def create_netcdf(self, forcing_dir="TabsD_v2.0_swiss.lv95", clip=True, merge=True):
@@ -591,3 +622,7 @@ def ch1903_to_wgs84(lat_1903, lon_1903):
     transformer = Transformer.from_crs("EPSG:21781", "EPSG:4326")
     lat_wgs84, lon_wgs84 = transformer.transform(lat_1903, lon_1903)
     return lat_wgs84, lon_wgs84
+
+
+def pet_monthly_ave():
+    rpe.pet_monthly_ave()

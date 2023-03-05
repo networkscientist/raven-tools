@@ -1099,7 +1099,7 @@ def generate_template_ostrich(model_type: str = model_type,
                             ],
                         "General Options":
                             [
-                                f"ProgramType  	    ParaPADDS",
+                                f"ProgramType  	    ParallelDDS",
                                 f"ObjectiveFunction   GCOP",
                                 f"ModelExecutable     ./Ost-RAVEN.sh",
                                 f"PreserveBestModel   ./save_best.sh",
@@ -1142,8 +1142,8 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
                                 f"BeginResponseVars",
                                 f"#name	  filename			        keyword		line	col	token                               augmented?",
-                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
-                                f"KGE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	4	',' yes",
+                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
+                                f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
                                 f"EndResponseVars",
                             ],
                         "Tied Response Variables":
@@ -1151,13 +1151,13 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"#Negative Nash-Sutcliffe efficiency",
                                 f"BeginTiedRespVars",
                                 f"NegNSE 1 NSE wsum -1.00",
-                                f"NegKGE 1 KGE wsum -1.00",
+                                f"NegKGE 1 KGE_NP wsum -1.00",
                                 f"EndTiedRespVars",
                             ],
                         "GCOP Options":
                             [
                                 f"BeginGCOP",
-                                f"CostFunction NegNSE",
+                                f"#CostFunction NegNSE",
                                 f"CostFunction NegKGE",
                                 f"PenaltyFunction APM",
                                 f"EndGCOP",
@@ -1178,32 +1178,15 @@ def generate_template_ostrich(model_type: str = model_type,
                             [
                                 f"#Algorithm should be last in this file (see p51 for APDDS):",
                                 f"",
-                                f"BeginParallelPADDSAlg",
+                                f"BeginParallelDDSAlg",
                                 f"PerturbationValue 0.20",
                                 f"MaxIterations 50",
                                 f"#	UseRandomParamValues",
-                                f"SelectionMetric ExactHyperVolumeContribution",
-                                f"EnableDebugging",
                                 f"# UseInitialParamValues",
                                 f"# Note: above intializes DDS to parameter values IN the initial",
                                 f"#       model input files IF 'extract' option used in BeginParams",
                                 f"#       block (column 'init')",
-                                f"EndParallelPADDSAlg",
-                                f"",
-                                f"#Begin_PADDSAU_Alg",
-                                f"#	PerturbationValue 0.20",
-                                f"#    NumSearches 25",
-                                f"#    MinItersPerSearch 20",
-                                f"#    MaxItersPerSearch 30",
-                                f"#    ParallelSearches yes",
-                                f"#    Threshold 500",
-                                f"#    Randomize no",
-                                f"#    ReviseAU yes",
-                                f"#	# UseInitialParamValues",
-                                f"#	# Note: above intializes DDS to parameter values IN the initial",
-                                f"#	#       model input files IF 'extract' option used in BeginParams",
-                                f"#	#       block (column 'init')",
-                                f"#End_DDSAU_Alg",
+                                f"EndParallelDDSAlg"
                             ]
                     },
                 "save_best":
@@ -1244,6 +1227,16 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
                                 f"exit 0",
                             ]
+                    },
+                "ost_mpi_script":
+                    {
+                        "Ostrich MPI run":
+                            [
+                                f"#!/bin/bash{newline}{newline}",
+                                f"# match assignment to location of OSTRICH installation{newline}",
+                                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
+                                f"mpirun $OSTRICH_MPI{newline}"
+                            ]
                     }
             },
         "HYMOD":
@@ -1260,7 +1253,7 @@ def generate_template_ostrich(model_type: str = model_type,
                             ],
                         "General Options":
                             [
-                                f"ProgramType  	    ParaPADDS",
+                                f"ProgramType  	    ParallelDDS",
                                 f"ObjectiveFunction   GCOP",
                                 f"ModelExecutable     ./Ost-RAVEN.sh",
                                 f"PreserveBestModel   ./save_best.sh",
@@ -1308,8 +1301,8 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
                                 f"BeginResponseVars",
                                 f"#name	  filename			        keyword		line	col	token                               augmented?",
-                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
-                                f"KGE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	4	',' yes",
+                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
+                                f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
                                 f"EndResponseVars",
                             ],
                         "Tied Response Variables":
@@ -1317,13 +1310,13 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"#Negative Nash-Sutcliffe efficiency",
                                 f"BeginTiedRespVars",
                                 f"NegNSE 1 NSE wsum -1.00",
-                                f"NegKGE 1 KGE wsum -1.00",
+                                f"NegKGE 1 KGE_NP wsum -1.00",
                                 f"EndTiedRespVars",
                             ],
                         "GCOP Options":
                             [
                                 f"BeginGCOP",
-                                f"CostFunction NegNSE",
+                                f"#CostFunction NegNSE",
                                 f"CostFunction NegKGE",
                                 f"PenaltyFunction APM",
                                 f"EndGCOP",
@@ -1344,32 +1337,15 @@ def generate_template_ostrich(model_type: str = model_type,
                             [
                                 f"#Algorithm should be last in this file (see p51 for APDDS):",
                                 f"",
-                                f"BeginParallelPADDSAlg",
+                                f"BeginParallelDDSAlg",
                                 f"PerturbationValue 0.20",
                                 f"MaxIterations 50",
                                 f"#	UseRandomParamValues",
-                                f"SelectionMetric ExactHyperVolumeContribution",
-                                f"EnableDebugging",
                                 f"# UseInitialParamValues",
                                 f"# Note: above intializes DDS to parameter values IN the initial",
                                 f"#       model input files IF 'extract' option used in BeginParams",
                                 f"#       block (column 'init')",
-                                f"EndParallelPADDSAlg",
-                                f"",
-                                f"#Begin_PADDSAU_Alg",
-                                f"#	PerturbationValue 0.20",
-                                f"#    NumSearches 25",
-                                f"#    MinItersPerSearch 20",
-                                f"#    MaxItersPerSearch 30",
-                                f"#    ParallelSearches yes",
-                                f"#    Threshold 500",
-                                f"#    Randomize no",
-                                f"#    ReviseAU yes",
-                                f"#	# UseInitialParamValues",
-                                f"#	# Note: above intializes DDS to parameter values IN the initial",
-                                f"#	#       model input files IF 'extract' option used in BeginParams",
-                                f"#	#       block (column 'init')",
-                                f"#End_DDSAU_Alg",
+                                f"EndParallelDDSAlg"
                             ]
                     },
                 "save_best":
@@ -1414,6 +1390,16 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
                                 f"exit 0",
                             ]
+                    },
+                "ost_mpi_script":
+                    {
+                        "Ostrich MPI run":
+                            [
+                                f"#!/bin/bash{newline}{newline}",
+                                f"# match assignment to location of OSTRICH installation{newline}",
+                                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
+                                f"mpirun $OSTRICH_MPI{newline}"
+                            ]
                     }
             },
         "HMETS":
@@ -1430,7 +1416,7 @@ def generate_template_ostrich(model_type: str = model_type,
                             ],
                         "General Options":
                             [
-                                f"ProgramType  	    ParaPADDS",
+                                f"ProgramType  	    ParallelDDS",
                                 f"ObjectiveFunction   GCOP",
                                 f"ModelExecutable     ./Ost-RAVEN.sh",
                                 f"PreserveBestModel   ./save_best.sh",
@@ -1502,8 +1488,8 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
                                 f"BeginResponseVars",
                                 f"#name	  filename			        keyword		line	col	token                               augmented?",
-                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
-                                f"KGE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	4	',' yes",
+                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
+                                f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
                                 f"EndResponseVars",
                             ],
                         "Tied Response Variables":
@@ -1511,13 +1497,13 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"#Negative Nash-Sutcliffe efficiency",
                                 f"BeginTiedRespVars",
                                 f"NegNSE 1 NSE wsum -1.00",
-                                f"NegKGE 1 KGE wsum -1.00",
+                                f"NegKGE 1 KGE_NP wsum -1.00",
                                 f"EndTiedRespVars",
                             ],
                         "GCOP Options":
                             [
                                 f"BeginGCOP",
-                                f"CostFunction NegNSE",
+                                f"#CostFunction NegNSE",
                                 f"CostFunction NegKGE",
                                 f"PenaltyFunction APM",
                                 f"EndGCOP",
@@ -1538,32 +1524,15 @@ def generate_template_ostrich(model_type: str = model_type,
                             [
                                 f"#Algorithm should be last in this file (see p51 for APDDS):",
                                 f"",
-                                f"BeginParallelPADDSAlg",
+                                f"BeginParallelDDSAlg",
                                 f"PerturbationValue 0.20",
                                 f"MaxIterations 50",
                                 f"#	UseRandomParamValues",
-                                f"SelectionMetric ExactHyperVolumeContribution",
-                                f"EnableDebugging",
                                 f"# UseInitialParamValues",
                                 f"# Note: above intializes DDS to parameter values IN the initial",
                                 f"#       model input files IF 'extract' option used in BeginParams",
                                 f"#       block (column 'init')",
-                                f"EndParallelPADDSAlg",
-                                f"",
-                                f"#Begin_PADDSAU_Alg",
-                                f"#	PerturbationValue 0.20",
-                                f"#    NumSearches 25",
-                                f"#    MinItersPerSearch 20",
-                                f"#    MaxItersPerSearch 30",
-                                f"#    ParallelSearches yes",
-                                f"#    Threshold 500",
-                                f"#    Randomize no",
-                                f"#    ReviseAU yes",
-                                f"#	# UseInitialParamValues",
-                                f"#	# Note: above intializes DDS to parameter values IN the initial",
-                                f"#	#       model input files IF 'extract' option used in BeginParams",
-                                f"#	#       block (column 'init')",
-                                f"#End_DDSAU_Alg",
+                                f"EndParallelDDSAlg"
                             ]
                     },
                 "save_best":
@@ -1606,6 +1575,16 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
                                 f"exit 0",
                             ]
+                    },
+                "ost_mpi_script":
+                    {
+                        "Ostrich MPI run":
+                            [
+                                f"#!/bin/bash{newline}{newline}",
+                                f"# match assignment to location of OSTRICH installation{newline}",
+                                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
+                                f"mpirun $OSTRICH_MPI{newline}"
+                            ]
                     }
             },
         "HBV":
@@ -1622,7 +1601,7 @@ def generate_template_ostrich(model_type: str = model_type,
                             ],
                         "General Options":
                             [
-                                f"ProgramType  	    ParaPADDS",
+                                f"ProgramType  	    ParallelDDS",
                                 f"ObjectiveFunction   GCOP",
                                 f"ModelExecutable     ./Ost-RAVEN.sh",
                                 f"PreserveBestModel   ./save_best.sh",
@@ -1680,8 +1659,8 @@ def generate_template_ostrich(model_type: str = model_type,
                             [
                                 f"BeginTiedParams",
                                 f"# 1-parameter linear (TLIN = 2*XVAL) ",
-                                f"{params[param_or_name]['HBV']['HBV_Param_11b']} 1 {params[param_or_name]['HBV']['HBV_Param_11b']} linear 0.5 0.00 free",
-                                f"{params[param_or_name]['HBV']['HBV_Param_17b']} 1 {params[param_or_name]['HBV']['HBV_Param_17']} linear 0.5 0.00 free",
+                                f"{params[param_or_name]['HBV']['HBV_Param_11b']} 1 {params[param_or_name]['HBV']['HBV_Param_11']} linear 0.5 0.00 free",
+                                f"{params[param_or_name]['HBV']['HBV_Param_17b']} 1 {params[param_or_name]['HBV']['HBV_Param_11']} linear 0.5 0.00 free",
                                 f"EndTiedParams"
                             ],
                         "Response Variables":
@@ -1689,8 +1668,8 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
                                 f"BeginResponseVars",
                                 f"#name	  filename			        keyword		line	col	token                               augmented?",
-                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
-                                f"KGE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	4	',' yes",
+                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
+                                f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
                                 f"EndResponseVars",
                             ],
                         "Tied Response Variables":
@@ -1698,13 +1677,13 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"#Negative Nash-Sutcliffe efficiency",
                                 f"BeginTiedRespVars",
                                 f"NegNSE 1 NSE wsum -1.00",
-                                f"NegKGE 1 KGE wsum -1.00",
+                                f"NegKGE 1 KGE_NP wsum -1.00",
                                 f"EndTiedRespVars",
                             ],
                         "GCOP Options":
                             [
                                 f"BeginGCOP",
-                                f"CostFunction NegNSE",
+                                f"#CostFunction NegNSE",
                                 f"CostFunction NegKGE",
                                 f"PenaltyFunction APM",
                                 f"EndGCOP",
@@ -1725,32 +1704,15 @@ def generate_template_ostrich(model_type: str = model_type,
                             [
                                 f"#Algorithm should be last in this file (see p51 for APDDS):",
                                 f"",
-                                f"BeginParallelPADDSAlg",
+                                f"BeginParallelDDSAlg",
                                 f"PerturbationValue 0.20",
                                 f"MaxIterations 50",
                                 f"#	UseRandomParamValues",
-                                f"SelectionMetric ExactHyperVolumeContribution",
-                                f"EnableDebugging",
                                 f"# UseInitialParamValues",
                                 f"# Note: above intializes DDS to parameter values IN the initial",
                                 f"#       model input files IF 'extract' option used in BeginParams",
                                 f"#       block (column 'init')",
-                                f"EndParallelPADDSAlg",
-                                f"",
-                                f"#Begin_PADDSAU_Alg",
-                                f"#	PerturbationValue 0.20",
-                                f"#    NumSearches 25",
-                                f"#    MinItersPerSearch 20",
-                                f"#    MaxItersPerSearch 30",
-                                f"#    ParallelSearches yes",
-                                f"#    Threshold 500",
-                                f"#    Randomize no",
-                                f"#    ReviseAU yes",
-                                f"#	# UseInitialParamValues",
-                                f"#	# Note: above intializes DDS to parameter values IN the initial",
-                                f"#	#       model input files IF 'extract' option used in BeginParams",
-                                f"#	#       block (column 'init')",
-                                f"#End_DDSAU_Alg",
+                                f"EndParallelDDSAlg"
                             ]
                     },
                 "save_best":
@@ -1796,6 +1758,16 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
                                 f"exit 0",
                             ]
+                    },
+                "ost_mpi_script":
+                    {
+                        "Ostrich MPI run":
+                            [
+                                f"#!/bin/bash{newline}{newline}",
+                                f"# match assignment to location of OSTRICH installation{newline}",
+                                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
+                                f"mpirun $OSTRICH_MPI{newline}"
+                            ]
                     }
             },
         "MOHYSE":
@@ -1812,7 +1784,7 @@ def generate_template_ostrich(model_type: str = model_type,
                             ],
                         "General Options":
                             [
-                                f"ProgramType  	    ParaPADDS",
+                                f"ProgramType  	    ParallelDDS",
                                 f"ObjectiveFunction   GCOP",
                                 f"ModelExecutable     ./Ost-RAVEN.sh",
                                 f"PreserveBestModel   ./save_best.sh",
@@ -1860,8 +1832,8 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
                                 f"BeginResponseVars",
                                 f"#name	  filename			        keyword		line	col	token                               augmented?",
-                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
-                                f"KGE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	4	',' yes",
+                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
+                                f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
                                 f"EndResponseVars",
                             ],
                         "Tied Response Variables":
@@ -1869,7 +1841,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"#Negative Nash-Sutcliffe efficiency",
                                 f"BeginTiedRespVars",
                                 f"NegNSE 1 NSE wsum -1.00",
-                                f"NegKGE 1 KGE wsum -1.00",
+                                f"NegKGE 1 KGE_NP wsum -1.00",
                                 f"EndTiedRespVars",
                             ],
                         "GCOP Options":
@@ -1896,32 +1868,15 @@ def generate_template_ostrich(model_type: str = model_type,
                             [
                                 f"#Algorithm should be last in this file (see p51 for APDDS):",
                                 f"",
-                                f"BeginParallelPADDSAlg",
+                                f"BeginParallelDDSAlg",
                                 f"PerturbationValue 0.20",
                                 f"MaxIterations 50",
                                 f"#	UseRandomParamValues",
-                                f"SelectionMetric ExactHyperVolumeContribution",
-                                f"EnableDebugging",
                                 f"# UseInitialParamValues",
                                 f"# Note: above intializes DDS to parameter values IN the initial",
                                 f"#       model input files IF 'extract' option used in BeginParams",
                                 f"#       block (column 'init')",
-                                f"EndParallelPADDSAlg",
-                                f"",
-                                f"#Begin_PADDSAU_Alg",
-                                f"#	PerturbationValue 0.20",
-                                f"#    NumSearches 25",
-                                f"#    MinItersPerSearch 20",
-                                f"#    MaxItersPerSearch 30",
-                                f"#    ParallelSearches yes",
-                                f"#    Threshold 500",
-                                f"#    Randomize no",
-                                f"#    ReviseAU yes",
-                                f"#	# UseInitialParamValues",
-                                f"#	# Note: above intializes DDS to parameter values IN the initial",
-                                f"#	#       model input files IF 'extract' option used in BeginParams",
-                                f"#	#       block (column 'init')",
-                                f"#End_DDSAU_Alg",
+                                f"EndParallelDDSAlg"
                             ]
                     },
                 "save_best":
@@ -1963,6 +1918,16 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"# shellcheck disable=SC2086",
                                 f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
                                 f"exit 0",
+                            ]
+                    },
+                "ost_mpi_script":
+                    {
+                        "Ostrich MPI run":
+                            [
+                                f"#!/bin/bash{newline}{newline}",
+                                f"# match assignment to location of OSTRICH installation{newline}",
+                                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
+                                f"mpirun $OSTRICH_MPI{newline}"
                             ]
                     }
             },
@@ -2093,7 +2058,8 @@ def write_ostrich(
         params: dict = default_params,
         ost_in: bool = True,
         save_best: bool = True,
-        ost_raven: bool = True
+        ost_raven: bool = True,
+        ost_mpi_script: bool = True
 ):
     """Writes Ostrich input files ostIn.txt, save_best.sh and Ost-RAVEN.sh
     Args:
@@ -2115,6 +2081,7 @@ def write_ostrich(
     ost_in_file_name: str = f"ostIn.txt"
     save_best_file_name: str = f"save_best.sh"
     ost_raven_file_name: str = f"Ost-RAVEN.sh"
+    ost_shell_file_name: str = f"Ostrich_MPI.sh"
     logger.debug(f"filename w/o suffix set to {ost_in_file_name}.")
     template_sections = generate_template_ostrich(model_type=model_type, params=params, catchment=catchment)
     logger.debug(f"Dictionary template_sections created.")
@@ -2133,11 +2100,12 @@ def write_ostrich(
                 logger.debug("Template section written.")
                 ff.write(newline)
             logger.debug("template_sections for-loop finished.")
-    logger.debug(f"Variable save_best evaluated to {save_best}")
+        logger.debug(f"Variable save_best evaluated to {save_best}")
     if save_best:
+        file_path: Path = Path(project_dir, model_dir, catchment, model_type, save_best_file_name)
         logger.debug(
-            f"Trying to write to file: {Path(project_dir, model_dir, catchment, model_type, save_best_file_name)}")
-        with open(Path(project_dir, model_dir, catchment, model_type, save_best_file_name), 'w') as ff:
+            f"Trying to write to file: {file_path}")
+        with open(file_path, 'w') as ff:
             logger.debug("Entering template_sections for-loop...")
             logger.debug(f"template_sections dictionary: {newline} {template_sections}")
             for section in template_sections["save_best"]:
@@ -2145,11 +2113,13 @@ def write_ostrich(
                 logger.debug("Template section written.")
                 ff.write(newline)
             logger.debug("template_sections for-loop finished.")
-    logger.debug(f"Variable ost_raven evaluated to {ost_raven}")
+        logger.debug(f"Variable ost_raven evaluated to {ost_raven}")
+        os.chmod(file_path, 0o775)
     if ost_raven:
+        file_path: Path = Path(project_dir, model_dir, catchment, model_type, ost_raven_file_name)
         logger.debug(
-            f"Trying to write to file: {Path(project_dir, model_dir, catchment, model_type, ost_raven_file_name)}")
-        with open(Path(project_dir, model_dir, catchment, model_type, ost_raven_file_name), 'w') as ff:
+            f"Trying to write to file: {file_path}")
+        with open(file_path, 'w') as ff:
             logger.debug("Entering template_sections for-loop...")
             logger.debug(f"template_sections dictionary: {newline} {template_sections}")
             for section in template_sections["ost_raven"]:
@@ -2157,6 +2127,16 @@ def write_ostrich(
                 logger.debug("Template section written.")
                 ff.write(newline)
             logger.debug("template_sections for-loop finished.")
+        os.chmod(file_path, 0o775)
+
+    if ost_mpi_script:
+        file_path: Path = Path(project_dir, model_dir, catchment, model_type, ost_shell_file_name)
+        with open(file_path, "w") as ff:
+            for section in template_sections["ost_mpi_script"]:
+                ff.writelines(f"{lin}\n" for lin in template_sections["ost_mpi_script"][section])
+                logger.debug("Template section written.")
+                ff.write(newline)
+        os.chmod(file_path, 0o775)
 
 
 if __name__ == '__main__':
