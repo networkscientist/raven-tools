@@ -572,20 +572,40 @@ class RavenModel:
             rpe.nc_merge(start_year=self.start_year, end_year=self.end_year,
                          forcing_dir=Path(self.data_dir, "MeteoSwiss_gridded_products"), catchment=self.catchment)
 
-    def write_rvt(self):
-        rr.write_rvt(start_year=self.start_year,
-                     end_year=self.end_year,
-                     model_dir=self.model_dir,
-                     model_type=self.model_type,
-                     project_dir=self.root_dir,
-                     catchment=self.catchment,
-                     catchment_id=self.catchment_id,
-                     gauge_lat=self.gauge_lat,
-                     gauge_lon=self.gauge_lon,
-                     model_sub_dir=self.model_sub_dir,
-                     gauge_short_code=self.gauge_short_code,
-                     station_elevation=self.station_elevation,
-                     catchment_gauge_id=str(self.ctm_info))
+    def write_rvt(self, ostrich_template: bool = True, raven_template: bool = True):
+
+        if ostrich_template:
+            rr.write_rvt(start_year=self.start_year,
+                         end_year=self.end_year,
+                         model_dir=self.model_dir,
+                         model_type=self.model_type,
+                         project_dir=self.root_dir,
+                         catchment=self.catchment,
+                         catchment_id=self.catchment_id,
+                         gauge_lat=self.gauge_lat,
+                         gauge_lon=self.gauge_lon,
+                         model_sub_dir=self.model_sub_dir,
+                         gauge_short_code=self.gauge_short_code,
+                         station_elevation=self.station_elevation,
+                         catchment_gauge_id=str(self.ctm_info),
+                         params=self.default_params,
+                         param_or_name="names")
+        if raven_template:
+            rr.write_rvt(start_year=self.start_year,
+                         end_year=self.end_year,
+                         model_dir=self.model_dir,
+                         model_type=self.model_type,
+                         project_dir=self.root_dir,
+                         catchment=self.catchment,
+                         catchment_id=self.catchment_id,
+                         gauge_lat=self.gauge_lat,
+                         gauge_lon=self.gauge_lon,
+                         model_sub_dir=self.model_sub_dir,
+                         gauge_short_code=self.gauge_short_code,
+                         station_elevation=self.station_elevation,
+                         catchment_gauge_id=str(self.ctm_info),
+                         params=self.default_params,
+                         param_or_name="params")
 
     def camels_to_rvt(self):
         rpe.camels_to_rvt(data_dir=self.data_dir, catchment_id=self.catchment_id,
@@ -622,7 +642,3 @@ def ch1903_to_wgs84(lat_1903, lon_1903):
     transformer = Transformer.from_crs("EPSG:21781", "EPSG:4326")
     lat_wgs84, lon_wgs84 = transformer.transform(lat_1903, lon_1903)
     return lat_wgs84, lon_wgs84
-
-
-def pet_monthly_ave():
-    rpe.pet_monthly_ave()

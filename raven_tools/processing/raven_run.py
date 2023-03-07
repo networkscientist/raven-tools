@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas
 
+import processing.raven_preprocess
 import raven_tools.config.variables
 from raven_tools import config
 
@@ -144,7 +145,9 @@ def write_rvt(start_year: int,
               author=conf['Author'],
               gauge_short_code="DefAult",
               station_elevation="100",
-              catchment_gauge_id="1000"):
+              catchment_gauge_id="1000",
+              params=default_params,
+              param_or_name: str = "names"):
     """Write to Raven .rvt file.
 
     Args:
@@ -164,19 +167,47 @@ def write_rvt(start_year: int,
     file_path: Path = Path(model_dir, model_sub_dir, file_name)
     logger.debug(f"file_name = {file_name}")
     logger.debug(f"file_path = {file_path}")
-
-    gauge = [
-        f":Gauge {gauge_short_code}\n",
+    gauge_header = f":Gauge {gauge_short_code}\n"
+    gauge_end = f":EndGauge{newline}{newline}"
+    gauge_info = [
         f"  :Latitude    {gauge_lat}\n",
         f"  :Longitude {gauge_lon}\n",
-        f"  :Elevation  {station_elevation}\n",
-        ":EndGauge\n"
+        f"  :Elevation  {station_elevation}{newline}{newline}",
     ]
 
     flow_observation = [
         "# observed streamflow\n",
         f":RedirectToFile data_obs/{gauge_short_code}_Q_{catchment_gauge_id}_daily.rvt"
     ]
+
+    if model_type == "HBV":
+        gauge_correction = [
+            f"  :RainCorrection    {params[param_or_name]['HBV']['HBV_Param_20']}{newline}",
+            f"  :SnowCorrection    {params[param_or_name]['HBV']['HBV_Param_21']}{newline}{newline}"
+        ]
+        pet_monthly_ave, temp_monthly_ave = processing.raven_preprocess.pet_temp_monthly_ave(
+            "/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_ets150m0_1_data.txt",
+            "/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_tre200h0_1_data.txt")
+        monthly_averages = [
+            # The following line expands the list into a string with spaces between the values, omitting any brackets
+            f"  :MonthlyAveEvaporation {' '.join(str(x) for x in pet_monthly_ave.to_list())}{newline}",
+            f"  :MonthlyAveTemperature {' '.join(str(x) for x in temp_monthly_ave.to_list())}{newline}{newline}"
+        ]
+        gauge = [
+            gauge_header,
+            *gauge_info,
+            *gauge_correction,
+            *monthly_averages,
+            gauge_end
+        ]
+
+    else:
+        gauge = [
+            gauge_header,
+            *gauge_info,
+            gauge_end
+        ]
+
     with open(file_path, 'w') as ff:
         ff.writelines(f"{line}{newline}" for line in
                       create_header(author=author, catchment=catchment, model=model_type, rvx_type="rvt"))

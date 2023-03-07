@@ -6,9 +6,10 @@ Currently, the dependencies have to be installed through conda-forge (create a n
 my computer.
 Please note that the netCDF coordinates start with (x,y)=(1,1) bottom left.
 """
-#TODO: Check wether deps still have to be installed through conda-forge...
+# TODO: Check wether deps still have to be installed through conda-forge...
 
 from pathlib import Path
+
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -228,6 +229,7 @@ if __name__ == '__main__':
 
     # Export the grid to a shape file
     grid.to_file("/media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/grid.shp")
+    # _-----------------------
 
     # Read the catchment shape file into a GeoDataFrame and set the projection accordingly
     catchment = gpd.read_file(extent_shape_file_path)

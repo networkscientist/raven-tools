@@ -253,21 +253,24 @@ def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
     cdf_dataset_out.close()
 
 
-def pet_monthly_ave(pet_filepath: Path):
+def pet_temp_monthly_ave(pet_filepath: Path, temp_filepath: Path):
     import pandas as pd
     from pathlib import Path
-    pet_filepath = Path("/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_ets150m0_1_data.txt")
+    pet_filepath = Path(pet_filepath)
     pet_monthly_from_order = pd.read_csv(pet_filepath, sep=";")
+
     pet_monthly_from_order['time'] = pd.to_datetime(pet_monthly_from_order['time'], format='%Y%m')
     pet_monthly_from_order['month'] = pet_monthly_from_order['time'].dt.month
-    print(pet_monthly_from_order.values)
+    pet_monthly = pet_monthly_from_order.groupby(pet_monthly_from_order.time.dt.month)['ets150m0'].mean()
+    print(str(pet_monthly_from_order['ets150m0'].mean()))
+    print(str(pet_monthly.values.mean()))
 
-    temp_filepath = Path("/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_tre200h0_1_data.txt")
+    temp_filepath = Path(temp_filepath)
     temp_hourly_from_order = pd.read_csv(temp_filepath, sep=";")
     temp_hourly_from_order['time'] = pd.to_datetime(temp_hourly_from_order['time'], format='%Y%m%d%H')
     temp_monthly = temp_hourly_from_order.groupby(temp_hourly_from_order.time.dt.month)['tre200h0'].mean()
     print(temp_monthly.values)
-    return pet_monthly_from_order
+    return pet_monthly, temp_monthly
 
 
 def resample_netcdf_monthly():
