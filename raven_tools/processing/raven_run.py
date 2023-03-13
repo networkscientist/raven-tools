@@ -58,7 +58,7 @@ def create_header(author=conf['Author'], creation_date=generation_date, catchmen
                   rvx_type: str = "rvi"):
     try:
         header_line = "#########################################################################"
-        file_type = ":FileType          rvt ASCII Raven 3.5"
+        file_type = f":FileType          {rvx_type} ASCII Raven 3.5"
         author_line = f":WrittenBy         {author}"
         creation_date = f":CreationDate      {creation_date}"
         description = [
@@ -147,7 +147,8 @@ def write_rvt(start_year: int,
               station_elevation="100",
               catchment_gauge_id="1000",
               params=default_params,
-              param_or_name: str = "names"):
+              param_or_name: str = "names",
+              template_type: str = "Raven"):
     """Write to Raven .rvt file.
 
     Args:
@@ -163,10 +164,18 @@ def write_rvt(start_year: int,
 
     """
     logger.debug("Entered write_rvt function.")
-    file_name: str = f"{catchment}_{model_type}.rvt"
-    file_path: Path = Path(model_dir, model_sub_dir, file_name)
-    logger.debug(f"file_name = {file_name}")
-    logger.debug(f"file_path = {file_path}")
+    if template_type == "Raven":
+        param_or_name = "params"
+        file_name: str = f"{catchment}_{model_type}.rvt"
+        logger.debug(f"file_name = {file_name}")
+        file_path: Path = Path(model_dir, file_name)
+        logger.debug(f"file_path = {file_path}")
+    if template_type == "Ostrich":
+        param_or_name = "names"
+        file_name: str = f"{catchment}_{model_type}.rvt.tpl"
+        file_path: Path = Path(model_dir, file_name)
+        logger.debug(f"file_path = {file_path}")
+
     gauge_header = f":Gauge {gauge_short_code}\n"
     gauge_end = f":EndGauge{newline}{newline}"
     gauge_info = [
@@ -186,8 +195,8 @@ def write_rvt(start_year: int,
             f"  :SnowCorrection    {params[param_or_name]['HBV']['HBV_Param_21']}{newline}{newline}"
         ]
         pet_monthly_ave, temp_monthly_ave = processing.raven_preprocess.pet_temp_monthly_ave(
-            "/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_ets150m0_1_data.txt",
-            "/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_tre200h0_1_data.txt")
+            pet_filepath=Path("/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_ets150m0_1_data.txt"),
+            temp_filepath=Path("/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_tre200h0_1_data.txt"))
         monthly_averages = [
             # The following line expands the list into a string with spaces between the values, omitting any brackets
             f"  :MonthlyAveEvaporation {' '.join(str(x) for x in pet_monthly_ave.to_list())}{newline}",
@@ -336,9 +345,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 f":EndDate               {end_year}-12-31 00:00:00",
                                 ":TimeStep              1.0",
                                 ":Method                ORDERED_SERIES",
-                                f":RunName               {catchment}_GR4J",
-                                f":EvaluationPeriod CALIBRATION {start_year}-01-01 {cali_end_year}-12-31",
-                                f":EvaluationPeriod VALIDATION {int(cali_end_year) + 1}-01-01 {end_year}-12-31"
+                                f":RunName               {catchment}_GR4J"
                             ],
                             "Model Options":
                                 [
@@ -349,7 +356,9 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                     ":RainSnowFraction      RAINSNOW_DINGMAN",
                                     ":PotentialMeltMethod   POTMELT_DEGREE_DAY",
                                     ":OroTempCorrect        OROCORR_SIMPLELAPSE",
-                                    ":OroPrecipCorrect      OROCORR_SIMPLELAPSE"
+                                    ":OroPrecipCorrect      OROCORR_SIMPLELAPSE",
+                                    f":EvaluationPeriod CALIBRATION {start_year}-01-01 {cali_end_year}-12-31",
+                                    f":EvaluationPeriod VALIDATION {int(cali_end_year) + 1}-01-01 {end_year}-12-31"
                                 ],
                             "Soil Layer Alias Definitions":
                                 [
@@ -380,14 +389,13 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ],
                             "Output Options":
                                 [
-                                    "#  :EvaluationMetrics NASH_SUTCLIFFE KLING_GUPTA"
                                 ]
                         },
                     "rvc":
                         {
                             "Soil Profiles":
                                 [
-                                    f"# SOIL[0] = {params[param_or_name]['GR4J']['GR4J_X1']} * 1000. / 2.0 (initialize to 1/2 full)",
+                                    "# SOIL[0] = GR4J_X1 * 1000. / 2.0 (initialize to 1/2 full)",
                                     "# SOIL[1] = 0.3m * 1000. / 2.0   (initialize to 1/2 full)"
                                 ],
                             "HRU States":
@@ -395,7 +403,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                     ":HRUStateVariableTable",
                                     "   :Attributes SOIL[0] SOIL[1]",
                                     "   :Units      mm      mm",
-                                    "   1           264.5   15.0",
+                                    f"   1           {params[param_or_name]['GR4J']['GR4J_X1b']},   15.0",
                                     ":EndHRUStateVariableTable"
                                 ]
                         },
@@ -431,7 +439,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                     ":LandUseClasses",
                                     "   :Attributes, IMPERM, FOREST_COV,",
                                     "   :Units, frac, frac,",
-                                    "       LU_ALL, 0.0, 1.0",
+                                    f"       LU_ALL, {int(csv_file.loc['a0425_clc18_5_aurbv1_0']['values']) / 100}, {int(csv_file.loc['a0418_clc18_5_afrtv1_0']['values']) / 100}",
                                     ":EndLandUseClasses"
                                 ],
                             "Vegetation Classes":
@@ -523,7 +531,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                             "Hydrologic Process Order":
                                 [
                                     ":HydrologicProcesses",
-                                    "\t:Precipitation     PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
+                                    "   :Precipitation     PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
                                     "   :SnowBalance       SNOBAL_SIMPLE_MELT SNOW            PONDED_WATER",
                                     "   :Infiltration      INF_PDM            PONDED_WATER    MULTIPLE",
                                     "#  :Flush            RAVEN_DEFAULT      SURFACE_WATER   SOIL[1]   HYMOD_PARAM_9=ALPHA",
@@ -534,7 +542,6 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ],
                             "Output Options":
                                 [
-                                    "#  :EvaluationMetrics NASH_SUTCLIFFE KLING_GUPTA"
                                 ]
                         },
                     "rvc":
@@ -654,9 +661,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 f":EndDate                {end_year}-12-31 00:00:00",
                                 ":TimeStep                1.0",
                                 ":Method                  ORDERED_SERIES",
-                                f":RunName                 {catchment}_HMETS",
-                                f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
-                                f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
+                                f":RunName                 {catchment}_HMETS"
                             ],
                             "Model Options":
                                 [
@@ -666,7 +671,9 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                     "#:Evaporation            PET_OUDIN",
                                     ":CatchmentRoute          ROUTE_DUMP",
                                     ":Routing                 ROUTE_NONE",
-                                    ":SoilModel               SOIL_TWO_LAYER"
+                                    ":SoilModel               SOIL_TWO_LAYER",
+                                    f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
+                                    f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
                                 ],
                             "Alias Definitions":
                                 [
@@ -690,7 +697,6 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ],
                             "Output Options":
                                 [
-                                    "#:EvaluationMetrics NASH_SUTCLIFFE"
                                 ]
                         },
                     "rvc":
@@ -698,9 +704,9 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                             [
                                 "# initialize to 1/2 full",
                                 "# x(20)/2",
-                                ":UniformInitialConditions SOIL[0] 155.36055",
+                                f":UniformInitialConditions SOIL[0] {params[param_or_name]['HMETS']['HMETS_Param_20b']}",
                                 "# x(21)/2",
-                                ":UniformInitialConditions SOIL[1] 458.09735"
+                                f":UniformInitialConditions SOIL[1] {params[param_or_name]['HMETS']['HMETS_Param_21b']}"
                             ],
                             "HRUs":
                                 [
@@ -757,15 +763,15 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                     ":LandUseClasses",
                                     "   :Attributes, IMPERM, FOREST_COV,",
                                     "   :Units, frac, frac,",
-                                    "       LU_ALL, 0.0, 1.0",
+                                    f"       LU_ALL, {int(csv_file.loc['a0425_clc18_5_aurbv1_0']['values']) / 100}, {int(csv_file.loc['a0418_clc18_5_afrtv1_0']['values']) / 100}",
                                     ":EndLandUseClasses"
                                 ],
                             "Global Parameters":
                                 [
                                     f":GlobalParameter RAINSNOW_TEMP       {params[param_or_name]['HBV']['HBV_Param_01']}",
                                     ":GlobalParameter RAINSNOW_DELTA      1.0 #constant",
-                                    f"#:GlobalParameter PRECIP_LAPSE     {params[param_or_name]['HBV']['HBV_Param_12']} # I assume not necessary for gridded data, HBV_PARA_12=PCALT",
-                                    f"#:GlobalParameter ADIABATIC_LAPSE  {params[param_or_name]['HBV']['HBV_Param_13']} # not necessary for gridded data, HBV_PARA_13=TCALT",
+                                    f":GlobalParameter PRECIP_LAPSE     {params[param_or_name]['HBV']['HBV_Param_12']} # I assume not necessary for gridded data, HBV_PARA_12=PCALT",
+                                    f":GlobalParameter ADIABATIC_LAPSE  {params[param_or_name]['HBV']['HBV_Param_13']} # not necessary for gridded data, HBV_PARA_13=TCALT",
                                     f":GlobalParameter SNOW_SWI  {params[param_or_name]['HBV']['HBV_Param_04']} #HBV_PARA_04"
                                 ],
                             "Land Use Parameters":
@@ -823,7 +829,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                     "#                            MAXBAS,                 MAXBAS/2,",
                                     "   :Parameters,           TIME_CONC,             TIME_TO_PEAK,",
                                     "   :Units,                        d,                        d,",
-                                    f"              1,          {params[param_or_name]['HBV']['HBV_Param_11']},                  {params[param_or_name]['HBV']['HBV_Param_11']},",
+                                    f"              1,          {params[param_or_name]['HBV']['HBV_Param_11']},                  {params[param_or_name]['HBV']['HBV_Param_11b']},",
                                     ":EndSubBasinProperties"
                                 ]
                         },
@@ -833,9 +839,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 f":StartDate             {start_year}-01-01 00:00:00",
                                 f":EndDate               {end_year}-12-31 00:00:00",
                                 ":TimeStep              1.0",
-                                f":RunName               {catchment}_HBV",
-                                f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
-                                f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
+                                f":RunName               {catchment}_HBV"
                             ],
                             "Model Options":
                                 [
@@ -855,7 +859,9 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                     ":CloudCoverMethod    	    CLOUDCOV_NONE",
                                     ":PrecipIceptFract    	    PRECIP_ICEPT_USER",
                                     ":MonthlyInterpolationMethod MONTHINT_LINEAR_21",
-                                    ":SoilModel                  SOIL_MULTILAYER 3"
+                                    ":SoilModel                  SOIL_MULTILAYER 3",
+                                    f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
+                                    f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
                                 ],
                             "Soil Alias Layer Definitions":
                                 [
@@ -869,7 +875,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                     "   :SnowRefreeze      FREEZE_DEGREE_DAY  SNOW_LIQ        SNOW",
                                     "   :Precipitation     PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
                                     "   :CanopyEvaporation CANEVP_ALL         CANOPY          ATMOSPHERE",
-                                    ":  CanopySnowEvap    CANEVP_ALL         CANOPY_SNOW     ATMOSPHERE",
+                                    "   :CanopySnowEvap    CANEVP_ALL         CANOPY_SNOW     ATMOSPHERE",
                                     "   :SnowBalance       SNOBAL_SIMPLE_MELT SNOW            SNOW_LIQ",
                                     "       :-->Overflow     RAVEN_DEFAULT      SNOW_LIQ        PONDED_WATER",
                                     "   :Flush             RAVEN_DEFAULT      PONDED_WATER    GLACIER",
@@ -889,7 +895,6 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ],
                             "Output Options":
                                 [
-                                    "#:EvaluationMetrics NASH_SUTCLIFFE"
                                 ]
                         },
                     "rvc":
@@ -908,7 +913,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                     "",
                                     ":InitialConditions SOIL[2]",
                                     "# derived from thickness: HBV_PARA_17 [m] * 1000.0 / 2.0",
-                                    f"{params[param_or_name]['HBV']['HBV_Param_17']}",
+                                    f"{params[param_or_name]['HBV']['HBV_Param_17b']}",
                                     ":EndInitialConditions"
                                 ]
                         },
@@ -960,15 +965,15 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                     ":LandUseClasses",
                                     "   :Attributes, IMPERM, FOREST_COV,",
                                     "   :Units, frac, frac,",
-                                    "       LU_ALL, 0.0, 1.0",
+                                    f"       LU_ALL, {int(csv_file.loc['a0425_clc18_5_aurbv1_0']['values']) / 100}, {int(csv_file.loc['a0418_clc18_5_afrtv1_0']['values']) / 100}",
                                     ":EndLandUseClasses"
                                 ],
                             "Global Parameters":
                                 [
                                     "#:GlobalParameter      RAINSNOW_TEMP              -2.0",
                                     ":GlobalParameter       TOC_MULTIPLIER              1.0",
-                                    f"# :GlobalParameter     MOHYSE_PET_COEFF  {params[param_or_name]['MOHYSE']['MOHYSE_Param_01']}",
-                                    ":GlobalParameter       MOHYSE_PET_COEFF         1.0000"
+                                    f"# :GlobalParameter     MOHYSE_PET_COEFF  MOHYSE_PARA_01",
+                                    f":GlobalParameter       MOHYSE_PET_COEFF         {params[param_or_name]['MOHYSE']['MOHYSE_Param_01']}"
                                 ],
                             "Land Use Parameters":
                                 [
@@ -1025,9 +1030,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 f":EndDate                {end_year}-12-31 00:00:00",
                                 ":TimeStep                1.0",
                                 ":Method                  ORDERED_SERIES",
-                                f":RunName                 {catchment}_MOHYSE",
-                                f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
-                                f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
+                                f":RunName                 {catchment}_MOHYSE"
                             ],
                             "Model Options":
                                 [
@@ -1037,7 +1040,9 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                     ":CatchmentRoute        ROUTE_GAMMA_CONVOLUTION",
                                     ":Evaporation           PET_MOHYSE",
                                     ":DirectEvaporation",
-                                    ":RainSnowFraction      RAINSNOW_DATA"
+                                    ":RainSnowFraction      RAINSNOW_DATA",
+                                    f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
+                                    f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
                                 ],
                             "Alias Definitions":
                                 [
@@ -1066,7 +1071,6 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ],
                             "Output Options":
                                 [
-                                    "#:EvaluationMetrics NASH_SUTCLIFFE"
                                 ]
                         },
                     "rvc":
@@ -1150,6 +1154,7 @@ def generate_template_ostrich(model_type: str = model_type,
                             [
                                 f"BeginFilePairs",
                                 f"{file_name}.rvp.tpl;	{file_name}.rvp",
+                                f"{file_name}.rvc.tpl;  {file_name}.rvc",
                                 f"#can be multiple (.rvh, .rvi)",
                                 f"EndFilePairs"
                             ],
@@ -1163,17 +1168,24 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"{params[param_or_name]['GR4J']['GR4J_X1']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['GR4J']['GR4J_X2']}  	random	 	-15		10	none   none 	none",
                                 f"{params[param_or_name]['GR4J']['GR4J_X3']}  	random		10		700	none   none 	none",
-                                f"{params[param_or_name]['GR4J']['GR4J_X4']}  	random		0		7 	none   none	none",
+                                f"{params[param_or_name]['GR4J']['GR4J_X4']}  	random		0.5		7 	none   none	none",
                                 f"{params[param_or_name]['GR4J']['Melt_Factor']}  	random		1		30	none   none	none",
                                 f"{params[param_or_name]['GR4J']['Airsnow_Coeff']}  	random		0		1	none   none 	none",
                                 f"EndParams"
+                            ],
+                        "Tied Parameters":
+                            [
+                                f"BeginTiedParams",
+                                f"# 1-parameter linear (TLIN = 2*XVAL) ",
+                                f"{params[param_or_name]['GR4J']['GR4J_X1b']}   1 {params[param_or_name]['GR4J']['GR4J_X1']} linear 500 0.00 free # SOIL[0] ",
+                                f"EndTiedParams"
                             ],
                         "Response Variables":
                             [
                                 f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
                                 f"BeginResponseVars",
                                 f"#name	  filename			        keyword		line	col	token                               augmented?",
-                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
+                                f"#NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
                                 f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
                                 f"EndResponseVars",
                             ],
@@ -1181,7 +1193,7 @@ def generate_template_ostrich(model_type: str = model_type,
                             [
                                 f"#Negative Nash-Sutcliffe efficiency",
                                 f"BeginTiedRespVars",
-                                f"NegNSE 1 NSE wsum -1.00",
+                                f"#NegNSE 1 NSE wsum -1.00",
                                 f"NegKGE 1 KGE_NP wsum -1.00",
                                 f"EndTiedRespVars",
                             ],
@@ -1231,6 +1243,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"\tmkdir model_best",
                                 f"fi{newline}",
                                 f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
+                                f"cp model/{file_name}.rvc                    model_best/{file_name}.rvc",
                                 f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
                                 f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
                                 f"exit 0",
@@ -1246,6 +1259,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
                                 f"# Copy the latest model files to the model folder",
                                 f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
+                                f"cp ./{file_name}.rvc model/{file_name}.rvc{newline}",
                                 f"## cd into the model folder",
                                 f"cd model{newline}",
                                 f"# Run Raven.exe",
@@ -1652,6 +1666,9 @@ def generate_template_ostrich(model_type: str = model_type,
                             [
                                 f"BeginFilePairs",
                                 f"{file_name}.rvp.tpl;	{file_name}.rvp",
+                                f"{file_name}.rvc.tpl;  {file_name}.rvc",
+                                f"{file_name}.rvh.tpl;  {file_name}.rvh",
+                                f"{file_name}.rvt.tpl;  {file_name}.rvt",
                                 f"#can be multiple (.rvh, .rvi)",
                                 f"EndFilePairs"
                             ],
@@ -1676,7 +1693,6 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"{params[param_or_name]['HBV']['HBV_Param_12']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HBV']['HBV_Param_13']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HBV']['HBV_Param_14']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_15']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HBV']['HBV_Param_16']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HBV']['HBV_Param_17']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HBV']['HBV_Param_18']}		random		0.01		2.5	none   none 	none",
@@ -1691,7 +1707,7 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"BeginTiedParams",
                                 f"# 1-parameter linear (TLIN = 2*XVAL) ",
                                 f"{params[param_or_name]['HBV']['HBV_Param_11b']} 1 {params[param_or_name]['HBV']['HBV_Param_11']} linear 0.5 0.00 free",
-                                f"{params[param_or_name]['HBV']['HBV_Param_17b']} 1 {params[param_or_name]['HBV']['HBV_Param_11']} linear 0.5 0.00 free",
+                                f"{params[param_or_name]['HBV']['HBV_Param_17b']} 1 {params[param_or_name]['HBV']['HBV_Param_17']} linear 0.5 0.00 free",
                                 f"EndTiedParams"
                             ],
                         "Response Variables":
@@ -1756,9 +1772,9 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"if [ ! -e model_best ] ; then",
                                 f"\tmkdir model_best",
                                 f"fi{newline}",
-                                f"cp model/{file_name}.rvi                    model_best/{file_name}.rvi",
                                 f"cp model/{file_name}.rvh                    model_best/{file_name}.rvh",
                                 f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
+                                f"cp model/{file_name}.rvc                    model_best/{file_name}.rvc",
                                 f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
                                 f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
                                 f"exit 0",
@@ -1773,7 +1789,6 @@ def generate_template_ostrich(model_type: str = model_type,
                                 f"# Get the latest version of the diagnostics script and copy it to the model folder",
                                 f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
                                 f"# Copy the latest model files to the model folder",
-                                f"cp ./{file_name}.rvi model/{file_name}.rvi",
                                 f"cp ./{file_name}.rvh model/{file_name}.rvh",
                                 f"cp ./{file_name}.rvc model/{file_name}.rvc",
                                 f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
@@ -2036,7 +2051,7 @@ def write_rvx(model_dir: str = model_dir,
     logger.debug("Attribute catchment attribute CSV file read.")
     file_name: str = f"{catchment}_{model_type}.{rvx_type}"
     logger.debug(f".{rvx_type} filename set to {file_name}.")
-    file_path: Path = Path(project_dir, model_dir, catchment, model_type, model_sub_dir, file_name)
+    file_path: Path = Path(project_dir, model_dir, catchment, model_type, file_name)
     logger.debug(f".{rvx_type} file path set to {file_path}.")
     template_sections = {}
     logger.debug("Empty dict template_sections created.")

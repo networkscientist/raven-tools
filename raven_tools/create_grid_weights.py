@@ -225,7 +225,7 @@ if __name__ == '__main__':
 
     # Every cell that is not within the catchment area will have area_rel set to zero
     grid["area_rel"] = 0
-    grid = grid.set_crs(2056)
+    # grid = grid.set_crs(2056)
 
     # Export the grid to a shape file
     grid.to_file("/media/mainman/Data/RAVEN/data/MeteoSwiss_gridded_products/grid.shp")

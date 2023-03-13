@@ -431,7 +431,7 @@ class RavenModel:
         self._ost_exe_path = value
 
     def create_symlinks(self, forcings: bool = True, discharge: bool = True, raven_executable: bool = True,
-                        ostrich_executable: bool = True):
+                        ostrich_executable: bool = True, rvx_files: bool = True):
         logger.debug("Entered function create_symlinks.")
         if forcings:
             logger.debug("Trying to create data symlinks...")
@@ -501,6 +501,20 @@ class RavenModel:
                 logger.exception("Error creating symlink: File already exists")
                 pass
 
+        if rvx_files:
+            for s in config.variables.raven_filetypes:
+                src = Path(self.model_dir, f"{self.catchment}_{self.model_type}.{s}")
+                dst = Path(self.model_dir, self.model_sub_dir, f"{self.catchment}_{self.model_type}.{s}")
+                logger.info("Source path created.")
+                logger.debug(f"Symlink src: {src}")
+                logger.debug(f"Symlink dst: {dst}")
+                try:
+                    os.symlink(src, dst)
+                    logger.info(".rvX symlink created.")
+                except FileExistsError:
+                    logger.exception("Error creating symlink: File already exists.")
+                    pass
+
     def write_rvx(self, ostrich_template: bool = False, raven_template: bool = True, rvx_type: str = "rvi"):
         """Write .rvX file for Raven and/or Ostrich
 
@@ -568,6 +582,12 @@ class RavenModel:
                                          catchment=self.catchment, data_dir=self.data_dir)
             except:
                 logger.exception(f"Error creating netCDF file {netcdf_dir_path}")
+            try:
+                logger.debug(f"netcdf_dir_path = {netcdf_dir_path}")
+                rpe.netcdf_clipper_multi(netcdf_dir_path=netcdf_dir_path,
+                                         catchment=self.catchment, data_dir=self.data_dir)
+            except:
+                logger.exception(f"Error creating netCDF file {netcdf_dir_path}")
         if merge:
             rpe.nc_merge(start_year=self.start_year, end_year=self.end_year,
                          forcing_dir=Path(self.data_dir, "MeteoSwiss_gridded_products"), catchment=self.catchment)
@@ -589,7 +609,7 @@ class RavenModel:
                          station_elevation=self.station_elevation,
                          catchment_gauge_id=str(self.ctm_info),
                          params=self.default_params,
-                         param_or_name="names")
+                         template_type="Ostrich")
         if raven_template:
             rr.write_rvt(start_year=self.start_year,
                          end_year=self.end_year,
@@ -605,7 +625,7 @@ class RavenModel:
                          station_elevation=self.station_elevation,
                          catchment_gauge_id=str(self.ctm_info),
                          params=self.default_params,
-                         param_or_name="params")
+                         template_type="Raven")
 
     def camels_to_rvt(self):
         rpe.camels_to_rvt(data_dir=self.data_dir, catchment_id=self.catchment_id,
@@ -620,7 +640,7 @@ class RavenModel:
         forcing_name_root = re.findall("[A-Za-z]+", forcing_name)[0]
         netcdf_file_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "merged",
                                 f"{forcing_name_root}_{forcing_suffix}_{self.start_year}01010000_{self.end_year}12310000_{self.catchment}_clipped.nc")
-        catchment_filepath = Path(self.data_dir, "Catchment",
+        catchment_filepath = Path(self.data_dir, "Catchment", "reproject_2056",
                                   f"{config.variables.catchments[self.catchment]['catchment_id']}.shp")
         out_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "out",
                         f"grid_weights_{self.catchment}")
@@ -636,6 +656,7 @@ class RavenModel:
         grid.set_index("cell_id")
         grid = rpe.copy_rel_area_from_union_to_grid(res_union=res_union, grid=grid)
         rpe.write_weights_to_file(grd=grid, grid_dir_path=out_path, catchment=self.catchment)
+        logger.debug(f"grid weight written to file {out_path}")
 
 
 def ch1903_to_wgs84(lat_1903, lon_1903):

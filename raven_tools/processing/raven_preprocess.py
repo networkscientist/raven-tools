@@ -56,14 +56,14 @@ def create_bbox_geometry(extent_shape_path: Path):
     """
     logger.debug("Entered create_bbox_geometry function...")
     ext_gdf = gpd.read_file(extent_shape_path)
-    ext_gdf.set_crs("EPSG:4326", allow_override=True)
+    # ext_gdf.set_crs("EPSG:4326", allow_override=True)
     ext_gdf.to_crs("EPSG:2056", inplace=True)
     se = ext_gdf.geometry.total_bounds  # Get bounds and store in array
     bbox_poly = Polygon([[se[0], se[1]], [se[2], se[1]], [se[2], se[3]], [se[0], se[3]]])
     return bbox_poly, ext_gdf  # Return the Polygon and the GeoDataFrame
 
 
-def create_bounding_shape(extent_shape_file_path: Path, bb_file_path: Path):
+def create_bbox(extent_shape_file_path: Path, bb_file_path: Path, create_bbox_shp: bool = True):
     """Create a bounding box shape file.
 
     This function takes a shape file, creates a bounding box around the features and returns this box as a
@@ -86,13 +86,17 @@ def create_bounding_shape(extent_shape_file_path: Path, bb_file_path: Path):
 
     # Create the bounding box Polygon
     bbox_poly, ext_gdf = create_bbox_geometry(extent_shape_file_path)
+
     # Create the bounding shape in a GeoDataFrame
     bbox_gdf: GeoDataFrame = gpd.GeoDataFrame(pd.DataFrame(['p1'], columns=['geom']),
                                               crs={'init': 'epsg:2056'},
                                               geometry=[bbox_poly])
-    # This writes the bounding box as a shape file
-    bbox_gdf.to_file(str(bb_file_path))
-    return bbox_gdf, ext_gdf, bb_file_path
+    if create_bbox_shp:
+        # This writes the bounding box as a shape file
+        bbox_gdf.to_file(str(bb_file_path))
+        return bbox_gdf, ext_gdf, bb_file_path
+    else:
+        return bbox_gdf, ext_gdf
 
 
 def netcdf_to_dataset(netcdf_file_path: Path) -> xr.Dataset:
@@ -100,11 +104,11 @@ def netcdf_to_dataset(netcdf_file_path: Path) -> xr.Dataset:
 
     Args:
         netcdf_file_path : Path
-            Path to the netCDF file to clip
+            Path to the netCDF file to clip. It has to be in CH1903+/LV95 (EPSG=2056).
 
     Returns:
         xds : Dataset
-            The netCDF data as a netCDF4 dataset
+            The netCDF data as a netCDF4 dataset in CH1903+/LV95 (EPSG=2056).
 
     """
 
@@ -112,8 +116,7 @@ def netcdf_to_dataset(netcdf_file_path: Path) -> xr.Dataset:
     xds: xr.Dataset = xr.open_dataset(netcdf_file_path)
     # Define the dimensions
     xds.rio.set_spatial_dims(x_dim="E", y_dim="N", inplace=True)
-    # Set the CRS projection EPSG to 2056
-    # TODO: Why set CRS to EPSG=2056?
+    # Set the CRS projection EPSG to 2056, since this is the one the netCDF files are in
     xds.rio.write_crs("EPSG:2056", inplace=True)
     # delete the attribute 'grid_mapping' to prevent an error
     vars_list = list(xds.data_vars)
@@ -149,14 +152,14 @@ def dataset_to_netcdf(xds_to_write: xr.Dataset, netcdf_file_path: Path, catchmen
         mode="w")
 
 
-def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, ext_gdf: GeoDataFrame,
+def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, bbox_gdf: GeoDataFrame,
                    catchment: str) -> xr.Dataset:
     """Clips a netCDF file according to a bounding box.
 
     For one netCDF file in a directory, clips it according to a bounding box shape file.
 
     Args:
-        ext_gdf : GeoDataFrame
+        bbox_gdf : GeoDataFrame
             The GeoDataFrame with the data from the extent shape file
         netcdf_file_path : Path
             Path to the netCDF file to clip
@@ -168,11 +171,14 @@ def netcdf_clipper(netcdf_file_path: Path, bbox_file_path: Path, ext_gdf: GeoDat
             The clipped Dataset
 
     """
-
+    # Read the netCDF file with EPSG2056 into an xArray Dataset with EPSG2056
     xds: xr.Dataset = netcdf_to_dataset(netcdf_file_path)
-    bbox_gdf = gpd.read_file(bbox_file_path)
+    bbox_gdf = bbox_gdf
+    # bbox_gdf = gpd.read_file(bbox_file_path)
     # Clip the xarray Dataset according to the bounding box GeoDataFrame
-    xds_clipped = xds.rio.clip(bbox_gdf.geometry.apply(mapping), ext_gdf.crs)
+
+    xds_clipped = xds.rio.clip(bbox_gdf.geometry.apply(mapping), bbox_gdf.crs)
+    xds_clipped.rio.write_crs("EPSG:2056")
     # Saves the clipped file as shape file
     try:
         dataset_to_netcdf(xds_clipped, netcdf_file_path, catchment=catchment)
@@ -195,15 +201,19 @@ def netcdf_clipper_multi(netcdf_dir_path: Path,
             Bounding box GeoDataFrame created with create_bounding_shape()
 
     """
-    bbox_gdf, ext_gdf, bbox_file_path = create_bounding_shape(
-        extent_shape_file_path=Path(data_dir, "Catchment",
+    file_list = glob.glob(f"{netcdf_dir_path}/original_files/*.nc")
+
+    bbox_gdf, ext_gdf, bbox_file_path = create_bbox(
+        extent_shape_file_path=Path(data_dir, "Catchment", "reproject_2056",
                                     f"{config.variables.catchments[catchment]['catchment_id']}.shp"),
         bb_file_path=Path(data_dir, "Catchment", f"{catchment}_bbox.shp"))
-    file_list = glob.glob(f"{netcdf_dir_path}/original_files/*.nc")
-    # with Pool() as pool:
+    for f in file_list:
+        netcdf_clipper(netcdf_file_path=Path(f), bbox_file_path=bbox_file_path, bbox_gdf=bbox_gdf, catchment=catchment)
+
+    # %TODO: Check why ext_gdf is set to bbox_gdf
+
     #     pool.map(partial(netcdf_clipper,bbox_file_path=bbox_file_path,bbox_gdf=bbox_gdf,catchment=catchment), file_list)
-    for f in glob.glob(f"{netcdf_dir_path}/original_files/*.nc"):
-        netcdf_clipper(Path(f), bbox_file_path, bbox_gdf, catchment=catchment)
+    # with Pool() as pool:
 
 
 def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
@@ -321,8 +331,8 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
     # Read in the bounding box shape file from the clipping folder as a GeoPandas DataFrame
     logger.debug(f"bbox_filename: {bounding_box_filename}")
     bbox: GeoDataFrame = gpd.read_file(bounding_box_filename)
-    bbox.set_crs(2056, allow_override=True)
-    # bbox = bbox.to_crs("EPSG:2056")
+    # bbox.set_crs(2056, allow_override=True)
+    bbox = bbox.to_crs("EPSG:4326")
 
     # Read in the clipped netCDF file into a xarray Dataset
     ds: Dataset = xr.open_dataset(netcdf_filepath, engine="netcdf4")
@@ -342,7 +352,7 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
     # change the projection to LV95
     data_column = pd.Series(df[column_name])
     combi_catchment_grid: GeoDataFrame = gpd.GeoDataFrame(data_column, geometry=gpd.points_from_xy(df.E, df.N),
-                                                          crs="EPSG:2056")
+                                                          crs="EPSG:4326")
 
     # From the GeoDataFrame that contains the netCDF grid, get the extent as points
     xmin, ymin, xmax, ymax = combi_catchment_grid.total_bounds
@@ -360,7 +370,7 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
 
     # Create the GeoDataFrame with the grid, providing column names plus polygons for the geometry
     grid_cols = ['row', 'col', 'cell_id', 'polygons', 'area', 'area_rel']
-    grid: GeoDataFrame = gpd.GeoDataFrame(columns=grid_cols, geometry='polygons')
+    grid: GeoDataFrame = gpd.GeoDataFrame(columns=grid_cols, geometry='polygons', crs="EPSG:4326")
     # Loop over each cell and create the corresponding Polygon, then append it to the Polygon list
     # Also write the cell id from cell_id=i_row*n_columns + i_column
     for ix, x in enumerate(cols):
@@ -375,11 +385,12 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
 
     # Every cell that is not within the catchment area will have area_rel set to zero
     grid["area_rel"] = 0
-    grid = grid.set_crs(2056, allow_override=True)
+    # grid = grid.to_crs("EPSG:2056")
 
     if export_shp:
         # Export the grid to a shape file
         grid.to_file(str(str(out_path) + ".shp"))
+    logger.debug(f"grid weights shp file written: {out_path}")
     return grid
 
 
