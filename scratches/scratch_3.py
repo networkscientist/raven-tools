@@ -23,22 +23,21 @@ models = [
     "MOHYSE"
 ]
 
-# catchments = ["Ticino",
-#               "Broye",
-#               "Thur",
-#               "Massa",
-#               "Weisse_Luetschine",
-#               "Dischmabach"]
-c = "Dischmabach"
-m = "GR4J"
-model_instance = rt.model.raven_model.RavenModel(model_type=m, catchment=c)
-model_instance.start_year = 1981
-model_instance.end_year = 2020
-model_instance.data_dir = Path("/media/mainman/Work/RAVEN/data")
-model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment",
-                                    f"{model_instance.catchment}_bbox.shp")
-forcing_dir = rt.config.variables.forcings_dirs[0]
-model_instance.create_netcdf(forcing_dir=forcing_dir, clip=True, merge=False)
+catchments = ["Ticino",
+              "Broye",
+              "Thur",
+              "Massa",
+              "Weisse_Luetschine",
+              "Dischmabach"]
+# m = "GR4J"
+# model_instance = rt.model.raven_model.RavenModel(model_type=m, catchment=catchments[0])
+# model_instance.start_year = 1981
+# model_instance.end_year = 2020
+# model_instance.data_dir = Path("/media/mainman/Work/RAVEN/data")
+# # model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment",
+# #                                     f"{model_instance.catchment}_bbox.shp")
+# forcing_dir = rt.config.variables.forcings_dirs[0]
+# model_instance.create_netcdf(forcing_dir=forcing_dir, clip=True, merge=False)
 # for n in rt.config.variables.forcings_dirs:
 #     model_instance.create_netcdf(forcing_dir=n, clip=True, merge=True)
 # for c in catchments:
@@ -46,28 +45,29 @@ model_instance.create_netcdf(forcing_dir=forcing_dir, clip=True, merge=False)
 #     model_instance.create_symlinks(ostrich_executable=False, forcings=False, discharge=False)
 # model_instance.create_grid_weights(forcing_name="RhiresD_v2.0_swiss.lv95")
 
-# for c in catchments:
-#     for m in rt.config.variables.supported_models:
-#         model_instance = rt.model.raven_model.RavenModel(model_type=m, catchment=c)
-#         #         #         # print(model_instance.start_year)
-#         #         #         # model_instance.create_dirs()
-#         model_instance.start_year = 1981
-#         model_instance.end_year = 2020
-#         #         #         # model_instance.camels_to_rvt()
-#         model_instance.create_symlinks()
-#         # model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment",
-#         #                                             f"{model_instance.catchment}_bbox.shp")
-#         model_instance.data_dir = Path("/media/mainman/Work/RAVEN/data")
+for c in catchments:
+    for f in rt.config.variables.forcings_dirs:
+        model_instance = rt.model.raven_model.RavenModel(catchment=c, start_year=1981, end_year=2020)
+        #         #         #         #         # print(model_instance.start_year)
+        #         #         #         #         # model_instance.create_dirs()
+        #         #         #         #         # model_instance.camels_to_rvt()
+        #         #         model_instance.create_symlinks()
+        #         model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment",
+        #                                             f"{model_instance.catchment}_bbox.shp")
+        model_instance.data_dir = Path("/media/mainman/Work/RAVEN/data")
+        model_instance.create_grid_weights(forcing_name=f)
 #         model_instance.write_rvt(ostrich_template=True, raven_template=True)
-#                         for n in config.variables.forcings_dirs:
-#                             model_instance.create_netcdf(forcing_dir=n, clip=True, merge=True)
+# model_instance.create_netcdf(forcing_dir=forcing_dir, clip=True, merge=True)
 #
-#                 for n in config.variables.forcings_dirs:
-#                     model_instance.create_grid_weights(forcing_name=n)
+# model_instance.create_bbox()
+
+# for f in rt.config.variables.forcings_dirs:
+# model_instance.merge_netcdf(forcing_prefix=n)
+# model_instance.clip_netcdf(forcing_prefix=f)
+# model_instance.create_grid_weights(forcing_name=f)
 #         for s in suffix:
 #             model_instance.write_rvx(ostrich_template=True, rvx_type=s)
 #             model_instance.write_ost()
-# #         # model_instance.create_netcdf(clip=False, merge=True)
 # #         # model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment", f"{model_instance.catchment}_bbox.shp")
 # #         # print(model_instance.bbox_filepath)
 # # gr4j_broye.write_rvx(rvx_type="rvi")
