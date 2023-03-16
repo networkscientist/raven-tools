@@ -10,7 +10,6 @@ Functions:
     netcdf_clipper_multi(Path,GeoDataFrame)
 """
 
-import glob
 import logging
 import os
 import re
@@ -195,32 +194,30 @@ def netcdf_clipper_legacy(netcdf_file_path: Path, bbox_file_path: Path, bbox_gdf
     return xds_clipped
 
 
-def netcdf_clipper_multi(netcdf_dir_path: Path,
-                         catchment: str, data_dir):
-    """ Clips multiple netCDF files in a directory
-
-    Args:
-        bbox_file_path : Path
-            Full Path to the bounding box shape file
-        netcdf_dir_path : Path
-            Path to directory with netCDF files to clip.
-        bbox_gdf : GeoDataFrame
-            Bounding box GeoDataFrame created with create_bounding_shape()
-
-    """
-    file_list = glob.glob(f"{netcdf_dir_path}/original_files/*.nc")
-    extent_shape_file_path = Path(data_dir, "Catchment", "reproject_2056",
-                                  f"{config.variables.catchments[catchment]['catchment_id']}.shp")
-    # bbox_gdf, ext_gdf, bbox_file_path = create_bbox(extent_shape_file_path=extent_shape_file_path, bb_file_path=Path(data_dir, "Catchment", f"{catchment}_bbox.shp"))
-    for f in file_list:
-        # netcdf_clipper_legacy(netcdf_file_path=Path(f), bbox_file_path=bbox_file_path, bbox_gdf=bbox_gdf,
-        #                       catchment=catchment)
-        netcdf_clipper(f, extent_shape_file_path)
-
-    # %TODO: Check why ext_gdf is set to bbox_gdf
-
-    #     pool.map(partial(netcdf_clipper,bbox_file_path=bbox_file_path,bbox_gdf=bbox_gdf,catchment=catchment), file_list)
-    # with Pool() as pool:
+# def netcdf_clipper_multi(netcdf_dir_path: Path,
+#                          catchment: str, data_dir):
+#     """ Clips multiple netCDF files in a directory
+#
+#     Args:
+#         bbox_file_path : Path
+#             Full Path to the bounding box shape file
+#         netcdf_dir_path : Path
+#             Path to directory with netCDF files to clip.
+#         bbox_gdf : GeoDataFrame
+#             Bounding box GeoDataFrame created with create_bounding_shape()
+#
+#     """
+#     file_list = glob.glob(f"{netcdf_dir_path}/original_files/*.nc")
+#     extent_shape_file_path = Path(data_dir, "Catchment", "reproject_2056",
+#                                   f"{config.variables.catchments[catchment_ch_id]['catchment_id']}.shp")
+#     # bbox_gdf, ext_gdf, bbox_file_path = create_bbox(extent_shape_file_path=extent_shape_file_path, bb_file_path=Path(data_dir, "Catchment", f"{catchment}_bbox.shp"))
+#     for f in file_list:
+#         # netcdf_clipper_legacy(netcdf_file_path=Path(f), bbox_file_path=bbox_file_path, bbox_gdf=bbox_gdf,
+#         #                       catchment=catchment)
+#         netcdf_clipper(f, extent_shape_file_path)
+#
+#     #     pool.map(partial(netcdf_clipper,bbox_file_path=bbox_file_path,bbox_gdf=bbox_gdf,catchment=catchment), file_list)
+#     # with Pool() as pool:
 
 
 def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
@@ -547,7 +544,7 @@ def copy_rel_area_from_union_to_grid(res_union: GeoDataFrame, grid: GeoDataFrame
     return grid
 
 
-def camels_to_rvt(data_dir, catchment_id, gauge_short_code, start_date="2000-01-01", end_date="2000-12-31"):
+def camels_to_rvt(data_dir, gauge_id, gauge_short_code, start_date="2000-01-01", end_date="2000-12-31"):
     """Reads CAMELS CSV discharge file and creates RAVEN .rvt file.
 
     Reads a daily CAMELS discharge CSV file, with the file path read from a global parameter and converts it to a daily
@@ -560,7 +557,7 @@ def camels_to_rvt(data_dir, catchment_id, gauge_short_code, start_date="2000-01-
     """
     logger.debug("Entered function camels_to_rvt.")
     # Read in the discharge data from .txt file
-    camels_filename = f"CAMELS_CH_obs_based_{catchment_id}.txt"
+    camels_filename = f"CAMELS_CH_obs_based_{gauge_id}.txt"
     logger.debug(f"camels_filename = {camels_filename}")
     df_meteo: pd.DataFrame = pd.read_csv(Path(data_dir, "Discharge", camels_filename), sep=";")
     # Rename the column for easier keyboard typing
@@ -576,7 +573,7 @@ def camels_to_rvt(data_dir, catchment_id, gauge_short_code, start_date="2000-01-
     # Uncomment the following line, if you want to get daily means. Otherwise, RAVEN will do it for you
     # df_meteo = df_meteo.resample('d', on='time').mean().dropna(how="all")
     # Invoke export_to_rvt_file to export
-    out_filename = f"{gauge_short_code}_Q_{catchment_id}_daily.rvt"
+    out_filename = f"{gauge_short_code}_Q_{gauge_id}_daily.rvt"
     out_path = Path(data_dir, "Discharge", out_filename)
     export_to_rvt_file(start_date, start_time, df_meteo, out_path)
 

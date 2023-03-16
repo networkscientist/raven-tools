@@ -27,35 +27,37 @@ class RavenModel:
 
     """
 
-    def __init__(self, model_type: str = "GR4J", catchment: str = "default", catchment_id: str = "CH-0057",
+    def __init__(self, model_type: str = "GR4J", catchment_ch_id: str = "CH-0057",
                  start_year=1981, end_year=2020):
         """
         Args:
             model_type (str): Name of model_type (GR4J, HYMOD, HMETS, HBV or MOHYSE)
-            catchment (str): Name of catchment
         """
         self.bbox_filepath = Path(os.getcwd())
         logger.debug(f"Starting __init__ of {__name__}...")
         assert isinstance(model_type, str), f"model_type expected a string, got {type(model_type)} instead"
-        assert isinstance(catchment, str), f"catchment expected a string, got {type(catchment)} instead"
-        assert isinstance(catchment_id, str), f"catchment_id expected a string, got {type(catchment_id)} instead"
+        assert isinstance(catchment_ch_id, str), f"catchment_id expected a string, got {type(catchment_ch_id)} instead"
+        self.catchment_ch_id = catchment_ch_id
+        logger.info(f"Self.catchment_ch_id set to {self.catchment_ch_id}.")
         self.supported_models = config.variables.supported_models
         self.raven_filetypes = config.variables.raven_filetypes
         assert model_type in self.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
         logger.debug(f"CWD: {os.getcwd()}")
         logger.debug("Trying to open project_config.yaml...")
+
         try:
             self.conf = config.variables.project_config
         except:
             logger.debug("Error getting project_config file from __init__.py")
 
         try:
-            self.ctm_info = config.variables.catchments[catchment]['ID']
-            self.gauge_lat, self.gauge_lon = ch1903_to_wgs84(config.variables.catchments[catchment]["lat"],
-                                                             config.variables.catchments[catchment]["lon"])
+            self.ctm_info = config.variables.catchments[self.catchment_ch_id]['ID']
+            self.gauge_lat, self.gauge_lon = ch1903_to_wgs84(config.variables.catchments[self.catchment_ch_id]["lat"],
+                                                             config.variables.catchments[self.catchment_ch_id]["lon"])
         except:
             logger.exception("Error getting catchments info from __init__.py")
-
+        logger.debug("Setting self.catchment...")
+        self.stream_name = config.variables.catchments[self.catchment_ch_id]['stream_name']
         logger.debug("project_config.yaml loaded.")
         logger.debug("Trying to set self.X variables...")
         logger.debug("Setting self.model_type...")
@@ -64,21 +66,17 @@ class RavenModel:
         self.end_year = end_year
         logger.debug("Setting self.root_dir...")
         self.root_dir = Path(os.path.join(os.getcwd(), Path("RAVEN")))
-        logger.debug("Setting self.catchment...")
-        self.catchment = catchment
         logger.debug("Setting self.catchment_id...")
-        self.catchment_id = config.variables.catchments[self.catchment]['ID']
-        self.gauge_short_code = config.variables.catchments[self.catchment]['short_code']
-        self.catchment_ch_id = config.variables.catchments[self.catchment]['catchment_id']
-        logger.info(f"Self.catchment_id set to {self.catchment_id}.")
+        self.gauge_id = config.variables.catchments[self.catchment_ch_id]['ID']
+        self.gauge_short_code = config.variables.catchments[self.catchment_ch_id]['short_code']
+        logger.info(f"Self.gauge_id set to {self.gauge_id}.")
         logger.info(f"Self.gauge_short_code set to {self.gauge_short_code}.")
-        logger.info(f"Self.catchment_ch_id set to {self.catchment_ch_id}.")
-        self.station_elevation = config.variables.catchments[self.catchment]['station_elevation']
+        self.station_elevation = config.variables.catchments[self.catchment_ch_id]['station_elevation']
         logger.debug(f"Self.station_elevation set to {self.station_elevation}.")
         logger.debug("Setting self.attribute_csv_name (file name with catchment attributes...")
-        self.attribute_csv = f"{self.catchment_id}_attributes.csv"
+        self.attribute_csv = f"{self.catchment_ch_id}_attributes.csv"
         logger.debug("Setting self.model_dir...")
-        self.model_dir = Path(self.root_dir, "models", self.catchment, self.model_type)
+        self.model_dir = Path(self.root_dir, "models", self.stream_name, self.model_type)
         logger.debug("Setting self.model_sub_dir...")
         self.model_sub_dir = self.conf['ModelSubDir']
         logger.debug("Setting self.dirs...")
@@ -102,7 +100,7 @@ class RavenModel:
         try:
             self.default_params = config.variables.default_params
         except:
-            logger("Error getting default_params file from __init__.py")
+            logger.exception("Error getting default_params file from __init__.py")
         self.raven_exe_path: Path = Path(self.conf['RavenExePath'])
         self.ost_exe_path: Path = Path(self.conf['OstrichExePath'])
         logger.debug(f"Raven exe path set: {self.raven_exe_path}")
@@ -153,6 +151,17 @@ class RavenModel:
         self._model_type = value
 
     @property
+    def gauge_id(self) -> int:
+        """Returns gauge_id."""
+        assert isinstance(self._gauge_id, int), f"gauge_id should be int, is type {type(self._gauge_id)} instead."
+        return self._gauge_id
+
+    @gauge_id.setter
+    def gauge_id(self, value: int):
+        assert isinstance(value, int), f"gauge_id should be int, is type {type(value)} instead."
+        self._gauge_id = value
+
+    @property
     def root_dir(self) -> Path:
         """Get root directory that contains the 'RAVEN' folder."""
 
@@ -181,7 +190,7 @@ class RavenModel:
         self._model_dir = value
 
     @property
-    def catchment(self) -> str:
+    def stream_name(self) -> str:
         """Return catchment name
 
         :return self._catchment: Catchment name
@@ -190,8 +199,8 @@ class RavenModel:
         logger.debug("Getting catchment name...")
         return self._catchment
 
-    @catchment.setter
-    def catchment(self, value: str):
+    @stream_name.setter
+    def stream_name(self, value: str):
         """Set catchment name.
 
         :param value: Catchment name
@@ -357,18 +366,6 @@ class RavenModel:
         self._raven_filetypes = value
 
     @property
-    def catchment_id(self) -> int:
-        """Returns catchment_id."""
-        assert isinstance(self._catchment_id,
-                          int), f"catchment_id should be int, is type {type(self._catchment_id)} instead."
-        return self._catchment_id
-
-    @catchment_id.setter
-    def catchment_id(self, value: int):
-        assert isinstance(value, int), f"catchment_id should be int, is type {type(value)} instead."
-        self._catchment_id = value
-
-    @property
     def catchment_ch_id(self) -> str:
         """Returns catchment_ch_id."""
         assert isinstance(self._catchment_ch_id,
@@ -471,7 +468,7 @@ class RavenModel:
                 except FileExistsError:
                     logger.exception("Error creating symlink: File already exists")
         if discharge:
-            discharge_filename = f"{self.gauge_short_code}_Q_{self.catchment_id}_daily.rvt"
+            discharge_filename = f"{self.gauge_short_code}_Q_{self.catchment_ch_id}_daily.rvt"
             src = Path(self.data_dir, "Discharge", discharge_filename)
             dst = Path(self.model_dir, self.model_sub_dir, "data_obs", discharge_filename)
             logger.debug("Source Path created.")
@@ -520,8 +517,8 @@ class RavenModel:
 
         if rvx_files:
             for s in config.variables.raven_filetypes:
-                src = Path(self.model_dir, f"{self.catchment}_{self.model_type}.{s}")
-                dst = Path(self.model_dir, self.model_sub_dir, f"{self.catchment}_{self.model_type}.{s}")
+                src = Path(self.model_dir, f"{self.stream_name}_{self.model_type}.{s}")
+                dst = Path(self.model_dir, self.model_sub_dir, f"{self.stream_name}_{self.model_type}.{s}")
                 logger.info("Source path created.")
                 logger.debug(f"Symlink src: {src}")
                 logger.debug(f"Symlink dst: {dst}")
@@ -549,14 +546,18 @@ class RavenModel:
             logger.debug("Variable raven_template is True...")
             logger.debug(f"Trying to call rr.write_rvx function to create .{rvx_type} for Raven...")
             rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=self.default_params, template_type="Raven",
+                         catchment_ch_id=self.catchment_ch_id,
+                         params=self.default_params,
+                         template_type="Raven",
                          rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year)
             logger.debug(f".{rvx_type} for Raven created by rr.write_rvx function")
         if ostrich_template is True:
             logger.debug("Variable ostrich_template is True...")
             logger.debug(f"Trying to call rr.write_rvx function to create .{rvx_type}.tpl for Ostrich...")
             rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=self.default_params, template_type="Ostrich",
+                         catchment_ch_id=self.catchment_ch_id,
+                         params=self.default_params,
+                         template_type="Ostrich",
                          rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year)
             logger.debug(f".{rvx_type}.tpl for Ostrich created by rr.write_rvx function")
         if ostrich_template is False and raven_template is False:
@@ -581,7 +582,8 @@ class RavenModel:
         logger.debug(f"Trying to call rr.write_ostrich_files() function to create ostrich input files\
             for Raven...")
         rr.write_ostrich(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment=self.catchment, params=self.default_params, ost_in=ost_in,
+                         catchment_name=self.stream_name, catchment_ch_id=self.catchment_ch_id,
+                         params=self.default_params, ost_in=ost_in,
                          save_best=save_best,
                          ost_raven=ost_raven,
                          ost_mpi_script=ost_mpi_script)
@@ -612,7 +614,7 @@ class RavenModel:
     def create_bbox(self):
         rpe.create_bbox(extent_shape_file_path=Path(self.data_dir, "Catchment", "reproject_2056",
                                                     f"{self.catchment_ch_id}.shp"),
-                        bb_file_path=Path(self.data_dir, "Catchment", f"{self.catchment}_bbox.shp"),
+                        bb_file_path=Path(self.data_dir, "Catchment", f"{self.stream_name}_bbox.shp"),
                         create_bbox_shp=True)
 
     def write_rvt(self, ostrich_template: bool = True, raven_template: bool = True):
@@ -623,8 +625,7 @@ class RavenModel:
                          model_dir=self.model_dir,
                          model_type=self.model_type,
                          project_dir=self.root_dir,
-                         catchment=self.catchment,
-                         catchment_id=self.catchment_id,
+                         catchment_ch_id=self.catchment_ch_id,
                          gauge_lat=self.gauge_lat,
                          gauge_lon=self.gauge_lon,
                          model_sub_dir=self.model_sub_dir,
@@ -639,8 +640,7 @@ class RavenModel:
                          model_dir=self.model_dir,
                          model_type=self.model_type,
                          project_dir=self.root_dir,
-                         catchment=self.catchment,
-                         catchment_id=self.catchment_id,
+                         catchment_ch_id=self.catchment_ch_id,
                          gauge_lat=self.gauge_lat,
                          gauge_lon=self.gauge_lon,
                          model_sub_dir=self.model_sub_dir,
@@ -651,7 +651,7 @@ class RavenModel:
                          template_type="Raven")
 
     def camels_to_rvt(self):
-        rpe.camels_to_rvt(data_dir=self.data_dir, catchment_id=self.catchment_id,
+        rpe.camels_to_rvt(data_dir=self.data_dir, gauge_id=self.gauge_id,
                           gauge_short_code=self.gauge_short_code, start_date=f"{self.start_year}-01-01",
                           end_date=f"{self.end_year}-01-01")
 
@@ -664,9 +664,9 @@ class RavenModel:
         netcdf_file_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "out",
                                 f"{forcing_name}_{self.start_year}01010000_{self.end_year}12310000_{self.catchment_ch_id}_clipped.nc")
         catchment_filepath = Path(self.data_dir, "Catchment", "reproject_2056",
-                                  f"{config.variables.catchments[self.catchment]['catchment_id']}.shp")
+                                  f"{config.variables.catchments[self.catchment_ch_id]['catchment_id']}.shp")
         out_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "out",
-                        f"grid_weights_{self.catchment}")
+                        f"grid_weights_{self.catchment_ch_id}")
         grid = rpe.create_grid(netcdf_filepath=netcdf_file_path, bounding_box_filename=self.bbox_filepath,
                                out_path=out_path,
                                forcing_name=forcing_name, start_year=self.start_year)
@@ -678,7 +678,7 @@ class RavenModel:
         res_union = rpe.calc_relative_area(res_union)
         grid.set_index("cell_id")
         grid = rpe.copy_rel_area_from_union_to_grid(res_union=res_union, grid=grid)
-        rpe.write_weights_to_file(grd=grid, grid_dir_path=out_path, catchment=self.catchment)
+        rpe.write_weights_to_file(grd=grid, grid_dir_path=out_path, catchment=self.stream_name)
         logger.debug(f"grid weight written to file {out_path}")
 
 
