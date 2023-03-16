@@ -4,11 +4,17 @@ X=( $(ogrinfo -so -al $1 | grep Extent | grep -Po '\d+\.\d+') )
 echo "$1"
 pwd
 echo $X
-echo "${X[1]}"	
-LonMin="${X[0]}"
-LonMax="${X[2]}"
-LatMin="${X[1]}"
-LatMax="${X[3]}"
+echo "${X[1]}"
+#The increment makes sure the grid covers the shape file extent completely
+increment="0.01"
+LonMin=$(echo "${X[0]} - ${increment}" | bc -l)
+LonMax=$(echo "${X[2]} + ${increment}" | bc -l)
+LatMin=$(echo "${X[1]} - ${increment}" | bc -l)
+LatMax=$(echo "${X[3]} + ${increment}" | bc -l)
+#LonMin="${X[0]}"
+#LonMax="${X[2]}"
+#LatMin="${X[1]}"
+#LatMax="${X[3]}"
 echo "LonMin = $LonMin"
 echo "LonMax = $LonMax"
 echo "LatMin = $LatMin"
