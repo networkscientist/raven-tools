@@ -27,7 +27,8 @@ class RavenModel:
 
     """
 
-    def __init__(self, model_type: str = "GR4J", catchment: str = "default", catchment_id: str = "CH-0057"):
+    def __init__(self, model_type: str = "GR4J", catchment: str = "default", catchment_id: str = "CH-0057",
+                 start_year=1981, end_year=2020):
         """
         Args:
             model_type (str): Name of model_type (GR4J, HYMOD, HMETS, HBV or MOHYSE)
@@ -59,6 +60,8 @@ class RavenModel:
         logger.debug("Trying to set self.X variables...")
         logger.debug("Setting self.model_type...")
         self.model_type = model_type
+        self.start_year = start_year
+        self.end_year = end_year
         logger.debug("Setting self.root_dir...")
         self.root_dir = Path(os.path.join(os.getcwd(), Path("RAVEN")))
         logger.debug("Setting self.catchment...")
@@ -66,8 +69,10 @@ class RavenModel:
         logger.debug("Setting self.catchment_id...")
         self.catchment_id = config.variables.catchments[self.catchment]['ID']
         self.gauge_short_code = config.variables.catchments[self.catchment]['short_code']
-        logger.debug(f"Self.catchment_id set to {self.catchment_id}.")
-        logger.debug(f"Self.gauge_short_code set to {self.gauge_short_code}.")
+        self.catchment_ch_id = config.variables.catchments[self.catchment]['catchment_id']
+        logger.info(f"Self.catchment_id set to {self.catchment_id}.")
+        logger.info(f"Self.gauge_short_code set to {self.gauge_short_code}.")
+        logger.info(f"Self.catchment_ch_id set to {self.catchment_ch_id}.")
         self.station_elevation = config.variables.catchments[self.catchment]['station_elevation']
         logger.debug(f"Self.station_elevation set to {self.station_elevation}.")
         logger.debug("Setting self.attribute_csv_name (file name with catchment attributes...")
@@ -363,6 +368,18 @@ class RavenModel:
         assert isinstance(value, int), f"catchment_id should be int, is type {type(value)} instead."
         self._catchment_id = value
 
+    @property
+    def catchment_ch_id(self) -> str:
+        """Returns catchment_ch_id."""
+        assert isinstance(self._catchment_ch_id,
+                          str), f"catchment_ch_id should be str, is type {type(self._catchment_ch_id)} instead."
+        return self._catchment_ch_id
+
+    @catchment_ch_id.setter
+    def catchment_ch_id(self, value: str):
+        assert isinstance(value, str), f"catchment_ch_id should be str, is type {type(value)} instead."
+        self._catchment_ch_id = value
+
     def create_dirs(self):
         """Create model (sub-)directories.
 
@@ -431,7 +448,7 @@ class RavenModel:
         self._ost_exe_path = value
 
     def create_symlinks(self, forcings: bool = True, discharge: bool = True, raven_executable: bool = True,
-                        ostrich_executable: bool = True):
+                        ostrich_executable: bool = True, rvx_files: bool = True):
         logger.debug("Entered function create_symlinks.")
         if forcings:
             logger.debug("Trying to create data symlinks...")
@@ -501,6 +518,20 @@ class RavenModel:
                 logger.exception("Error creating symlink: File already exists")
                 pass
 
+        if rvx_files:
+            for s in config.variables.raven_filetypes:
+                src = Path(self.model_dir, f"{self.catchment}_{self.model_type}.{s}")
+                dst = Path(self.model_dir, self.model_sub_dir, f"{self.catchment}_{self.model_type}.{s}")
+                logger.info("Source path created.")
+                logger.debug(f"Symlink src: {src}")
+                logger.debug(f"Symlink dst: {dst}")
+                try:
+                    os.symlink(src, dst)
+                    logger.info(".rvX symlink created.")
+                except FileExistsError:
+                    logger.exception("Error creating symlink: File already exists.")
+                    pass
+
     def write_rvx(self, ostrich_template: bool = False, raven_template: bool = True, rvx_type: str = "rvi"):
         """Write .rvX file for Raven and/or Ostrich
 
@@ -556,21 +587,33 @@ class RavenModel:
                          ost_mpi_script=ost_mpi_script)
         logger.debug(f"ostIn.txt for Raven created by rr.write_rvx function")
 
-    def create_netcdf(self, forcing_dir="TabsD_v2.0_swiss.lv95", clip=True, merge=True):
+    def clip_netcdf(self, forcing_prefix="TabsD_v2.0_swiss.lv95"):
         """Create the netCDF files for the chosen catchment
 
         """
-        netcdf_dir_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_dir)
-        if clip:
-            try:
-                logger.debug(f"netcdf_dir_path = {netcdf_dir_path}")
-                rpe.netcdf_clipper_multi(netcdf_dir_path=netcdf_dir_path,
-                                         catchment=self.catchment, data_dir=self.data_dir)
-            except:
-                logger.exception(f"Error creating netCDF file {netcdf_dir_path}")
-        if merge:
-            rpe.nc_merge(start_year=self.start_year, end_year=self.end_year,
-                         forcing_dir=Path(self.data_dir, "MeteoSwiss_gridded_products"), catchment=self.catchment)
+
+        extent_file_path = Path(self.data_dir, "Catchment", f"{self.catchment_ch_id}.shp")
+        netcdf_file_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_prefix, "out",
+                                f"{forcing_prefix}_{self.start_year}01010000_{self.end_year}12310000.nc")
+
+        try:
+            rpe.netcdf_clipper(netcdf_file_path=netcdf_file_path, extent_file_path=extent_file_path)
+            logger.info(f"netcdf_file_path = {netcdf_file_path}")
+            # rpe.netcdf_clipper_multi(netcdf_dir_path=netcdf_dir_path,
+            #                          catchment=self.catchment, data_dir=self.data_dir)
+        except:
+            logger.exception(f"Error creating netCDF file {netcdf_file_path}")
+
+    def merge_netcdf(self, forcing_prefix):
+        forcing_dir: Path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_prefix, "original_files")
+        rpe.nc_merge(start_year=self.start_year, end_year=self.end_year, forcing_dir=forcing_dir,
+                     forcing_prefix=forcing_prefix)
+
+    def create_bbox(self):
+        rpe.create_bbox(extent_shape_file_path=Path(self.data_dir, "Catchment", "reproject_2056",
+                                                    f"{self.catchment_ch_id}.shp"),
+                        bb_file_path=Path(self.data_dir, "Catchment", f"{self.catchment}_bbox.shp"),
+                        create_bbox_shp=True)
 
     def write_rvt(self, ostrich_template: bool = True, raven_template: bool = True):
 
@@ -589,7 +632,7 @@ class RavenModel:
                          station_elevation=self.station_elevation,
                          catchment_gauge_id=str(self.ctm_info),
                          params=self.default_params,
-                         param_or_name="names")
+                         template_type="Ostrich")
         if raven_template:
             rr.write_rvt(start_year=self.start_year,
                          end_year=self.end_year,
@@ -605,7 +648,7 @@ class RavenModel:
                          station_elevation=self.station_elevation,
                          catchment_gauge_id=str(self.ctm_info),
                          params=self.default_params,
-                         param_or_name="params")
+                         template_type="Raven")
 
     def camels_to_rvt(self):
         rpe.camels_to_rvt(data_dir=self.data_dir, catchment_id=self.catchment_id,
@@ -618,9 +661,9 @@ class RavenModel:
         else:
             forcing_suffix = "ch01r.swiss.lv95"
         forcing_name_root = re.findall("[A-Za-z]+", forcing_name)[0]
-        netcdf_file_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "merged",
-                                f"{forcing_name_root}_{forcing_suffix}_{self.start_year}01010000_{self.end_year}12310000_{self.catchment}_clipped.nc")
-        catchment_filepath = Path(self.data_dir, "Catchment",
+        netcdf_file_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "out",
+                                f"{forcing_name}_{self.start_year}01010000_{self.end_year}12310000_{self.catchment_ch_id}_clipped.nc")
+        catchment_filepath = Path(self.data_dir, "Catchment", "reproject_2056",
                                   f"{config.variables.catchments[self.catchment]['catchment_id']}.shp")
         out_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "out",
                         f"grid_weights_{self.catchment}")
@@ -629,13 +672,14 @@ class RavenModel:
                                forcing_name=forcing_name, start_year=self.start_year)
 
         # Create union and difference overlay GeoDataFrames
-        res_union, res_diff = rpe.create_overlay(grd=grid, catchment_filepath=catchment_filepath)
+        res_union = rpe.create_overlay(grd=grid, catchment_filepath=catchment_filepath)
 
         # Compute the relative area a.k.a grid weight and write to shape files
         res_union = rpe.calc_relative_area(res_union)
         grid.set_index("cell_id")
         grid = rpe.copy_rel_area_from_union_to_grid(res_union=res_union, grid=grid)
         rpe.write_weights_to_file(grd=grid, grid_dir_path=out_path, catchment=self.catchment)
+        logger.debug(f"grid weight written to file {out_path}")
 
 
 def ch1903_to_wgs84(lat_1903, lon_1903):

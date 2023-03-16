@@ -21,6 +21,8 @@ pyet = "^1.2.2"
 rioxarray = "^0.13.3"
 PyYAML = "^6.0"
 hydroeval = "^0.1.0"
+matplotlib = "^3.7.1"
+gdal = "3.4.3"
 
 [tool.poetry.group.docs]
 optional = true
