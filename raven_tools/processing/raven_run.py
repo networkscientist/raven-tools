@@ -26,7 +26,7 @@ try:
     model_type = conf['ModelName']
     data_dir = conf['DataDir']
     project_dir = conf['ProjectDir']
-    catchment = conf['Catchment']
+    catchment_name = conf['Catchment']
     catchment_id = conf['CatchmentID']
     gauge_lat = conf['GaugeLat']
     gauge_lon = conf['GaugeLon']
@@ -54,7 +54,7 @@ def get_catchment_info(csv_file):
     pandas.read_csv(csv_file)
 
 
-def create_header(author=conf['Author'], creation_date=generation_date, catchment=catchment, model=model_type,
+def create_header(catchment_ch_id: str, author=conf['Author'], creation_date=generation_date, model=model_type,
                   rvx_type: str = "rvi"):
     try:
         header_line = "#########################################################################"
@@ -63,7 +63,7 @@ def create_header(author=conf['Author'], creation_date=generation_date, catchmen
         creation_date = f":CreationDate      {creation_date}"
         description = [
             "#",
-            f"# Emulation of {model} simulation of {catchment}",
+            f"# Emulation of {model} simulation of {catchment_ch_id}",
             "#------------------------------------------------------------------------"]
         header = [header_line, file_type, author_line, creation_date, *description]
         return header
@@ -72,7 +72,7 @@ def create_header(author=conf['Author'], creation_date=generation_date, catchmen
         pass
 
 
-def forcing_block(start_year: int, end_year: int, catchment: str):
+def forcing_block(start_year: int, end_year: int, catchment_ch_id: str):
     """Create Dictionary of forcing data to write in RVT file.
 
     This function creates a Dictionary of forcing data to be written into an RVT file. From a start and end year,
@@ -95,34 +95,34 @@ def forcing_block(start_year: int, end_year: int, catchment: str):
         'Rainfall': [
             ":GriddedForcing           Rainfall",
             "    :ForcingType          RAINFALL",
-            f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/merged/RhiresD_ch01h.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment}_clipped.nc",
+            f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/merged/RhiresD_ch01h.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
             "    :VarNameNC            RhiresD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment}.txt",
+            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
             ":EndGriddedForcing"],
         'Average Temperature': [
             ":GriddedForcing           Average Temperature",
             "    :ForcingType          TEMP_AVE",
-            f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/merged/TabsD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment}_clipped.nc",
+            f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/merged/TabsD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
             "    :VarNameNC            TabsD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment}.txt",
+            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
             ":EndGriddedForcing"],
         'Maximum Temperature': [
             ":GriddedForcing           Maximum Temperature",
             "    :ForcingType          TEMP_MAX",
-            f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/merged/TmaxD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment}_clipped.nc",
+            f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/merged/TmaxD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
             "    :VarNameNC            TmaxD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment}.txt",
+            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
             ":EndGriddedForcing"],
         'Minimum Temperature': [
             ":GriddedForcing           Minimum Temperature",
             "    :ForcingType          TEMP_MIN",
-            f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/merged/TminD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment}_clipped.nc",
+            f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/merged/TminD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
             "    :VarNameNC            TminD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment}.txt",
+            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
             ":EndGriddedForcing"
         ]
     }
@@ -134,11 +134,10 @@ def forcing_block(start_year: int, end_year: int, catchment: str):
 
 def write_rvt(start_year: int,
               end_year: int,
+              catchment_ch_id: str,
               model_dir=model_dir,
               model_type=model_type,
               project_dir=project_dir,
-              catchment=catchment,
-              catchment_id=catchment_id,
               gauge_lat=gauge_lat,
               gauge_lon=gauge_lon,
               model_sub_dir=model_sub_dir,
@@ -153,7 +152,6 @@ def write_rvt(start_year: int,
 
     Args:
         model_sub_dir:
-        catchment:
         project_dir:
         start_year : int
             Start year of forcings data files
@@ -166,13 +164,13 @@ def write_rvt(start_year: int,
     logger.debug("Entered write_rvt function.")
     if template_type == "Raven":
         param_or_name = "params"
-        file_name: str = f"{catchment}_{model_type}.rvt"
+        file_name: str = f"{catchment_ch_id}_{model_type}.rvt"
         logger.debug(f"file_name = {file_name}")
         file_path: Path = Path(model_dir, file_name)
         logger.debug(f"file_path = {file_path}")
     if template_type == "Ostrich":
         param_or_name = "names"
-        file_name: str = f"{catchment}_{model_type}.rvt.tpl"
+        file_name: str = f"{catchment_ch_id}_{model_type}.rvt.tpl"
         file_path: Path = Path(model_dir, file_name)
         logger.debug(f"file_path = {file_path}")
 
@@ -219,9 +217,9 @@ def write_rvt(start_year: int,
 
     with open(file_path, 'w') as ff:
         ff.writelines(f"{line}{newline}" for line in
-                      create_header(author=author, catchment=catchment, model=model_type, rvx_type="rvt"))
+                      create_header(author=author, catchment_ch_id=catchment_ch_id, model=model_type, rvx_type="rvt"))
         ff.write(f"# meteorological forcings\n")
-        for f in forcing_block(start_year, end_year, catchment).values():
+        for f in forcing_block(start_year, end_year, catchment_ch_id=catchment_ch_id).values():
             for t in f:
                 ff.write(f"{t}\n")
 
@@ -229,9 +227,10 @@ def write_rvt(start_year: int,
         ff.writelines(flow_observation)
 
 
-def generate_template_rvx(csv_file=None, model_type=model_type, params=default_params, param_or_name="names",
+def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_type, params=default_params,
+                          param_or_name="names",
                           start_year: str = start_year, end_year: str = end_year,
-                          cali_end_year: str = cali_end_year, catchment: str = catchment) -> dict:
+                          cali_end_year: str = cali_end_year) -> dict:
     """Generates template text which can be written to .rvX file.
 
         Args:
@@ -327,7 +326,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ":SubBasins",
                                 "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
                                 "  :Units     ,          none,          none,   none,          km,         none",
-                                f"            1,        {catchment},            -1,   NONE,       _AUTO,     1",
+                                f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
                                 ":EndSubBasins"
                             ],
                             "HRUs":
@@ -345,7 +344,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 f":EndDate               {end_year}-12-31 00:00:00",
                                 ":TimeStep              1.0",
                                 ":Method                ORDERED_SERIES",
-                                f":RunName               {catchment}_GR4J"
+                                f":RunName               {catchment_ch_id}_GR4J"
                             ],
                             "Model Options":
                                 [
@@ -482,7 +481,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ":SubBasins",
                                 "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
                                 "  :Units     ,          none,          none,   none,          km,         none",
-                                f"            1,        {catchment},            -1,   NONE,       _AUTO,     1",
+                                f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
                                 ":EndSubBasins"
                             ],
                             "HRUs":
@@ -510,7 +509,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 f":EndDate            {end_year}-12-31 00:00:00",
                                 ":TimeStep           1.0",
                                 ":Method             ORDERED_SERIES",
-                                f":RunName            {catchment}_HYMOD"
+                                f":RunName            {catchment_ch_id}_HYMOD"
                             ],
                             "Model Options":
                                 [
@@ -642,7 +641,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ":SubBasins",
                                 "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
                                 "  :Units     ,          none,          none,   none,          km,         none",
-                                f"            1,        {catchment},            -1,   NONE,       _AUTO,     1",
+                                f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
                                 ":EndSubBasins"
                             ],
                             "HRUs":
@@ -661,7 +660,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 f":EndDate                {end_year}-12-31 00:00:00",
                                 ":TimeStep                1.0",
                                 ":Method                  ORDERED_SERIES",
-                                f":RunName                 {catchment}_HMETS"
+                                f":RunName                 {catchment_ch_id}_HMETS"
                             ],
                             "Model Options":
                                 [
@@ -811,7 +810,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ":SubBasins",
                                 "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
                                 "  :Units     ,          none,          none,   none,          km,         none",
-                                f"            1,        {catchment},            -1,   NONE,       _AUTO,     1",
+                                f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
                                 ":EndSubBasins"
                             ],
                             "HRUs":
@@ -839,7 +838,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 f":StartDate             {start_year}-01-01 00:00:00",
                                 f":EndDate               {end_year}-12-31 00:00:00",
                                 ":TimeStep              1.0",
-                                f":RunName               {catchment}_HBV"
+                                f":RunName               {catchment_ch_id}_HBV"
                             ],
                             "Model Options":
                                 [
@@ -1002,7 +1001,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 ":SubBasins",
                                 "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
                                 "  :Units     ,          none,          none,   none,          km,         none",
-                                f"            1,        {catchment},            -1,   NONE,       _AUTO,     1",
+                                f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
                                 ":EndSubBasins"
                             ],
                             "HRUs":
@@ -1030,7 +1029,7 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
                                 f":EndDate                {end_year}-12-31 00:00:00",
                                 ":TimeStep                1.0",
                                 ":Method                  ORDERED_SERIES",
-                                f":RunName                 {catchment}_MOHYSE"
+                                f":RunName                 {catchment_ch_id}_MOHYSE"
                             ],
                             "Model Options":
                                 [
@@ -1092,16 +1091,17 @@ def generate_template_rvx(csv_file=None, model_type=model_type, params=default_p
 # TODO: Which param is HBV_PARA_???
 
 
-def generate_template_ostrich(model_type: str = model_type,
+def generate_template_ostrich(catchment_ch_id: str,
+                              model_type: str = model_type,
                               params: dict = default_params,
-                              catchment: str = catchment,
+                              catchment_name: str = catchment_name,
                               author: str = author,
                               generation_date: str = generation_date) -> dict:
     """
     Generates template text which can be written to .rvp file
 
     Args:
-        catchment : str
+        catchment_name : str
             Catchment name
         model_type : str
             Name of model type
@@ -1113,7 +1113,7 @@ def generate_template_ostrich(model_type: str = model_type,
             Dictionary with Ostrich parameters
     """
 
-    file_name = f"{catchment}_{model_type}"
+    file_name = f"{catchment_ch_id}_{model_type}"
     param_or_name = "names"
     logger.debug("Entered generate_template() function.")
     assert model_type in config.variables.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
@@ -1127,8 +1127,8 @@ def generate_template_ostrich(model_type: str = model_type,
                         "Model Info":
                             [
                                 f"# Model Type: {model_type}",
-                                f"# Catchment Name: {catchment}",
-                                f"# Catchment ID: {catchment_id}",
+                                f"# Catchment Name: {catchment_name}",
+                                f"# Catchment ID: {catchment_ch_id}",
                                 f"# Author: {author}",
                                 f"# Generation Date: {generation_date}"
                             ],
@@ -1291,8 +1291,8 @@ def generate_template_ostrich(model_type: str = model_type,
                         "Model Info":
                             [
                                 f"# Model Type: {model_type}",
-                                f"# Catchment Name: {catchment}",
-                                f"# Catchment ID: {catchment_id}",
+                                f"# Catchment Name: {catchment_name}",
+                                f"# Catchment ID: {catchment_ch_id}",
                                 f"# Author: {author}",
                                 f"# Generation Date: {generation_date}"
                             ],
@@ -1454,8 +1454,8 @@ def generate_template_ostrich(model_type: str = model_type,
                         "Model Info":
                             [
                                 f"# Model Type: {model_type}",
-                                f"# Catchment Name: {catchment}",
-                                f"# Catchment ID: {catchment_id}",
+                                f"# Catchment Name: {catchment_name}",
+                                f"# Catchment ID: {catchment_ch_id}",
                                 f"# Author: {author}",
                                 f"# Generation Date: {generation_date}"
                             ],
@@ -1639,8 +1639,8 @@ def generate_template_ostrich(model_type: str = model_type,
                         "Model Info":
                             [
                                 f"# Model Type: {model_type}",
-                                f"# Catchment Name: {catchment}",
-                                f"# Catchment ID: {catchment_id}",
+                                f"# Catchment Name: {catchment_name}",
+                                f"# Catchment ID: {catchment_ch_id}",
                                 f"# Author: {author}",
                                 f"# Generation Date: {generation_date}"
                             ],
@@ -1823,8 +1823,8 @@ def generate_template_ostrich(model_type: str = model_type,
                         "Model Info":
                             [
                                 f"# Model Type: {model_type}",
-                                f"# Catchment Name: {catchment}",
-                                f"# Catchment ID: {catchment_id}",
+                                f"# Catchment Name: {catchment_name}",
+                                f"# Catchment ID: {catchment_ch_id}",
                                 f"# Author: {author}",
                                 f"# Generation Date: {generation_date}"
                             ],
@@ -2006,11 +2006,11 @@ def subsection_header(title: str) -> list[str]:
     return subsection_head
 
 
-def write_rvx(model_dir: str = model_dir,
+def write_rvx(catchment_ch_id: str,
+              model_dir: str = model_dir,
               model_type: str = model_type,
               data_dir: str = data_dir,
               project_dir: Path = project_dir,
-              catchment: str = catchment,
               model_sub_dir: str = model_sub_dir,
               params: dict = default_params,
               template_type: str = "Raven",
@@ -2025,7 +2025,6 @@ def write_rvx(model_dir: str = model_dir,
         model_type (str): The type of model to use. Default is "model_type".
         data_dir (str): The directory where the input data is stored. Default is "data_dir".
         project_dir (Path): The directory of the project. Default is "project_dir".
-        catchment (str): The name of the catchment for which the RVX file should be created. Default is "catchment".
         model_sub_dir (str): The sub-directory where the model files are stored. Default is "model_sub_dir".
         params (dict): A dictionary of model parameters. Default is "default_params".
         template_type (str): The type of template to use. Default is "Raven".
@@ -2039,7 +2038,7 @@ def write_rvx(model_dir: str = model_dir,
     logger.debug("Arrived in function write_rvx().")
     assert model_type in config.variables.supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
                                                             f"supported_models."
-    attribute_csv_name = f"{raven_tools.config.variables.catchments[catchment]['catchment_id']}_attributes.csv"
+    attribute_csv_name = f"{raven_tools.config.variables.catchments[catchment_ch_id]['catchment_id']}_attributes.csv"
     try:
         logger.debug(
             f"Trying to read catchment attribute CSV file {Path(project_dir, data_dir, attribute_csv_dir, attribute_csv_name)}...")
@@ -2049,9 +2048,9 @@ def write_rvx(model_dir: str = model_dir,
     except:
         logger.exception("Error reading csv file into pandas...")
     logger.debug("Attribute catchment attribute CSV file read.")
-    file_name: str = f"{catchment}_{model_type}.{rvx_type}"
+    file_name: str = f"{catchment_ch_id}_{model_type}.{rvx_type}"
     logger.debug(f".{rvx_type} filename set to {file_name}.")
-    file_path: Path = Path(project_dir, model_dir, catchment, model_type, file_name)
+    file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, file_name)
     logger.debug(f".{rvx_type} file path set to {file_path}.")
     template_sections = {}
     logger.debug("Empty dict template_sections created.")
@@ -2062,10 +2061,10 @@ def write_rvx(model_dir: str = model_dir,
         logger.debug(f"Trying to generate .{rvx_type} template sections with function generate_template()...")
         template_sections = generate_template_rvx(model_type=model_type, csv_file=csv_file, params=params,
                                                   param_or_name="params", start_year=start_year, end_year=end_year,
-                                                  catchment=catchment)
+                                                  catchment_ch_id=catchment_ch_id)
         logger.debug(f"Wrote .{rvx_type} template sections generated by generate_template() to dict template_sections")
     if template_type == "Ostrich":
-        file_path: Path = Path(project_dir, model_dir, catchment, model_type, file_name)
+        file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, file_name)
         logger.debug(f"template_type is {template_type}.")
         logger.debug(f"Adding .tpl suffix to file_path for Ostrich template file...")
         file_path = Path((str(file_path) + ".tpl"))
@@ -2073,14 +2072,15 @@ def write_rvx(model_dir: str = model_dir,
         logger.debug(f"Trying to generate .{rvx_type}.tpl template sections with function generate_template()...")
         template_sections = generate_template_rvx(model_type=model_type, csv_file=csv_file, params=params,
                                                   param_or_name="names", start_year=start_year, end_year=end_year,
-                                                  catchment=catchment)
+                                                  catchment_ch_id=catchment_ch_id)
         logger.debug(
             f"Wrote .{rvx_type}.tpl template sections generated by generate_template() to dict template_sections")
 
     logger.debug(f"Trying to write to file {file_path}")
     with open(file_path, 'w') as ff:
         ff.writelines(f"{line}{newline}" for line in
-                      create_header(author=author, catchment=catchment, model=model_type, rvx_type=rvx_type))
+                      create_header(author=author, catchment_ch_id=catchment_ch_id, model=model_type,
+                                    rvx_type=rvx_type))
         logger.debug("Header lines written.")
         ff.write(newline)
         logger.debug("Entering template_sections for-loop...")
@@ -2100,7 +2100,8 @@ def write_ostrich(
         model_dir: str = model_dir,
         model_type: str = model_type,
         project_dir: Path = project_dir,
-        catchment: str = catchment,
+        catchment_name: str = catchment_name,
+        catchment_ch_id: str = "CH-0010",
         params: dict = default_params,
         ost_in: bool = True,
         save_best: bool = True,
@@ -2112,7 +2113,7 @@ def write_ostrich(
         model_dir (str): The directory where the model files are stored. Default is "model_dir".
         model_type (str): The type of model to use. Default is "model_type".
         project_dir (Path): The directory of the project. Default is "project_dir".
-        catchment (str): The name of the catchment for which the RVX file should be created. Default is "catchment".
+        catchment_name (str): The name of the catchment for which the RVX file should be created. Default is "catchment".
         params (dict): A dictionary of model parameters. Default is "default_params".
         ost_in (bool): Flag to indicate if Ostrich input file should be created. Default is True.
         save_best (bool): Flag to indicate if save_best.sh file should be created. Default is True.
@@ -2129,13 +2130,14 @@ def write_ostrich(
     ost_raven_file_name: str = f"Ost-RAVEN.sh"
     ost_shell_file_name: str = f"Ostrich_MPI.sh"
     logger.debug(f"filename w/o suffix set to {ost_in_file_name}.")
-    template_sections = generate_template_ostrich(model_type=model_type, params=params, catchment=catchment)
+    template_sections = generate_template_ostrich(model_type=model_type, params=params, catchment_ch_id=catchment_ch_id,
+                                                  catchment_name=catchment_name)
     logger.debug(f"Dictionary template_sections created.")
     logger.debug(f"Variable ost_in evaluated to {ost_in}")
     if ost_in:
         logger.debug(
-            f"Trying to write to file: {Path(project_dir, model_dir, catchment, model_type, ost_in_file_name)}")
-        with open(Path(project_dir, model_dir, catchment, model_type, ost_in_file_name), 'w') as ff:
+            f"Trying to write to file: {Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name)}")
+        with open(Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name), 'w') as ff:
             logger.debug("Entering template_sections for-loop...")
             logger.debug(f"template_sections dictionary: {newline} {template_sections}")
             for section in template_sections["ost_in"]:
@@ -2148,7 +2150,7 @@ def write_ostrich(
             logger.debug("template_sections for-loop finished.")
         logger.debug(f"Variable save_best evaluated to {save_best}")
     if save_best:
-        file_path: Path = Path(project_dir, model_dir, catchment, model_type, save_best_file_name)
+        file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, save_best_file_name)
         logger.debug(
             f"Trying to write to file: {file_path}")
         with open(file_path, 'w') as ff:
@@ -2162,7 +2164,7 @@ def write_ostrich(
         logger.debug(f"Variable ost_raven evaluated to {ost_raven}")
         os.chmod(file_path, 0o775)
     if ost_raven:
-        file_path: Path = Path(project_dir, model_dir, catchment, model_type, ost_raven_file_name)
+        file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, ost_raven_file_name)
         logger.debug(
             f"Trying to write to file: {file_path}")
         with open(file_path, 'w') as ff:
@@ -2176,7 +2178,7 @@ def write_ostrich(
         os.chmod(file_path, 0o775)
 
     if ost_mpi_script:
-        file_path: Path = Path(project_dir, model_dir, catchment, model_type, ost_shell_file_name)
+        file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, ost_shell_file_name)
         with open(file_path, "w") as ff:
             for section in template_sections["ost_mpi_script"]:
                 ff.writelines(f"{lin}\n" for lin in template_sections["ost_mpi_script"][section])

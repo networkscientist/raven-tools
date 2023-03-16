@@ -15,20 +15,8 @@ suffix = [
 ]
 # gr4j_broye.write_rvh()
 # gr4j_broye.write_rvx()
-models = [
-    "GR4J",
-    "HYMOD",
-    "HMETS",
-    "HBV",
-    "MOHYSE"
-]
-
-catchments = ["Ticino",
-              "Broye",
-              "Thur",
-              "Massa",
-              "Weisse_Luetschine",
-              "Dischmabach"]
+models_by_name: list = list(rt.config.variables.supported_models.keys())
+catchments_by_id: list = list(rt.config.variables.catchments.keys())
 # m = "GR4J"
 # model_instance = rt.model.raven_model.RavenModel(model_type=m, catchment=catchments[0])
 # model_instance.start_year = 1981
@@ -45,9 +33,9 @@ catchments = ["Ticino",
 #     model_instance.create_symlinks(ostrich_executable=False, forcings=False, discharge=False)
 # model_instance.create_grid_weights(forcing_name="RhiresD_v2.0_swiss.lv95")
 
-for c in catchments:
+for c in catchments_by_id:
     for f in rt.config.variables.forcings_dirs:
-        model_instance = rt.model.raven_model.RavenModel(catchment=c, start_year=1981, end_year=2020)
+        model_instance = rt.model.raven_model.RavenModel(catchment_ch_id=c, start_year=1981, end_year=2020)
         #         #         #         #         # print(model_instance.start_year)
         #         #         #         #         # model_instance.create_dirs()
         #         #         #         #         # model_instance.camels_to_rvt()
