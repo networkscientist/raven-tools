@@ -618,7 +618,7 @@ def export_to_rvt_file(start_date, start_time, df, out_path):
         df_as_string = df.to_string(justify="right", header=False, index=False,
                                     columns=['discharge'])
         f.write(df_as_string)
-        # f.write(df_as_string)
+        # f.write(df_as  _string)
         f.write("\n:EndObservationData")
 
 

@@ -1,6 +1,5 @@
 # import raven_model as rm
 # import model.raven_model
-from pathlib import Path
 
 import raven_tools as rt
 
@@ -15,8 +14,10 @@ suffix = [
 ]
 # gr4j_broye.write_rvh()
 # gr4j_broye.write_rvx()
-models_by_name: list = list(rt.config.variables.supported_models.keys())
-catchments_by_id: list = list(rt.config.variables.catchments.keys())
+models_by_name = rt.config.variables.supported_models
+catchments_by_id = [key for key in rt.config.variables.catchments]
+start_year = 1981
+end_year = 2020
 # m = "GR4J"
 # model_instance = rt.model.raven_model.RavenModel(model_type=m, catchment=catchments[0])
 # model_instance.start_year = 1981
@@ -33,21 +34,34 @@ catchments_by_id: list = list(rt.config.variables.catchments.keys())
 #     model_instance.create_symlinks(ostrich_executable=False, forcings=False, discharge=False)
 # model_instance.create_grid_weights(forcing_name="RhiresD_v2.0_swiss.lv95")
 
+# Do the following snippet for each forcing_dir
+# ---------------------------------------------
+
+# for c in catchments_by_id:
+#     for f in rt.config.variables.forcings_dirs:
+#         model_instance = rt.model.raven_model.RavenModel(catchment_ch_id=c, start_year=1981, end_year=2020)
+#         model_instance.data_dir = Path("/media/mainman/Work/RAVEN/data")
+#         #         #         #         # model_instance.camels_to_rvt()
+#         #         model_instance.create_symlinks()
+#         model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment",
+#                                             f"{model_instance.catchment}_bbox.shp")
+# model_instance.create_grid_weights(forcing_name=f)
+# model_instance.write_rvt(ostrich_template=True, raven_template=True)
+
+# Do the following snippet for each catchment and model type:
+# -----------------------------------------------------------
+
 for c in catchments_by_id:
-    for f in rt.config.variables.forcings_dirs:
-        model_instance = rt.model.raven_model.RavenModel(catchment_ch_id=c, start_year=1981, end_year=2020)
-        #         #         #         #         # print(model_instance.start_year)
-        #         #         #         #         # model_instance.create_dirs()
-        #         #         #         #         # model_instance.camels_to_rvt()
-        #         #         model_instance.create_symlinks()
-        #         model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment",
-        #                                             f"{model_instance.catchment}_bbox.shp")
-        model_instance.data_dir = Path("/media/mainman/Work/RAVEN/data")
-        model_instance.create_grid_weights(forcing_name=f)
-#         model_instance.write_rvt(ostrich_template=True, raven_template=True)
-# model_instance.create_netcdf(forcing_dir=forcing_dir, clip=True, merge=True)
-#
-# model_instance.create_bbox()
+    for m in models_by_name:
+        model_instance = rt.model.raven_model.RavenModel(model_type=m, catchment_ch_id=c, start_year=start_year,
+                                                         end_year=end_year)
+        # model_instance.create_dirs()
+        model_instance.camels_to_rvt()
+        # for s in suffix:
+        #     model_instance.write_rvx(rvx_type=s, ostrich_template=True, raven_template=True)
+        # model_instance.write_rvt()
+        # model_instance.write_ost()
+        # model_instance.create_symlinks(rvx_files=False)
 
 # for f in rt.config.variables.forcings_dirs:
 # model_instance.merge_netcdf(forcing_prefix=n)

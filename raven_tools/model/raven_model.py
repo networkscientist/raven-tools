@@ -76,7 +76,7 @@ class RavenModel:
         logger.debug("Setting self.attribute_csv_name (file name with catchment attributes...")
         self.attribute_csv = f"{self.catchment_ch_id}_attributes.csv"
         logger.debug("Setting self.model_dir...")
-        self.model_dir = Path(self.root_dir, "models", self.stream_name, self.model_type)
+        self.model_dir = Path(self.root_dir, "models", self.catchment_ch_id, self.model_type)
         logger.debug("Setting self.model_sub_dir...")
         self.model_sub_dir = self.conf['ModelSubDir']
         logger.debug("Setting self.dirs...")
@@ -468,7 +468,7 @@ class RavenModel:
                 except FileExistsError:
                     logger.exception("Error creating symlink: File already exists")
         if discharge:
-            discharge_filename = f"{self.gauge_short_code}_Q_{self.catchment_ch_id}_daily.rvt"
+            discharge_filename = f"{self.gauge_short_code}_Q_{self.gauge_id}_daily.rvt"
             src = Path(self.data_dir, "Discharge", discharge_filename)
             dst = Path(self.model_dir, self.model_sub_dir, "data_obs", discharge_filename)
             logger.debug("Source Path created.")
@@ -517,8 +517,8 @@ class RavenModel:
 
         if rvx_files:
             for s in config.variables.raven_filetypes:
-                src = Path(self.model_dir, f"{self.stream_name}_{self.model_type}.{s}")
-                dst = Path(self.model_dir, self.model_sub_dir, f"{self.stream_name}_{self.model_type}.{s}")
+                src = Path(self.model_dir, f"{self.catchment_ch_id}_{self.model_type}.{s}")
+                dst = Path(self.model_dir, self.model_sub_dir, f"{self.catchment_ch_id}_{self.model_type}.{s}")
                 logger.info("Source path created.")
                 logger.debug(f"Symlink src: {src}")
                 logger.debug(f"Symlink dst: {dst}")
