@@ -95,7 +95,7 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str):
         'Rainfall': [
             ":GriddedForcing           Rainfall",
             "    :ForcingType          RAINFALL",
-            f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/merged/RhiresD_ch01h.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
+            f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/out/RhiresD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
             "    :VarNameNC            RhiresD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
             f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
@@ -103,7 +103,7 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str):
         'Average Temperature': [
             ":GriddedForcing           Average Temperature",
             "    :ForcingType          TEMP_AVE",
-            f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/merged/TabsD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
+            f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/out/TabsD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
             "    :VarNameNC            TabsD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
             f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
@@ -111,7 +111,7 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str):
         'Maximum Temperature': [
             ":GriddedForcing           Maximum Temperature",
             "    :ForcingType          TEMP_MAX",
-            f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/merged/TmaxD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
+            f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/out/TmaxD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
             "    :VarNameNC            TmaxD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
             f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
@@ -119,7 +119,7 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str):
         'Minimum Temperature': [
             ":GriddedForcing           Minimum Temperature",
             "    :ForcingType          TEMP_MIN",
-            f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/merged/TminD_ch01r.swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
+            f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/out/TminD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
             "    :VarNameNC            TminD",
             "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
             f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
@@ -229,7 +229,7 @@ def write_rvt(start_year: int,
 
 def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_type, params=default_params,
                           param_or_name="names",
-                          start_year: str = start_year, end_year: str = end_year,
+                          start_year: int = start_year, end_year: int = end_year,
                           cali_end_year: str = cali_end_year) -> dict:
     """Generates template text which can be written to .rvX file.
 
@@ -299,7 +299,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     ":GlobalParameter RAINSNOW_TEMP       0.0",
                                     ":GlobalParameter RAINSNOW_DELTA      1.0",
                                     f":GlobalParameter AIRSNOW_COEFF     {params[param_or_name]['GR4J']['Airsnow_Coeff']} # [1/d] = 1.0 - CEMANEIGE_X2 = 1.0 - x6",
-                                    ":GlobalParameter AVG_ANNUAL_SNOW    16.9 # [mm]  =       CEMANEIGE_X1 =       x5",
+                                    f":GlobalParameter AVG_ANNUAL_SNOW    {params[param_or_name]['GR4J']['Cemaneige_X1']} # [mm]  =       CEMANEIGE_X1 =       x5",
                                     "#:GlobalParameter PRECIP_LAPSE     0.0004 I assume not necessary for gridded data",
                                     "#:GlobalParameter ADIABATIC_LAPSE  0.0065 not necessary for gridded data"
                                 ],
@@ -316,7 +316,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     ":LandUseParameterList",
                                     "   :Parameters, GR4J_X4, MELT_FACTOR",
                                     "   :Units, d, mm / d / C",
-                                    f"   [DEFAULT], {params[param_or_name]['GR4J']['GR4J_X4']}, {params[param_or_name]['GR4J']['Melt_Factor']}",
+                                    f"   [DEFAULT], {params[param_or_name]['GR4J']['GR4J_X4']}, 3.5",
                                     ":EndLandUseParameterList"
                                 ]
                         },
@@ -594,7 +594,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                 ],
                             "Global Parameters":
                                 [
-                                    f":GlobalParameter  SNOW_SWI_MIN {params[param_or_name]['HMETS']['HMETS_Param_09']} # x(9)",
+                                    f":GlobalParameter  SNOW_SWI_MIN {params[param_or_name]['HMETS']['HMETS_Param_09a']} # x(9)",
                                     f":GlobalParameter  SNOW_SWI_MAX {params[param_or_name]['HMETS']['HMETS_Param_09b']} # x(9)+x(10)",
                                     f":GlobalParameter  SWI_REDUCT_COEFF {params[param_or_name]['HMETS']['HMETS_Param_11']} # x(11)",
                                     ":GlobalParameter SNOW_SWI 0.05 #not sure why/if needed"
@@ -612,7 +612,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     ":LandUseParameterList",
                                     "   :Parameters, MIN_MELT_FACTOR, MAX_MELT_FACTOR,    DD_MELT_TEMP,  DD_AGGRADATION, REFREEZE_FACTOR,    REFREEZE_EXP, DD_REFREEZE_TEMP, HMETS_RUNOFF_COEFF,",
                                     "   :Units,          mm/d/C,          mm/d/C,               C,            1/mm,          mm/d/C,               -,                C,                  -,",
-                                    f"      [DEFAULT],  {params[param_or_name]['HMETS']['HMETS_Param_05']}, {params[param_or_name]['HMETS']['HMETS_Param_05b']},  {params[param_or_name]['HMETS']['HMETS_Param_07']},  {params[param_or_name]['HMETS']['HMETS_Param_08']},  {params[param_or_name]['HMETS']['HMETS_Param_13']},  {params[param_or_name]['HMETS']['HMETS_Param_14']},   {params[param_or_name]['HMETS']['HMETS_Param_12']},     {params[param_or_name]['HMETS']['HMETS_Param_16']},",
+                                    f"      [DEFAULT],  {params[param_or_name]['HMETS']['HMETS_Param_05a']}, {params[param_or_name]['HMETS']['HMETS_Param_05b']},  {params[param_or_name]['HMETS']['HMETS_Param_07']},  {params[param_or_name]['HMETS']['HMETS_Param_08']},  {params[param_or_name]['HMETS']['HMETS_Param_13']},  {params[param_or_name]['HMETS']['HMETS_Param_14']},   {params[param_or_name]['HMETS']['HMETS_Param_12']},     {params[param_or_name]['HMETS']['HMETS_Param_16']},",
                                     "#      x(5),       x(5)+x(6),            x(7),            x(8),           x(13),           x(14),            x(12),              x(16),",
                                     ":EndLandUseParameterList",
                                     "",
@@ -649,7 +649,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     ":HRUs",
                                     "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
                                     "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
-                                    f"            1, {csv_file.loc['area_ch1903plus']['values']},     {csv_file.loc['a0401_eu_dem_v11_e40n20crp_chv1_0']['values']},   {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
+                                    f"            1, {csv_file.loc['area_ch1903plus']['values']},     {csv_file.loc['a0401_eu_dem_v11_e40n20crp_chv1_0']['values']},   {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']},        1,        FOREST,   FOREST,    DEFAULT_P,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
                                     ":EndHRUs"
                                 ]
                         },
@@ -666,8 +666,8 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                 [
                                     ":PotentialMeltMethod     POTMELT_HMETS",
                                     ":RainSnowFraction        RAINSNOW_DATA",
-                                    ":Evaporation             PET_DATA",
-                                    "#:Evaporation            PET_OUDIN",
+                                    "#:Evaporation             PET_DATA",
+                                    ":Evaporation            PET_OUDIN",
                                     ":CatchmentRoute          ROUTE_DUMP",
                                     ":Routing                 ROUTE_NONE",
                                     ":SoilModel               SOIL_TWO_LAYER",
@@ -1169,7 +1169,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"{params[param_or_name]['GR4J']['GR4J_X2']}  	random	 	-15		10	none   none 	none",
                                 f"{params[param_or_name]['GR4J']['GR4J_X3']}  	random		10		700	none   none 	none",
                                 f"{params[param_or_name]['GR4J']['GR4J_X4']}  	random		0.5		7 	none   none	none",
-                                f"{params[param_or_name]['GR4J']['Melt_Factor']}  	random		1		30	none   none	none",
+                                f"{params[param_or_name]['GR4J']['Cemaneige_X1']}  	random		0.5		30	none   none	none",
                                 f"{params[param_or_name]['GR4J']['Airsnow_Coeff']}  	random		0		1	none   none 	none",
                                 f"EndParams"
                             ],
@@ -1185,22 +1185,19 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
                                 f"BeginResponseVars",
                                 f"#name	  filename			        keyword		line	col	token                               augmented?",
-                                f"#NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
-                                f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
+                                f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
                                 f"EndResponseVars",
                             ],
                         "Tied Response Variables":
                             [
-                                f"#Negative Nash-Sutcliffe efficiency",
+                                f"#Negative Non-Parametric Kling-Gupta efficiency",
                                 f"BeginTiedRespVars",
-                                f"#NegNSE 1 NSE wsum -1.00",
                                 f"NegKGE 1 KGE_NP wsum -1.00",
                                 f"EndTiedRespVars",
                             ],
                         "GCOP Options":
                             [
                                 f"BeginGCOP",
-                                f"#CostFunction NegNSE",
                                 f"CostFunction NegKGE",
                                 f"PenaltyFunction APM",
                                 f"EndGCOP",
@@ -1258,7 +1255,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"# Get the latest version of the diagnostics script and copy it to the model folder",
                                 f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
                                 f"# Copy the latest model files to the model folder",
-                                f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
+                                f"cp ./{file_name}.rvp model/{file_name}.rvp",
                                 f"cp ./{file_name}.rvc model/{file_name}.rvc{newline}",
                                 f"## cd into the model folder",
                                 f"cd model{newline}",
@@ -1279,6 +1276,11 @@ def generate_template_ostrich(catchment_ch_id: str,
                             [
                                 f"#!/bin/bash{newline}{newline}",
                                 f"# match assignment to location of OSTRICH installation{newline}",
+                                f"cp ./{file_name}.rvi model/{file_name}.rvi",
+                                f"cp ./{file_name}.rvh model/{file_name}.rvh",
+                                f"cp ./{file_name}.rvt model/{file_name}.rvt",
+                                f"cp ./{file_name}.rvp model/{file_name}.rvp",
+                                f"cp ./{file_name}.rvc model/{file_name}.rvc",
                                 f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
                                 f"mpirun $OSTRICH_MPI{newline}"
                             ]
@@ -1495,12 +1497,12 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_02']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_03']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_04']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_05']}		random		0.01		2.5	none   none 	none",
+                                f"{params[param_or_name]['HMETS']['HMETS_Param_05a']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_05b']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_06']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_07']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_08']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_09']}		random		0.01		2.5	none   none 	none",
+                                f"{params[param_or_name]['HMETS']['HMETS_Param_09a']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_09b']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_10']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_11']}		random		0.01		2.5	none   none 	none",
@@ -1512,9 +1514,9 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_17']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_18']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_19']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_20']}		random		0.01		2.5	none   none 	none",
+                                f"{params[param_or_name]['HMETS']['HMETS_Param_20a']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_20b']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_21']}		random		0.01		2.5	none   none 	none",
+                                f"{params[param_or_name]['HMETS']['HMETS_Param_21a']}		random		0.01		2.5	none   none 	none",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_21b']}		random		0.01		2.5	none   none 	none",
                                 f"EndParams"
                             ],
@@ -1524,8 +1526,8 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"# 1-parameter linear (TLIN = 2*XVAL) ",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_05b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # SNOW_SWI_MAX ",
                                 f"{params[param_or_name]['HMETS']['HMETS_Param_09b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # MAX_MELT_FACTOR ",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_20b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # :UniformInitialConditions SOIL[0] = HMETS_Param_20/2 ",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_21b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # :UniformInitialConditions SOIL[1] = HMETS_Param_21/2 ",
+                                f"{params[param_or_name]['HMETS']['HMETS_Param_20b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # :UniformInitialConditions SOIL[0] = HMETS_Param_20a/2 ",
+                                f"{params[param_or_name]['HMETS']['HMETS_Param_21b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # :UniformInitialConditions SOIL[1] = HMETS_Param_21a/2 ",
                                 f"EndTiedParams"
                             ],
                         "Response Variables":
@@ -2017,8 +2019,8 @@ def write_rvx(catchment_ch_id: str,
               attribute_csv_dir: str = "Catchment",
               rvx_type: str = "rvi",
               author=conf['Author'],
-              start_year: str = start_year,
-              end_year: str = end_year):
+              start_year: int = start_year,
+              end_year: int = end_year):
     """Writes .rvX file(s), either as an Ostrich or Raven template.
     Args:
         model_dir (str): The directory where the model files are stored. Default is "model_dir".

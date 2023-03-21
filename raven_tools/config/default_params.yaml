@@ -1,14 +1,13 @@
 names:
   GR4J:
     Airsnow_Coeff: Airsnow_Coeff
-    Cemaneige_X1: Cemaneige_X1
-    Cemaneige_X2: Cemaneige_X2
+    Cemaneige_X1: Cemaneige_x1
+    Cemaneige_X2: Cemaneige_x2
     GR4J_X1: GR4J_x1
     GR4J_X1b: Soil_0
     GR4J_X2: GR4J_x2
     GR4J_X3: GR4J_x3
     GR4J_X4: GR4J_x4
-    Melt_Factor: Melt_Factor
   HBV:
     HBV_Param_01: RainSnow_Temp
     HBV_Param_02: Melt_Fact
@@ -34,31 +33,31 @@ names:
     HBV_Param_20: Rain_Correction_RFCF
     HBV_Param_21: Snow_Correction_SFCF
   HMETS:
-    HMETS_Param_01: GAMMA_SHAPE
-    HMETS_Param_02: GAMMA_SCALE
-    HMETS_Param_03: GAMMA_SHAPE2
-    HMETS_Param_04: GAMMA_SCALE2
-    HMETS_Param_05: MIN_MELT_FACTOR
-    HMETS_Param_05b: HMETS_Param_05b
-    HMETS_Param_06: HMETS_Param_06
-    HMETS_Param_07: DD_MELT_TEMP
-    HMETS_Param_08: DD_AGGRADATION
-    HMETS_Param_09: SNOW_SWI_MIN
-    HMETS_Param_09b: HMETS_Param_09b
-    HMETS_Param_10: HMETS_Param_10
-    HMETS_Param_11: SWI_REDUCT_COEFF
-    HMETS_Param_12: DD_REFREEZE_TEMP
-    HMETS_Param_13: REFREEZE_FACTOR
-    HMETS_Param_14: REFREEZE_EXP
-    HMETS_Param_15: PET_CORRECTION_TOPSOIL
-    HMETS_Param_16: HMETS_RUNOFF_COEFF
-    HMETS_Param_17: PERC_COEFF_TOPSOIL
-    HMETS_Param_18: BASEFLOW_COEFF_TOPSOIL
-    HMETS_Param_19: BASEFLOW_COEFF_PHREATIC
-    HMETS_Param_20: HMETS_Param_20
-    HMETS_Param_20b: HMETS_Param_20b
-    HMETS_Param_21: HMETS_Param_21
-    HMETS_Param_21b: HMETS_Param_21b
+    HMETS_Param_01: HMETS_Param_01 #GAMMA_SHAPE
+    HMETS_Param_02: HMETS_Param_02 #GAMMA_SCALE
+    HMETS_Param_03: HMETS_Param_03 #GAMMA_SHAPE2
+    HMETS_Param_04: HMETS_Param_04 #GAMMA_SCALE2
+    HMETS_Param_05a: HMETS_Param_05a #MIN_MELT_FACTOR
+    HMETS_Param_05b: HMETS_Param_05b #HMETS_Param_05b
+    HMETS_Param_06: HMETS_Param_06 #HMETS_Param_06
+    HMETS_Param_07: HMETS_Param_07 #DD_MELT_TEMP
+    HMETS_Param_08: HMETS_Param_08 #DD_AGGRADATION
+    HMETS_Param_09a: HMETS_Param_09a #SNOW_SWI_MIN
+    HMETS_Param_09b: HMETS_Param_09b #HMETS_Param_09b
+    HMETS_Param_10: HMETS_Param_10 #HMETS_Param_10
+    HMETS_Param_11: HMETS_Param_11 #SWI_REDUCT_COEFF
+    HMETS_Param_12: HMETS_Param_12 #DD_REFREEZE_TEMP
+    HMETS_Param_13: HMETS_Param_13 #REFREEZE_FACTOR
+    HMETS_Param_14: HMETS_Param_14 #REFREEZE_EXP
+    HMETS_Param_15: HMETS_Param_15 #PET_CORRECTION_TOPSOIL
+    HMETS_Param_16: HMETS_Param_16 #HMETS_RUNOFF_COEFF
+    HMETS_Param_17: HMETS_Param_17 #PERC_COEFF_TOPSOIL
+    HMETS_Param_18: HMETS_Param_18 #BASEFLOW_COEFF_TOPSOIL
+    HMETS_Param_19: HMETS_Param_19 #BASEFLOW_COEFF_PHREATIC
+    HMETS_Param_20a: HMETS_Param_20a #HMETS_Param_20
+    HMETS_Param_20b: HMETS_Param_20b #HMETS_Param_20b
+    HMETS_Param_21a: HMETS_Param_21a #HMETS_Param_21
+    HMETS_Param_21b: HMETS_Param_21b #HMETS_Param_21b
   HYMOD:
     HYMOD_Param_01: Res_Constant
     HYMOD_Param_02: C_max
@@ -90,7 +89,6 @@ params:
     GR4J_X2: '0.5'
     GR4J_X3: '0.5'
     GR4J_X4: '0.5'
-    Melt_Factor: '0.5'
   HBV:
     HBV_Param_01: '0.5'
     HBV_Param_02: '0.5'
@@ -120,12 +118,12 @@ params:
     HMETS_Param_02: '0.5'
     HMETS_Param_03: '0.5'
     HMETS_Param_04: '0.5'
-    HMETS_Param_05: '0.5'
+    HMETS_Param_05a: '0.5'
     HMETS_Param_05b: '0.5'
     HMETS_Param_06: '0.5'
     HMETS_Param_07: '0.5'
     HMETS_Param_08: '0.5'
-    HMETS_Param_09: '0.5'
+    HMETS_Param_09a: '0.5'
     HMETS_Param_09b: '0.5'
     HMETS_Param_10: '0.5'
     HMETS_Param_11: '0.5'
@@ -137,9 +135,9 @@ params:
     HMETS_Param_17: '0.5'
     HMETS_Param_18: '0.5'
     HMETS_Param_19: '0.5'
-    HMETS_Param_20: '0.5'
+    HMETS_Param_20a: '0.5'
     HMETS_Param_20b: '155'
-    HMETS_Param_21: '0.5'
+    HMETS_Param_21a: '0.5'
     HMETS_Param_21b: '458'
   HYMOD:
     HYMOD_Param_01: '0.5'
