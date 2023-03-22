@@ -622,5 +622,59 @@ def export_to_rvt_file(start_date, start_time, df, out_path):
         f.write("\n:EndObservationData")
 
 
+def glacier_extent(ctm_gdf: GeoDataFrame, glacier_gdf: GeoDataFrame):
+    ctm_glaciation: GeoDataFrame = ctm_gdf.overlay(glacier_gdf, how='intersection')
+    ctm_glaciation.set_crs(epsg='2056')
+    # ctm_glaciation.set_index("cell_id")
+    # ctm_glaciation.set_crs(epsg='2056')
+    return ctm_glaciation
+
+
+def glaciation_ratio_height(catchment_filepath: Path, glacier_shape_path: Path, dem_filepaths: list[Path]):
+    ctm_gdf: GeoDataFrame = gpd.read_file(catchment_filepath)
+    ctm_gdf.set_crs(epsg="2056")
+    glacier_gdf: GeoDataFrame = gpd.read_file(glacier_shape_path)
+    glacier_gdf.set_crs(epsg='2056')
+    glaciated_area_gdf: GeoDataFrame = glacier_extent(ctm_gdf=ctm_gdf, glacier_gdf=glacier_gdf)
+    glaciation_area = glaciated_area_gdf["geometry"].area.sum()
+    ctm_area = ctm_gdf["geometry"].area.sum()
+    glaciation_ratio: float = (glaciation_area * 1000000) / (ctm_area * 1000000)
+    gla_height = glacier_height(glaciated_area_gdf=glaciated_area_gdf, dem_filepaths=dem_filepaths)
+    return glaciation_ratio, gla_height
+
+
+def glacier_height(glaciated_area_gdf: GeoDataFrame, dem_filepaths: list[Path]):
+    import rasterio as rio
+    from rasterio import merge
+    import rioxarray as rxr
+    from rasterio.io import MemoryFile
+
+    memfile = MemoryFile()
+    file_handler = [rio.open(row) for row in dem_filepaths]
+    rio.merge.merge(datasets=file_handler, dtype='float32',
+                    dst_path=memfile.name)
+    dataset = memfile.open(driver='GTiff')
+
+    dem_im = rxr.open_rasterio(dataset.name, masked=True).squeeze()
+    # f, ax = plt.subplots(figsize=(10, 5))
+    # dem_im.plot.imshow(ax=ax)
+    # glaciated_area_gdf.plot(ax=ax, alpha=.8)
+    # ax.set(title="Raster Layer with Shapefile overlayed")
+    # ax.set_axis_off()
+    # plt.show()
+
+    dem_clipped = dem_im.rio.clip(glaciated_area_gdf.geometry.apply(mapping))
+    # f, ax = plt.subplots(figsize=(10, 4))
+    # dem_clipped.plot(ax=ax)
+    # ax.set(title="Raster Layer cropped to GeoDataFrame extent")
+    # ax.set_axis_off()
+    # plt.show()
+    dem_mean = dem_clipped.mean(dim=["x", "y"], skipna=True).to_numpy()
+
+    mean_height = dem_mean.tolist()
+
+    return mean_height
+
+
 if __name__ == '__main__':
     pass

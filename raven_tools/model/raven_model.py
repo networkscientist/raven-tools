@@ -1,7 +1,6 @@
 """
 Work with a Raven class.
 """
-
 import logging
 import os
 import re
@@ -653,7 +652,7 @@ class RavenModel:
     def camels_to_rvt(self):
         rpe.camels_to_rvt(data_dir=self.data_dir, gauge_id=self.gauge_id,
                           gauge_short_code=self.gauge_short_code, start_date=f"{self.start_year}-01-01",
-                          end_date=f"{self.end_year}-01-01")
+                          end_date=f"{self.end_year + 1}-01-01")
 
     def create_grid_weights(self, forcing_name):
         if forcing_name == "RhiresD_v2.0_swiss.lv95":
@@ -680,6 +679,25 @@ class RavenModel:
         grid = rpe.copy_rel_area_from_union_to_grid(res_union=res_union, grid=grid)
         rpe.write_weights_to_file(grd=grid, grid_dir_path=out_path, catchment=self.stream_name)
         logger.debug(f"grid weight written to file {out_path}")
+
+    def glaciation_ratio(self, dem_tif_filenames):
+        catchment_filepath: Path = Path(self.data_dir, "Catchment", "reproject_2056",
+                                        f"{config.variables.catchments[self.catchment_ch_id]['catchment_id']}.shp")
+        glacier_extent_filepath: Path = Path(self.data_dir, "glaciers", "SGI_2016_glaciers.shp")
+        # glaciation_ratio_height = {
+        #     "glaciation_ratio":
+        #         [],
+        #     "glaciation_height":
+        #         []
+        # }
+
+        dem_filepaths = [Path(self.data_dir, "DEM", f) for f in dem_tif_filenames]
+        glaciation_ratio, glacier_height = rpe.glaciation_ratio_height(catchment_filepath=catchment_filepath,
+                                                                       glacier_shape_path=glacier_extent_filepath,
+                                                                       dem_filepaths=dem_filepaths)
+        # glaciation_ratio_height["glaciation_ratio"].append(glaciation_ratio)
+        # glaciation_ratio_height["glaciation_height"].append(glacier_height)
+        return glaciation_ratio, glacier_height
 
 
 def ch1903_to_wgs84(lat_1903, lon_1903):

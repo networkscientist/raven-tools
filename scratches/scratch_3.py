@@ -57,10 +57,10 @@ for c in catchments_by_id:
                                                          end_year=end_year)
         # model_instance.create_dirs()
         model_instance.camels_to_rvt()
-        # for s in suffix:
-        #     model_instance.write_rvx(rvx_type=s, ostrich_template=True, raven_template=True)
-        # model_instance.write_rvt()
-        # model_instance.write_ost()
+        for s in suffix:
+            model_instance.write_rvx(rvx_type=s, ostrich_template=True, raven_template=True)
+        model_instance.write_rvt()
+        model_instance.write_ost()
         # model_instance.create_symlinks(rvx_files=False)
 
 # for f in rt.config.variables.forcings_dirs:

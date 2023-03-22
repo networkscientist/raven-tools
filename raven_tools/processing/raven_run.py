@@ -251,7 +251,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
     logger.debug("Entered generate_template() function.")
     assert model_type in config.variables.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
     logger.debug("model_type is in the list of supported models.")
-
+    end_date = f"{end_year + 1}-01-01 00:00:00"
     logger.debug("Trying to create rvx_params dictionary...")
     rvx_params = \
         {
@@ -341,7 +341,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                         {"Model Organisation":
                             [
                                 f":StartDate             {start_year}-01-01 00:00:00",
-                                f":EndDate               {end_year}-12-31 00:00:00",
+                                f":EndDate               {end_date}",
                                 ":TimeStep              1.0",
                                 ":Method                ORDERED_SERIES",
                                 f":RunName               {catchment_ch_id}_GR4J"
@@ -506,7 +506,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                         {"Model Organisation":
                             [
                                 f":StartDate          {start_year}-01-01 00:00:00",
-                                f":EndDate            {end_year}-12-31 00:00:00",
+                                f":EndDate            {end_date}",
                                 ":TimeStep           1.0",
                                 ":Method             ORDERED_SERIES",
                                 f":RunName            {catchment_ch_id}_HYMOD"
@@ -657,7 +657,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                         {"Model Organisation":
                             [
                                 f":StartDate               {start_year}-01-01 00:00:00",
-                                f":EndDate                {end_year}-12-31 00:00:00",
+                                f":EndDate                {end_date}",
                                 ":TimeStep                1.0",
                                 ":Method                  ORDERED_SERIES",
                                 f":RunName                 {catchment_ch_id}_HMETS"
@@ -836,7 +836,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                         {"Model Organisation":
                             [
                                 f":StartDate             {start_year}-01-01 00:00:00",
-                                f":EndDate               {end_year}-12-31 00:00:00",
+                                f":EndDate               {end_date}",
                                 ":TimeStep              1.0",
                                 f":RunName               {catchment_ch_id}_HBV"
                             ],
@@ -1026,7 +1026,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                         {"Model Organisation":
                             [
                                 f":StartDate               {start_year}-01-01 00:00:00",
-                                f":EndDate                {end_year}-12-31 00:00:00",
+                                f":EndDate                {end_date}",
                                 ":TimeStep                1.0",
                                 ":Method                  ORDERED_SERIES",
                                 f":RunName                 {catchment_ch_id}_MOHYSE"
