@@ -14,6 +14,7 @@ from raven_tools import config
 from raven_tools.processing import raven_run as rr
 from raven_tools.processing import raven_preprocess as rpe
 from pyproj import Transformer
+import csv
 
 
 class RavenModel:
@@ -96,6 +97,18 @@ class RavenModel:
         self.end_year = self.conf['EndYear']
         logger.debug("Self.X variables set.")
         logger.debug(f"__init__ of {__name__} finished...")
+        self.glaciation_ratio: float = 0.0
+        self.glacier_alti: float = 0.0
+        try:
+            with open(Path(self.data_dir, "glaciers", f"glaciation_ratio_{self.catchment_ch_id}.txt"),
+                      mode='r') as csv_file:
+                csv_reader = csv.DictReader(csv_file, delimiter=';')
+                for row in csv_reader:
+                    self.glaciation_ratio = float(row['Glac_Ratio'])
+                    self.glacier_alti = float(row['Alti'])
+                    # print(f"Attribute: {row[0]} - Value: {row[1]}")
+        except:
+            logger.exception("Error reading glacier data")
         try:
             self.default_params = config.variables.default_params
         except:
@@ -376,6 +389,30 @@ class RavenModel:
         assert isinstance(value, str), f"catchment_ch_id should be str, is type {type(value)} instead."
         self._catchment_ch_id = value
 
+    @property
+    def glaciation_ratio(self) -> float:
+        """Returns glaciation_ratio."""
+        assert isinstance(self._glaciation_ratio,
+                          float), f"glaciation_ratio should be float, is type {type(self._glaciation_ratio)} instead."
+        return self._glaciation_ratio
+
+    @glaciation_ratio.setter
+    def glaciation_ratio(self, value: float):
+        assert isinstance(value, float), f"glaciation_ratio should be float, is type {type(value)} instead."
+        self._glaciation_ratio = value
+
+    @property
+    def glacier_alti(self) -> float:
+        """Returns glacier_alti."""
+        assert isinstance(self._glacier_alti,
+                          float), f"glacier_alti should be float, is type {type(self._glacier_alti)} instead."
+        return self._glacier_alti
+
+    @glacier_alti.setter
+    def glacier_alti(self, value: float):
+        assert isinstance(value, float), f"glacier_alti should be float, is type {type(value)} instead."
+        self._glacier_alti = value
+
     def create_dirs(self):
         """Create model (sub-)directories.
 
@@ -548,7 +585,8 @@ class RavenModel:
                          catchment_ch_id=self.catchment_ch_id,
                          params=self.default_params,
                          template_type="Raven",
-                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year)
+                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year,
+                         glaciation_ratio=self.glaciation_ratio, glacier_alti=self.glacier_alti)
             logger.debug(f".{rvx_type} for Raven created by rr.write_rvx function")
         if ostrich_template is True:
             logger.debug("Variable ostrich_template is True...")
@@ -557,7 +595,8 @@ class RavenModel:
                          catchment_ch_id=self.catchment_ch_id,
                          params=self.default_params,
                          template_type="Ostrich",
-                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year)
+                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year,
+                         glaciation_ratio=self.glaciation_ratio, glacier_alti=self.glacier_alti)
             logger.debug(f".{rvx_type}.tpl for Ostrich created by rr.write_rvx function")
         if ostrich_template is False and raven_template is False:
             logger.debug("Variables ostrich_template and raven_template set to False.")
@@ -692,12 +731,16 @@ class RavenModel:
         # }
 
         dem_filepaths = [Path(self.data_dir, "DEM", f) for f in dem_tif_filenames]
-        glaciation_ratio, glacier_height = rpe.glaciation_ratio_height(catchment_filepath=catchment_filepath,
-                                                                       glacier_shape_path=glacier_extent_filepath,
-                                                                       dem_filepaths=dem_filepaths)
-        # glaciation_ratio_height["glaciation_ratio"].append(glaciation_ratio)
-        # glaciation_ratio_height["glaciation_height"].append(glacier_height)
-        return glaciation_ratio, glacier_height
+        try:
+            glaciation_ratio, glacier_height = rpe.glaciation_ratio_height(catchment_filepath=catchment_filepath,
+                                                                           glacier_shape_path=glacier_extent_filepath,
+                                                                           dem_filepaths=dem_filepaths)
+            # glaciation_ratio_height["glaciation_ratio"].append(glaciation_ratio)
+            # glaciation_ratio_height["glaciation_height"].append(glacier_height)
+            return glaciation_ratio, glacier_height
+        except ValueError:
+            logger.exception("Error clipping DEM")
+            pass
 
 
 def ch1903_to_wgs84(lat_1903, lon_1903):

@@ -148,6 +148,7 @@ def write_rvt(start_year: int,
               params=default_params,
               param_or_name: str = "names",
               template_type: str = "Raven"):
+    import shutil
     """Write to Raven .rvt file.
 
     Args:
@@ -225,12 +226,16 @@ def write_rvt(start_year: int,
 
         ff.writelines(gauge)
         ff.writelines(flow_observation)
+    if template_type == "Raven":
+        dst_path: Path = Path(model_dir, model_sub_dir, file_name)
+        shutil.copy(file_path, dst_path)
 
 
 def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_type, params=default_params,
                           param_or_name="names",
                           start_year: int = start_year, end_year: int = end_year,
-                          cali_end_year: str = cali_end_year) -> dict:
+                          cali_end_year: str = cali_end_year, glaciation_ratio: float = 0,
+                          glacier_alti: float = 0) -> dict:
     """Generates template text which can be written to .rvX file.
 
         Args:
@@ -253,6 +258,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
     logger.debug("model_type is in the list of supported models.")
     end_date = f"{end_year + 1}-01-01 00:00:00"
     logger.debug("Trying to create rvx_params dictionary...")
+    glaciated_area: float = float(csv_file.loc['area_ch1903plus']['values']) * float(glaciation_ratio)
     rvx_params = \
         {
             "GR4J":
@@ -275,6 +281,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     "#     name,#horizons,{soiltype,thickness}x{#horizons}",
                                     "#     GR4J_X1 is thickness of first layer (SOIL_PROD), here 0.529",
                                     ":SoilProfiles",
+                                    f"#   GLACIER, 0",
                                     f"   DEFAULT_P, 4, SOIL_PROD, {params[param_or_name]['GR4J']['GR4J_X1']}, SOIL_ROUT, 0.300, SOIL_TEMP, 1.000, SOIL_GW, 1.000,",
                                     ":EndSoilProfiles"
                                 ],
@@ -284,6 +291,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     "   :Attributes, MAX_HT, MAX_LAI, MAX_LEAF_COND",
                                     "   :Units, m, none, mm_per_s",
                                     "   VEG_ALL, 0.0, 0.0, 0.0",
+                                    "#   GLACIER, 0.0, 0.0, 0.0",
                                     ":EndVegetationClasses"
                                 ],
                             "Land Use Classes":
@@ -292,6 +300,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     "   :Attributes, IMPERM, FOREST_COV",
                                     "   :Units, frac, frac",
                                     f"   LU_ALL, {int(csv_file.loc['a0425_clc18_5_aurbv1_0']['values']) / 100}, {int(csv_file.loc['a0418_clc18_5_afrtv1_0']['values']) / 100}",
+                                    "#    GLACIER, 0.0, 0.0",
                                     ":EndLandUseClasses"
                                 ],
                             "Global Parameters":
@@ -335,6 +344,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
                                     "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
                                     f"            1, {csv_file.loc['area_ch1903plus']['values']},     {csv_file.loc['a0401_eu_dem_v11_e40n20crp_chv1_0']['values']},   {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
+                                    f"#            2, {glaciated_area}, {glacier_alti}, {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']}, 1,        GLACIER,   GLACIER,    GLACIER,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
                                     ":EndHRUs"
                                 ]},
                     "rvi":
@@ -2020,7 +2030,10 @@ def write_rvx(catchment_ch_id: str,
               rvx_type: str = "rvi",
               author=conf['Author'],
               start_year: int = start_year,
-              end_year: int = end_year):
+              end_year: int = end_year,
+              glaciation_ratio: float = 0,
+              glacier_alti: float = 2000):
+    import shutil
     """Writes .rvX file(s), either as an Ostrich or Raven template.
     Args:
         model_dir (str): The directory where the model files are stored. Default is "model_dir".
@@ -2063,7 +2076,8 @@ def write_rvx(catchment_ch_id: str,
         logger.debug(f"Trying to generate .{rvx_type} template sections with function generate_template()...")
         template_sections = generate_template_rvx(model_type=model_type, csv_file=csv_file, params=params,
                                                   param_or_name="params", start_year=start_year, end_year=end_year,
-                                                  catchment_ch_id=catchment_ch_id)
+                                                  catchment_ch_id=catchment_ch_id, glaciation_ratio=glaciation_ratio,
+                                                  glacier_alti=glacier_alti)
         logger.debug(f"Wrote .{rvx_type} template sections generated by generate_template() to dict template_sections")
     if template_type == "Ostrich":
         file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, file_name)
@@ -2074,7 +2088,8 @@ def write_rvx(catchment_ch_id: str,
         logger.debug(f"Trying to generate .{rvx_type}.tpl template sections with function generate_template()...")
         template_sections = generate_template_rvx(model_type=model_type, csv_file=csv_file, params=params,
                                                   param_or_name="names", start_year=start_year, end_year=end_year,
-                                                  catchment_ch_id=catchment_ch_id)
+                                                  catchment_ch_id=catchment_ch_id, glaciation_ratio=glaciation_ratio,
+                                                  glacier_alti=glacier_alti)
         logger.debug(
             f"Wrote .{rvx_type}.tpl template sections generated by generate_template() to dict template_sections")
 
@@ -2094,6 +2109,9 @@ def write_rvx(catchment_ch_id: str,
             ff.writelines(f"{lin}\n" for lin in template_sections[rvx_type][section])
             logger.debug("Template section written")
             ff.write(newline)
+    if template_type == "Raven":
+        dst_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, model_sub_dir, file_name)
+        shutil.copy(file_path, dst_path)
         logger.debug("template_sections for-loop finished.")
         logger.debug("Function write_rvx() finished.")
 

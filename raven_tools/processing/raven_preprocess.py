@@ -639,8 +639,12 @@ def glaciation_ratio_height(catchment_filepath: Path, glacier_shape_path: Path, 
     glaciation_area = glaciated_area_gdf["geometry"].area.sum()
     ctm_area = ctm_gdf["geometry"].area.sum()
     glaciation_ratio: float = (glaciation_area * 1000000) / (ctm_area * 1000000)
-    gla_height = glacier_height(glaciated_area_gdf=glaciated_area_gdf, dem_filepaths=dem_filepaths)
-    return glaciation_ratio, gla_height
+    try:
+        gla_height = glacier_height(glaciated_area_gdf=glaciated_area_gdf, dem_filepaths=dem_filepaths)
+        return glaciation_ratio, gla_height
+    except ValueError:
+        logger.exception("Error clipping DEM")
+        pass
 
 
 def glacier_height(glaciated_area_gdf: GeoDataFrame, dem_filepaths: list[Path]):
@@ -663,17 +667,22 @@ def glacier_height(glaciated_area_gdf: GeoDataFrame, dem_filepaths: list[Path]):
     # ax.set_axis_off()
     # plt.show()
 
-    dem_clipped = dem_im.rio.clip(glaciated_area_gdf.geometry.apply(mapping))
-    # f, ax = plt.subplots(figsize=(10, 4))
-    # dem_clipped.plot(ax=ax)
-    # ax.set(title="Raster Layer cropped to GeoDataFrame extent")
-    # ax.set_axis_off()
-    # plt.show()
-    dem_mean = dem_clipped.mean(dim=["x", "y"], skipna=True).to_numpy()
+    try:
 
-    mean_height = dem_mean.tolist()
+        dem_clipped = dem_im.rio.clip(glaciated_area_gdf.geometry.apply(mapping))
+        # f, ax = plt.subplots(figsize=(10, 4))
+        # dem_clipped.plot(ax=ax)
+        # ax.set(title="Raster Layer cropped to GeoDataFrame extent")
+        # ax.set_axis_off()
+        # plt.show()
+        dem_mean = dem_clipped.mean(dim=["x", "y"], skipna=True).to_numpy()
 
-    return mean_height
+        mean_height = dem_mean.tolist()
+
+        return mean_height
+    except ValueError:
+        logger.exception("There has been an error clipping the DEM")
+        pass
 
 
 if __name__ == '__main__':
