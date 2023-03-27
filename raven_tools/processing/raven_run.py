@@ -1053,19 +1053,19 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
                                     f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
                                 ],
-                            "Alias Definitions":
-                                [
-                                    "# :Alias MOHYSE_PARA_1      1.5589    # :GlobalParameter         MOHYSE_PET_COEFF",
-                                    "# :Alias MOHYSE_PARA_2	    0.9991    # LandUseParameterList --> AET_COEFF",
-                                    "# :Alias MOHYSE_PARA_3	    2.1511    # LandUseParameterList --> MELT_FACTOR",
-                                    "# :Alias MOHYSE_PARA_4	   -1.6101    # LandUseParameterList --> DD_MELT_TEMP",
-                                    "# :Alias MOHYSE_PARA_5	    0.5000    # SoilProfiles         --> thickness of TOPSOIL (in mm????? must be m!!!)",
-                                    "# :Alias MOHYSE_PARA_6	    0.1050    # SoilParameterList    --> PERC_COEFF (TOPSOIL)",
-                                    "# :Alias MOHYSE_PARA_7	    0.0533    # SoilParameterList    --> BASEFLOW_COEFF (TOPSOIL)",
-                                    "# :Alias MOHYSE_PARA_8	    0.0132    # SoilParameterList    --> BASEFLOW_COEFF (GWSOIL)",
-                                    "# :Alias MOHYSE_PARA_9	    1.0474    # :SubBasinProperties  --> GAMMA_SHAPE",
-                                    "# :Alias MOHYSE_PARA_10	    7.9628    # :SubBasinProperties  --> TIME_CONC = MOHYSE_PARA_10 / 0.3 = 26.542666666"
-                                ],
+                            # "Alias Definitions":
+                            #     [
+                            #         "# :Alias MOHYSE_PARA_1      1.5589    # :GlobalParameter         MOHYSE_PET_COEFF",
+                            #         "# :Alias MOHYSE_PARA_2	    0.9991    # LandUseParameterList --> AET_COEFF",
+                            #         "# :Alias MOHYSE_PARA_3	    2.1511    # LandUseParameterList --> MELT_FACTOR",
+                            #         "# :Alias MOHYSE_PARA_4	   -1.6101    # LandUseParameterList --> DD_MELT_TEMP",
+                            #         "# :Alias MOHYSE_PARA_5	    0.5000    # SoilProfiles         --> thickness of TOPSOIL (in mm????? must be m!!!)",
+                            #         "# :Alias MOHYSE_PARA_6	    0.1050    # SoilParameterList    --> PERC_COEFF (TOPSOIL)",
+                            #         "# :Alias MOHYSE_PARA_7	    0.0533    # SoilParameterList    --> BASEFLOW_COEFF (TOPSOIL)",
+                            #         "# :Alias MOHYSE_PARA_8	    0.0132    # SoilParameterList    --> BASEFLOW_COEFF (GWSOIL)",
+                            #         "# :Alias MOHYSE_PARA_9	    1.0474    # :SubBasinProperties  --> GAMMA_SHAPE",
+                            #         "# :Alias MOHYSE_PARA_10	    7.9628    # :SubBasinProperties  --> TIME_CONC = MOHYSE_PARA_10 / 0.3 = 26.542666666"
+                            #     ],
                             "Hydrologic Process Order":
                                 [
                                     ":HydrologicProcesses",
@@ -1129,6 +1129,25 @@ def generate_template_ostrich(catchment_ch_id: str,
     assert model_type in config.variables.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
     logger.debug("model_type is in the list of supported models.")
     module_root_dir: Path = Path().resolve()
+    response_variables = [
+        f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
+        f"BeginResponseVars",
+        f"#name	  filename			        keyword		line	col	token                               augmented?",
+        f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
+        f"EndResponseVars"
+    ]
+    tied_response_variables = [
+        f"#Negative Non-Parametric Kling-Gupta efficiency",
+        f"BeginTiedRespVars",
+        f"NegKGE 1 KGE_NP wsum -1.00",
+        f"EndTiedRespVars",
+    ]
+    gcop_options = [
+        f"BeginGCOP",
+        f"CostFunction NegKGE",
+        f"PenaltyFunction APM",
+        f"EndGCOP",
+    ]
     ost_params = {
         "GR4J":
             {
@@ -1862,7 +1881,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                             [
                                 f"BeginFilePairs",
                                 f"{file_name}.rvp.tpl;	{file_name}.rvp",
-                                f"{file_name}.rvc.tpl;	{file_name}.rvc",
+                                f"{file_name}.rvh.tpl;  {file_name}.rvh",
                                 f"#can be multiple (.rvh, .rvi)",
                                 f"EndFilePairs"
                             ],
@@ -1886,30 +1905,11 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"EndParams"
                             ],
                         "Response Variables":
-                            [
-                                f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
-                                f"BeginResponseVars",
-                                f"#name	  filename			        keyword		line	col	token                               augmented?",
-                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
-                                f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
-                                f"EndResponseVars",
-                            ],
+                            response_variables,
                         "Tied Response Variables":
-                            [
-                                f"#Negative Nash-Sutcliffe efficiency",
-                                f"BeginTiedRespVars",
-                                f"NegNSE 1 NSE wsum -1.00",
-                                f"NegKGE 1 KGE_NP wsum -1.00",
-                                f"EndTiedRespVars",
-                            ],
+                            tied_response_variables,
                         "GCOP Options":
-                            [
-                                f"BeginGCOP",
-                                f"CostFunction NegNSE",
-                                f"CostFunction NegKGE",
-                                f"PenaltyFunction APM",
-                                f"EndGCOP",
-                            ],
+                            gcop_options,
                         "Constraints":
                             [
                                 f"BeginConstraints",
@@ -1962,7 +1962,6 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"# Get the latest version of the diagnostics script and copy it to the model folder",
                                 f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
                                 f"# Copy the latest model files to the model folder",
-                                f"cp ./{file_name}.rvi model/{file_name}.rvi",
                                 f"cp ./{file_name}.rvh model/{file_name}.rvh",
                                 f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
                                 f"## cd into the model folder",
@@ -1984,6 +1983,11 @@ def generate_template_ostrich(catchment_ch_id: str,
                             [
                                 f"#!/bin/bash{newline}{newline}",
                                 f"# match assignment to location of OSTRICH installation{newline}",
+                                f"cp ./{file_name}.rvi model/{file_name}.rvi",
+                                f"cp ./{file_name}.rvh model/{file_name}.rvh",
+                                f"cp ./{file_name}.rvt model/{file_name}.rvt",
+                                f"cp ./{file_name}.rvp model/{file_name}.rvp",
+                                f"cp ./{file_name}.rvc model/{file_name}.rvc",
                                 f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
                                 f"mpirun $OSTRICH_MPI{newline}"
                             ]

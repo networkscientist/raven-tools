@@ -4,6 +4,7 @@ Work with a Raven class.
 import logging
 import os
 import re
+import shutil
 from pathlib import Path
 
 # import raven_tools as rt
@@ -481,7 +482,8 @@ class RavenModel:
         self._ost_exe_path = value
 
     def create_symlinks(self, forcings: bool = True, discharge: bool = True, raven_executable: bool = True,
-                        ostrich_executable: bool = True, rvx_files: bool = True):
+                        ostrich_executable: bool = True, rvx_files: bool = True, raven_diag: bool = True):
+        from raven_tools.processing import raven_diag
         logger.debug("Entered function create_symlinks.")
         if forcings:
             logger.debug("Trying to create data symlinks...")
@@ -564,6 +566,9 @@ class RavenModel:
                 except FileExistsError:
                     logger.exception("Error creating symlink: File already exists.")
                     pass
+
+        if raven_diag:
+            shutil.copy(raven_diag.__file__, Path(self.model_dir, self.model_sub_dir, "output", "raven_diag.py"))
 
     def write_rvx(self, ostrich_template: bool = False, raven_template: bool = True, rvx_type: str = "rvi"):
         """Write .rvX file for Raven and/or Ostrich

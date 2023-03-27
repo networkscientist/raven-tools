@@ -1,35 +1,47 @@
 """
 Tools to processing-process Raven output files.
 """
-import os
-import sys
+import glob
 from pathlib import Path
 
-import HydroErr as he
 import pandas as pd
 from matplotlib import pyplot as plt
 
+model_path = Path("/media/mainman/Work/RAVEN/models")
+model_types = ["GR4J", "MOHYSE", "HYMOD"]
+
+csv_dict = {}
+perf_metrics = ['KGE_NP', 'PBIAS', 'RMSE', 'VE']
+
+
+def test_function(model_name: str):
+    file_list = glob.glob(f"{model_path}/CH-*/{model_name}/processor_0/model_best/CH-*_{model_name}_Diagnostics.csv")
+    metrics_df = pd.DataFrame(columns=['Run', 'KGE_NP', 'PBIAS', 'RMSE', 'VE'])
+    cali_df = pd.DataFrame(columns=perf_metrics)
+    vali_df = pd.DataFrame(columns=perf_metrics)
+    for i, f in enumerate(file_list):
+        csv_pd = pd.read_csv(open(f), sep=",")
+        cali = csv_pd.loc[csv_pd['Run'] == 'HYDROGRAPH_CALIBRATION']
+        vali = csv_pd.loc[csv_pd['Run'] == 'HYDROGRAPH_VALIDATION']
+        cali_df = pd.concat([cali_df, cali])
+        vali_df = pd.concat([vali_df, vali])
+    # for pm in perf_metrics:
+    #     cali_list.plot.box(column=[pm])
+    fig, axes = plt.subplots(ncols=8, dpi=300)
+    fig.suptitle(model_name)
+
+    for i, pm in enumerate(perf_metrics):
+        cali_df.boxplot(column=pm, ax=axes[2 * i])
+        axes[2 * i].set_title('Cali')
+        vali_df.boxplot(column=pm, ax=axes[2 * i + 1])
+        axes[2 * i + 1].set_title('Vali')
+    # plt.show()
+
+    plt.savefig(f"/home/mainman/Documents/Studium/UniBe/Master's Thesis/data/figures/{model_name}.png")
+
+
+for m in model_types:
+    test_function(m)
+
 if __name__ == '__main__':
-    df_cali = pd.read_csv(
-        Path(
-            "/media/mainman/Work/RAVEN/models/CH-0058/HYMOD/processor_0/model_best/CH-0058_HYMOD_Hydrographs.csv"),
-        usecols=[1, 3, 4, 5], index_col='date')
-    df_cali = df_cali.iloc[1:, ]
-    df_cali.plot()
-    plt.show()
-    df_cali.set_index('date', inplace=True)
-    df_vali = pd.read_csv(Path(os.path.dirname(__file__), sys.argv[1]), index_col=1, parse_dates=True)
-    df_cali = pd.read_csv(
-        Path("/media/mainman/Work/RAVEN/models/CH-0058/GR4J/processor_0/model/output/CH-0058_GR4J_Hydrographs.csv"),
-        index_col=1)
-    df_vali = pd.read_csv(Path(""), index_col=1)
-
-    end_cali = df_cali.index.searchsorted("2000-12-31")
-    start_vali = df_vali.index.searchsorted("2001-01-01")
-    end_vali = df_vali.index.searchsorted("2020-12-31")
-    simulations_cali = df_cali.iloc[:end_cali, 3]
-    observations_cali = df_cali.iloc[:end_cali, 4]
-    simulations_vali = df_vali.iloc[start_vali:end_vali, 3]
-    observations_vali = df_vali.iloc[start_vali:end_vali, 4]
-
-    he.ve(simulated_array=simulations_cali, observed_array=observations_cali)
+    pass

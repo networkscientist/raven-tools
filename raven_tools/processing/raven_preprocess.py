@@ -616,7 +616,7 @@ def export_to_rvt_file(start_date, start_time, df, out_path):
         f.write(f":ObservationData\tHYDROGRAPH\t1\tm3/s\n{start_date}\t{start_time}\t1\t{len(df)}\n")
         # For gauged precipitation data
         df_as_string = df.to_string(justify="right", header=False, index=False,
-                                    columns=['discharge'])
+                                    columns=['discharge'], na_rep="-1.2345")
         f.write(df_as_string)
         # f.write(df_as  _string)
         f.write("\n:EndObservationData")
