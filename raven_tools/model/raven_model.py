@@ -724,7 +724,7 @@ class RavenModel:
         rpe.write_weights_to_file(grd=grid, grid_dir_path=out_path, catchment=self.stream_name)
         logger.debug(f"grid weight written to file {out_path}")
 
-    def glaciation_ratio(self, dem_tif_filenames):
+    def glacier_ratio(self, dem_tif_filenames):
         catchment_filepath: Path = Path(self.data_dir, "Catchment", "reproject_2056",
                                         f"{config.variables.catchments[self.catchment_ch_id]['catchment_id']}.shp")
         glacier_extent_filepath: Path = Path(self.data_dir, "glaciers", "SGI_2016_glaciers.shp")
@@ -737,12 +737,13 @@ class RavenModel:
 
         dem_filepaths = [Path(self.data_dir, "DEM", f) for f in dem_tif_filenames]
         try:
-            glaciation_ratio, glacier_height = rpe.glaciation_ratio_height(catchment_filepath=catchment_filepath,
-                                                                           glacier_shape_path=glacier_extent_filepath,
-                                                                           dem_filepaths=dem_filepaths)
+            glaciation_ratio, glacier_height, non_glaciation_ratio, non_gla_height, glaciated_centroid, non_glaciated_centroid = rpe.glaciation_ratio_height(
+                catchment_filepath=catchment_filepath,
+                glacier_shape_path=glacier_extent_filepath,
+                dem_filepaths=dem_filepaths)
             # glaciation_ratio_height["glaciation_ratio"].append(glaciation_ratio)
             # glaciation_ratio_height["glaciation_height"].append(glacier_height)
-            return glaciation_ratio, glacier_height
+            return glaciation_ratio, glacier_height, non_glaciation_ratio, non_gla_height, glaciated_centroid, non_glaciated_centroid
         except ValueError:
             logger.exception("Error clipping DEM")
             pass

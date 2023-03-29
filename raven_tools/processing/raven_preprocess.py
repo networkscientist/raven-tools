@@ -28,7 +28,7 @@ import xarray as xr
 from geopandas import GeoDataFrame
 from netCDF4 import Dataset
 from numpy import exp
-from shapely.geometry import Polygon, mapping
+from shapely.geometry import Polygon, mapping, Point
 
 from raven_tools import config
 
@@ -624,10 +624,12 @@ def export_to_rvt_file(start_date, start_time, df, out_path):
 
 def glacier_extent(ctm_gdf: GeoDataFrame, glacier_gdf: GeoDataFrame):
     ctm_glaciation: GeoDataFrame = ctm_gdf.overlay(glacier_gdf, how='intersection')
-    ctm_glaciation.set_crs(epsg='2056')
+    ctm_non_glaciation: GeoDataFrame = ctm_gdf.overlay(glacier_gdf, how='difference')
+    # ctm_glaciation.set_crs(epsg='2056')
+    # ctm_non_glaciation.set_crs(epsg='2056')
     # ctm_glaciation.set_index("cell_id")
     # ctm_glaciation.set_crs(epsg='2056')
-    return ctm_glaciation
+    return ctm_glaciation, ctm_non_glaciation
 
 
 def glaciation_ratio_height(catchment_filepath: Path, glacier_shape_path: Path, dem_filepaths: list[Path]):
@@ -635,19 +637,42 @@ def glaciation_ratio_height(catchment_filepath: Path, glacier_shape_path: Path, 
     ctm_gdf.set_crs(epsg="2056")
     glacier_gdf: GeoDataFrame = gpd.read_file(glacier_shape_path)
     glacier_gdf.set_crs(epsg='2056')
-    glaciated_area_gdf: GeoDataFrame = glacier_extent(ctm_gdf=ctm_gdf, glacier_gdf=glacier_gdf)
-    glaciation_area = glaciated_area_gdf["geometry"].area.sum()
+    glaciated_area_gdf, non_glaciated_area_gdf = glacier_extent(ctm_gdf=ctm_gdf, glacier_gdf=glacier_gdf)
+    non_glaciated_centroid = weighted_centroid(non_glaciated_area_gdf)
+    non_glaciation_area = non_glaciated_area_gdf["geometry"].area.sum()
     ctm_area = ctm_gdf["geometry"].area.sum()
-    glaciation_ratio: float = (glaciation_area * 1000000) / (ctm_area * 1000000)
-    try:
-        gla_height = glacier_height(glaciated_area_gdf=glaciated_area_gdf, dem_filepaths=dem_filepaths)
-        return glaciation_ratio, gla_height
-    except ValueError:
-        logger.exception("Error clipping DEM")
-        pass
+    glaciation_area: float = 0.0
+    glaciation_ratio: float = 0.0
+    non_glaciation_ratio: float = 1.0
+    non_gla_height = hru_height(hru_area_gdf=non_glaciated_area_gdf.to_crs(epsg='2056'), dem_filepaths=dem_filepaths)
+    gla_height: float = 0.0
+    if glaciated_area_gdf.empty:
+        return glaciation_ratio, gla_height, non_glaciation_ratio, non_gla_height, Point(0, 0), non_glaciated_centroid
+    else:
+
+        glaciacted_centroid = weighted_centroid(glaciated_area_gdf)
+        glaciation_area = glaciated_area_gdf["geometry"].area.sum()
+        glaciation_ratio = (glaciation_area * 1000000) / (ctm_area * 1000000)
+        non_glaciation_ratio: float = (non_glaciation_area * 1000000) / (ctm_area * 1000000)
+
+        gla_height = hru_height(hru_area_gdf=glaciated_area_gdf.to_crs(epsg='2056'), dem_filepaths=dem_filepaths)
+        return glaciation_ratio, gla_height, non_glaciation_ratio, non_gla_height, glaciacted_centroid, non_glaciated_centroid
 
 
-def glacier_height(glaciated_area_gdf: GeoDataFrame, dem_filepaths: list[Path]):
+def weighted_centroid(feature_gdf: GeoDataFrame):
+    feature_gdf.to_crs(epsg='32632', inplace=True)
+    area = np.array(feature_gdf.geometry.area)
+    centroids_x = np.array(feature_gdf.geometry.centroid.x)
+    weighted_centroid_x = (np.sum(centroids_x * area) / np.sum(area))
+    centroids_y = np.array(feature_gdf.geometry.centroid.y)
+    weighted_centroid_y = (np.sum(centroids_y * area) / np.sum(area))
+    weighted_centroid_x, weighted_centroid_y = crs_old_to_new(weighted_centroid_x, weighted_centroid_y,
+                                                              32632, 4326)
+    weighted_centroid_point = Point(weighted_centroid_x, weighted_centroid_y)
+    return weighted_centroid_point
+
+
+def hru_height(hru_area_gdf: GeoDataFrame, dem_filepaths: list[Path]):
     import rasterio as rio
     from rasterio import merge
     import rioxarray as rxr
@@ -669,7 +694,7 @@ def glacier_height(glaciated_area_gdf: GeoDataFrame, dem_filepaths: list[Path]):
 
     try:
 
-        dem_clipped = dem_im.rio.clip(glaciated_area_gdf.geometry.apply(mapping))
+        dem_clipped = dem_im.rio.clip(hru_area_gdf.geometry.apply(mapping))
         # f, ax = plt.subplots(figsize=(10, 4))
         # dem_clipped.plot(ax=ax)
         # ax.set(title="Raster Layer cropped to GeoDataFrame extent")
@@ -683,6 +708,13 @@ def glacier_height(glaciated_area_gdf: GeoDataFrame, dem_filepaths: list[Path]):
     except ValueError:
         logger.exception("There has been an error clipping the DEM")
         pass
+
+
+def crs_old_to_new(lat_old, lon_old, epsg_old: int, epsg_new: int):
+    from pyproj import Transformer
+    transformer = Transformer.from_crs(f"EPSG:{epsg_old}", f"EPSG:{epsg_new}")
+    lat_new, lon_new = transformer.transform(lat_old, lon_old)
+    return lat_new, lon_new
 
 
 if __name__ == '__main__':

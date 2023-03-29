@@ -235,7 +235,8 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                           param_or_name="names",
                           start_year: int = start_year, end_year: int = end_year,
                           cali_end_year: str = cali_end_year, glaciation_ratio: float = 0,
-                          glacier_alti: float = 0) -> dict:
+                          glacier_alti: float = 0, non_glaciation_ratio: float = 0,
+                          non_glacier_alti: float = 0) -> dict:
     """Generates template text which can be written to .rvX file.
 
         Args:
@@ -259,6 +260,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
     end_date = f"{end_year + 1}-01-01 00:00:00"
     logger.debug("Trying to create rvx_params dictionary...")
     glaciated_area: float = float(csv_file.loc['area_ch1903plus']['values']) * float(glaciation_ratio)
+    non_glaciated_area: float = float(csv_file.loc['area_ch1903plus']['values']) * float(non_glaciation_ratio)
     rvx_params = \
         {
             "GR4J":
@@ -343,7 +345,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     ":HRUs",
                                     "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
                                     "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
-                                    f"            1, {csv_file.loc['area_ch1903plus']['values']},     {csv_file.loc['a0401_eu_dem_v11_e40n20crp_chv1_0']['values']},   {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
+                                    f"            1, {non_glaciated_area},     {non_glacier_alti},   {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
                                     f"#            2, {glaciated_area}, {glacier_alti}, {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']}, 1,        GLACIER,   GLACIER,    GLACIER,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
                                     ":EndHRUs"
                                 ]},
