@@ -538,25 +538,6 @@ files = [
 numpy = "*"
 
 [[package]]
-name = "hydrostats"
-version = "0.78"
-description = "Tools for use in comparison studies, specifically for use in the field of hydrology"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    { file = "hydrostats-0.78.tar.gz", hash = "sha256:d79255a1aa1150cdd67410ee856dbb726d8609627aa5bd81083e0869b7303b28" },
-]
-
-[package.dependencies]
-HydroErr = "*"
-matplotlib = "*"
-numba = "*"
-numpy = "*"
-pandas = "*"
-scipy = "*"
-
-[[package]]
 name = "idna"
 version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -780,32 +761,6 @@ files = [
 ]
 
 [[package]]
-name = "llvmlite"
-version = "0.34.0"
-description = "lightweight wrapper around basic LLVM functionality"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-files = [
-    { file = "llvmlite-0.34.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:11342e5ac320c953590bdd9d0dec8c52f4b5252c4c6335ba25f1e7b9f91f9325" },
-    { file = "llvmlite-0.34.0-cp36-cp36m-manylinux2010_i686.whl", hash = "sha256:5bdf0ce430adfaf938ced5844d12f80616eb8321b5b9edfc45ef84ada5c5242c" },
-    { file = "llvmlite-0.34.0-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:e08d9d2dc5a31636bfc6b516d2d7daba95632afa3419eb8730dc76a7951e9558" },
-    { file = "llvmlite-0.34.0-cp36-cp36m-win32.whl", hash = "sha256:9ff1dcdad03be0cf953aca5fc8cffdca25ccee2ec9e8ec7e95571722cdc02d55" },
-    { file = "llvmlite-0.34.0-cp36-cp36m-win_amd64.whl", hash = "sha256:5acdc3c3c7ea0ef7a1a6b442272e05d695bc8492e5b07666135ed1cfbf4ab9d2" },
-    { file = "llvmlite-0.34.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:bb96989bc57a1ccb131e7a0e061d07b68139b6f81a98912345d53d9239e231e1" },
-    { file = "llvmlite-0.34.0-cp37-cp37m-manylinux2010_i686.whl", hash = "sha256:6d3f81992f52a94077e7b9b16497029daf5b5eebb2cce56f3c8345bbc9c6308e" },
-    { file = "llvmlite-0.34.0-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:d841248d1c630426c93e3eb3f8c45bca0dab77c09faeb7553b1a500220e362ce" },
-    { file = "llvmlite-0.34.0-cp37-cp37m-win32.whl", hash = "sha256:408b15ffec30696406e821c89da010f1bb1eb0aa572be4561c98eb2536d610ab" },
-    { file = "llvmlite-0.34.0-cp37-cp37m-win_amd64.whl", hash = "sha256:5d1f370bf150db7239204f09cf6a0603292ea28bac984e69b167e16fe160d803" },
-    { file = "llvmlite-0.34.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:132322bc084abf336c80dd106f9357978c8c085911fb656898d3be0d9ff057ea" },
-    { file = "llvmlite-0.34.0-cp38-cp38-manylinux2010_i686.whl", hash = "sha256:8f344102745fceba6eb5bf03c228bb290e9bc79157e9506a4a72878d636f9b3c" },
-    { file = "llvmlite-0.34.0-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:05253f3f44fab0148276335b2c1b2c4a78143dfa78e6bafd7f937d6248f297cc" },
-    { file = "llvmlite-0.34.0-cp38-cp38-win32.whl", hash = "sha256:28264f9e2b3df4135cbcfca5a91c5b0b31dd3fc02fa623b4bb13327f0cd4fc80" },
-    { file = "llvmlite-0.34.0-cp38-cp38-win_amd64.whl", hash = "sha256:964f8f7a2184963cb3617d057c2382575953e488b7bb061b632ee014cfef110a" },
-    { file = "llvmlite-0.34.0.tar.gz", hash = "sha256:f03ee0d19bca8f2fe922bb424a909d05c28411983b0c2bc58b020032a0d11f63" },
-]
-
-[[package]]
 name = "markupsafe"
 version = "2.1.2"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -999,37 +954,6 @@ files = [
 [package.dependencies]
 cftime = "*"
 numpy = ">=1.9"
-
-[[package]]
-name = "numba"
-version = "0.51.2"
-description = "compiling Python code using LLVM"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-files = [
-    { file = "numba-0.51.2-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:af798310eeb318c56cdb83254abbe9a938cc0182d08671d7f9f032dc817e064d" },
-    { file = "numba-0.51.2-cp36-cp36m-manylinux2014_i686.whl", hash = "sha256:93e18350f2094e7432321c1275730a3143b94af012fb609cc180fa376c44867f" },
-    { file = "numba-0.51.2-cp36-cp36m-manylinux2014_x86_64.whl", hash = "sha256:9e2bb1f129bfadd757ad7a9c18ab79c3ab25ce6d6a68e58565d6c52ad07b3566" },
-    { file = "numba-0.51.2-cp36-cp36m-win32.whl", hash = "sha256:31cdf6b6d1301d5fb6c4fcb8b4c711ba5c9f60ba2fca008b550da9b56185367c" },
-    { file = "numba-0.51.2-cp36-cp36m-win_amd64.whl", hash = "sha256:df6edca13c04a31fdb5addf5205199478a7da372712829157ef491e8a6e7031f" },
-    { file = "numba-0.51.2-cp37-cp37m-macosx_10_14_x86_64.whl", hash = "sha256:a628122dacfcba9a3ea68a9e95578c6b6391016e34962c46550ea8e189e0412e" },
-    { file = "numba-0.51.2-cp37-cp37m-manylinux2014_i686.whl", hash = "sha256:106736d5a8dab6bebce989d4ab1b3f169c264582598f172e6e5b736210d2e834" },
-    { file = "numba-0.51.2-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:a12f16fdb4ca5edc94e2ef412e4e768c29217ef9b6fdfc237d064ebe30acfe14" },
-    { file = "numba-0.51.2-cp37-cp37m-win32.whl", hash = "sha256:025b033fd31c44bba17802293c81270084b5454b5b055b8c10c394385c232f00" },
-    { file = "numba-0.51.2-cp37-cp37m-win_amd64.whl", hash = "sha256:081788f584fa500339e9b74bf02e3c5029d408c114e555ada19cae0b92721416" },
-    { file = "numba-0.51.2-cp38-cp38-macosx_10_14_x86_64.whl", hash = "sha256:5416b584183fd599afda11b947b64f89450fcf26a9c15b408167f412b98a3a94" },
-    { file = "numba-0.51.2-cp38-cp38-manylinux2014_i686.whl", hash = "sha256:05da65dca2ac28a192c9d8f20e9e477eb1237205cfc4d131c414f5f8092c6639" },
-    { file = "numba-0.51.2-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:aee435e3b7e465dd49971f8ea76aa414532a87736916cb399534e017334d1138" },
-    { file = "numba-0.51.2-cp38-cp38-win32.whl", hash = "sha256:bbbe2432433b11d3fadab0226a84c1a81918cb905ba1aeb022249e8d2ba8856c" },
-    { file = "numba-0.51.2-cp38-cp38-win_amd64.whl", hash = "sha256:259e7c15b24feec4a99fb41eb8c47b5ad49b544d1a5ad40ad0252ef531ba06fd" },
-    { file = "numba-0.51.2.tar.gz", hash = "sha256:16bd59572114adbf5f600ea383880d7b2071ae45477e84a24994e089ea390768" },
-]
-
-[package.dependencies]
-llvmlite = ">=0.34.0.dev0,<0.35"
-numpy = ">=1.15"
-setuptools = "*"
 
 [[package]]
 name = "numpy"
@@ -1557,6 +1481,32 @@ urllib3 = ">=1.21.1,<1.27"
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
+
+[[package]]
+name = "richdem"
+version = "0.3.4"
+description = "High-Performance Terrain Analysis"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    { file = "richdem-0.3.4-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:52ba15f974110e967318c96878cb1d9f9be2370133327319454650fb6464b45c" },
+    { file = "richdem-0.3.4-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:68a2cabcbcb99be22140e16a9474d5d92d427cf5744c1aeb07ca722645673260" },
+    { file = "richdem-0.3.4-cp27-cp27mu-manylinux1_i686.whl", hash = "sha256:6064292d3205db589aead92b901aac9d7b37c90ea6a3a205e6799ba158c03efc" },
+    { file = "richdem-0.3.4-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:6f5901c8b322dbd87938fc8b56b42663d49bda27f905347b67a50460d610ed85" },
+    { file = "richdem-0.3.4-cp34-cp34m-manylinux1_i686.whl", hash = "sha256:0c5988b58bea942a31ea9f5c5502a6a34aacad5cd1ab6b5e32ac627630a36b9b" },
+    { file = "richdem-0.3.4-cp34-cp34m-manylinux1_x86_64.whl", hash = "sha256:7ef3dc0d3f890b3697f2070448d07961543620c16fda26b000f872c742c7750f" },
+    { file = "richdem-0.3.4-cp35-cp35m-manylinux1_i686.whl", hash = "sha256:7601f868da4863466c4de436fc0bcd9c591407d98f8201a69f8a403485eca87e" },
+    { file = "richdem-0.3.4-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:68c69364dac7a9dba0abe21ff1e4f415a4c4388b1416e492a8fadb798e625c31" },
+    { file = "richdem-0.3.4-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:346d6a7f2e23e9743be8a34682247d630f0695db5f48f2f706ee2080ccd42d04" },
+    { file = "richdem-0.3.4-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:5fc6c48b34554ec97e68918bdd9dd51fc35de1f8f5fa29bc436c67093981167d" },
+    { file = "richdem-0.3.4-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:ffa5cf547b0af2e2900caa3af5ff5738f73954b72d63b1fcb1ab83c3036fa335" },
+    { file = "richdem-0.3.4-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:d0ab9b14f01b5f0e00410ca8d380779bf9a7dd46c78806bb6fb0cfa85abfba9e" },
+    { file = "richdem-0.3.4.tar.gz", hash = "sha256:a9d3119ca8e25aa73039c94816f68ac2e1c33dc8ef02b0467c090d44243a7ad1" },
+]
+
+[package.dependencies]
+numpy = { version = ">=1.7,<2", markers = "python_version > \"3.4\" or python_version < \"3.0\"" }
 
 [[package]]
 name = "rioxarray"
@@ -2096,4 +2046,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8.14"
-content-hash = "29936347a89934b56c7e762d4c9528bef4a442f3502b338bbc52411954bfe0f2"
+content-hash = "a6d96c3715192965620be72f3aa92b165d905ae42d5b6b7dd3e6925d32bbcfcd"

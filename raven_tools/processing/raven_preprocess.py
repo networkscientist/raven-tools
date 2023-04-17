@@ -348,9 +348,6 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
     """
     # Read in the bounding box shape file from the clipping folder as a GeoPandas DataFrame
     logger.debug(f"bbox_filename: {bounding_box_filename}")
-    # bbox: GeoDataFrame = gpd.read_file(bounding_box_filename)
-    # bbox.set_crs(2056, allow_override=True)
-    # bbox = bbox.set_crs(epsg='2056')
 
     # Read in the clipped netCDF file into a xarray Dataset
     ds: Dataset = xr.open_dataset(netcdf_filepath, engine="netcdf4")
@@ -388,7 +385,7 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
     cell_id: list[str] = []
 
     # Create the GeoDataFrame with the grid, providing column names plus polygons for the geometry
-    grid_cols = ['row', 'col', 'cell_id', 'polygons', 'area', 'area_rel']
+    grid_cols = ['row', 'col', 'cell_id', 'polygons', 'area']
     grid: GeoDataFrame = gpd.GeoDataFrame(columns=grid_cols, geometry='polygons', crs="EPSG:2056")
     # Loop over each cell and create the corresponding Polygon, then append it to the Polygon list
     # Also write the cell id from cell_id=i_row*n_columns + i_column
@@ -402,10 +399,6 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
     grid["polygons"] = polygons
     grid["cell_id"] = cell_id
 
-    # Every cell that is not within the catchment area will have area_rel set to zero
-    grid["area_rel"] = 0
-    # grid = grid.to_crs("EPSG:2056")
-
     if export_shp:
         # Export the grid to a shape file
         grid.to_file(str(str(out_path) + ".shp"))
@@ -413,7 +406,7 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
     return grid
 
 
-def create_overlay(grd: GeoDataFrame, catchment_filepath: Path):
+def create_overlay(grd: GeoDataFrame, ctm_gdf: GeoDataFrame):
     """Overlays a GeoDataFrame over another to create overlay Polygons
 
     Overlays two GeoDataFrame over each other and returns two new GeoDataFrames, one for the mode 'intersection',
@@ -430,16 +423,17 @@ def create_overlay(grd: GeoDataFrame, catchment_filepath: Path):
             Grid cells within the catchment area in EPSG2056
 
     """
-    ctm = gpd.read_file(catchment_filepath)
-    ctm.set_crs(epsg="2056")
+    ctm_gdf.set_crs(epsg="2056")
     grd.set_crs(epsg='2056')
-    res_u: GeoDataFrame = ctm.overlay(grd, how='intersection')
-    res_u.set_index("cell_id")
-    res_u.set_crs(epsg='2056')
+    ctm_gdf.to_crs(32632)
+    grd.to_crs(32632)
+    res_u: GeoDataFrame = ctm_gdf.overlay(grd, how='intersection')
+    # res_u.set_index("cell_id", inplace=True)
+    res_u.to_crs(2056)
     return res_u
 
 
-def calc_relative_area(gdf: GeoDataFrame) -> GeoDataFrame:
+def calc_relative_area(gdf: GeoDataFrame, hru_short_name: str, glacier: bool = False) -> GeoDataFrame:
     """Calculates the relative area of each polygon in a GeoDataFrame.
 
     Calculates the relative area of each polygon in a GeoDataFrame with EPSG=2056, writes it into a new column and
@@ -454,23 +448,25 @@ def calc_relative_area(gdf: GeoDataFrame) -> GeoDataFrame:
             GeoDataFrame with relative areas of each polygon
 
     """
+    area_column_name: str = f"{hru_short_name}_area_rel"
 
     # Set the CRS to WGS84 to preserve areas
     gdf = gdf.to_crs(32632)
+
     # For each intersected feature, compute the area and write into a new field
-    gdf["area"] = gdf["geometry"].area
+    gdf[area_column_name] = (gdf["geometry"].area * 1000000) / np.sum(gdf.geometry.area * 1000000)
     # Convert the area to float
     area_sum: float = float(gdf["area"].sum())
-    for index, row in gdf.iterrows():
-        # To minimize numerical errors, multiply and then divide the result by 1000000
-        gdf.at[index, "area_rel"] = ((gdf.loc[index]["area"] * 1000000) / area_sum) / 1000000
-        gdf.at[index, "index"] = int(index)
+    # for index, row in gdf.iterrows():
+    #     # To minimize numerical errors, multiply and then divide the result by 1000000
+    #     gdf.at[index, area_column_name] = (gdf.loc[index]["area"] / area_sum)
+    #     gdf.at[index, "index"] = int(index)
     # Re-project back into the LV95 projection and export to a shape file
     gdf: GeoDataFrame = gdf.to_crs(2056)
     return gdf
 
 
-def write_weights_to_file(grd: GeoDataFrame, grid_dir_path: Path, catchment):
+def write_weights_to_file(grd: dict[GeoDataFrame], grid_dir_path: Path, glacier: bool = False):
     """Write grid weights to Raven compatible file
 
     Args:
@@ -481,24 +477,14 @@ def write_weights_to_file(grd: GeoDataFrame, grid_dir_path: Path, catchment):
 
     """
     # Write to GridWeights.txt
-    data = write_grid_data(grd)
+    # data = create_grid_data_list(grd, glacier=glacier)
     # The following section has been adapted from Juliane Mai's derive_grid_weights.py script. It writes to a file
     # that is compatible with RAVEN
     grid_filepath = Path(str(grid_dir_path) + ".txt")
-    with open(grid_filepath, 'w') as ff:
-        ff.write(':GridWeights                     \n')
-        ff.write('   #                                \n')
-        ff.write('   # [# HRUs]                       \n')
-        ff.write('   :NumberHRUs       {0}            \n'.format(1))  # Currently for GR4J, there's 1 HRU
-        ff.write('   :NumberGridCells  {0}            \n'.format(len(grd.index)))
-        ff.write('   #                                \n')
-        ff.write('   # [HRU ID] [Cell #] [w_kl]       \n')
-        for idata in data:
-            ff.write("   1   {0}   {1}\n".format(idata[1], idata[0]))
-        ff.write(':EndGridWeights \n')
+    write_grid_data_to_file(grd=grd, grid_filepath=grid_filepath, glacier=glacier)
 
 
-def write_grid_data(grd: GeoDataFrame) -> list[list[float]]:
+def create_grid_data_list(grd: GeoDataFrame, glacier: bool = False):
     """Loops over each grid cell and extracts the grid weights.
 
     Args:
@@ -512,14 +498,64 @@ def write_grid_data(grd: GeoDataFrame) -> list[list[float]]:
     """
     # Loop over each intersected feature and write the relative area (compared with the total catchment area) into a new
     # field.
-    data_to_write: list[list[float]] = []
-    for index, row in grd.iterrows():
-        data_to_write.append(
-            [float(grd.loc[index]["area_rel"]), grd.loc[index]["cell_id"]])
+    data_to_write = {}
+    if glacier:
+        column_names = ["non_gla_area_rel", "gla_area_rel"]
+        hru_base_counter = 1
+        for c in column_names:
+            area_rel = grd[c][~grd[c].isna()]
+            data_to_write[f'{hru_base_counter}'] = area_rel
+            hru_base_counter += 1
     return data_to_write
 
 
-def copy_rel_area_from_union_to_grid(res_union: GeoDataFrame, grid: GeoDataFrame) -> GeoDataFrame:
+def write_grid_data_to_file(grd, grid_filepath: Path, glacier: bool = False):
+    with open(grid_filepath, 'w') as ff:
+        ff.write(':GridWeights                     \n')
+        ff.write('   #                                \n')
+        ff.write('   # [# HRUs]                       \n')
+        total_cells = len(grd['1'])
+        if not grd['2'].empty:
+            num_hrus = 2
+        else:
+            num_hrus = 1
+        ff.write(f'   :NumberHRUs       {num_hrus}            \n')  # Currently for GR4J, there's 1 HRU
+        ff.write(f'   :NumberGridCells  {total_cells}            \n')
+        ff.write('   #                                \n')
+        ff.write('   # [HRU ID] [Cell #] [w_kl]       \n')
+        averages = {}
+        df = grd['1'].reset_index()
+        for cell_id in df['cell_id'].unique():
+            tempdf = df[df['cell_id'] == cell_id]
+            average = tempdf['non_gla_area_rel'].mean()
+            averages[cell_id] = [average]
+            weights = gpd.GeoDataFrame.from_dict(averages, orient='index', columns=['area'])
+            weights.fillna(0, inplace=True)
+        # weights = grd['1']['non_gla_area_rel']
+        # weights.fillna(0, inplace=True)
+        for index, weight in zip(weights.index, weights['area']):
+            ff.write(f"   1   {index}   {weight}\n")
+        # for index, weight in weights.items():
+        #     print(index, weight)
+        if not grd['2'].empty:
+            del weights
+            averages = {}
+            df = grd['1'].reset_index()
+            for cell_id in df['cell_id'].unique():
+                tempdf = df[df['cell_id'] == cell_id]
+                average = tempdf['non_gla_area_rel'].mean()
+                averages[cell_id] = [average]
+                weights = gpd.GeoDataFrame.from_dict(averages, orient='index', columns=['area'])
+                weights.fillna(0, inplace=True)
+            # weights = grd['2']['gla_area_rel']
+            # weights.fillna(0, inplace=True)
+            for index, weight in zip(weights.index, weights['area']):
+                ff.write(f"   2   {index}   {weight}\n")
+
+        ff.write(':EndGridWeights \n')
+
+
+def copy_rel_area_from_union_to_grid(res_union: GeoDataFrame, grid: GeoDataFrame, hru_short_name: str) -> GeoDataFrame:
     """Takes grid weights from a union GeoDataFrame and writes the to the grid GeoDataFrame.
 
     Args:
@@ -536,11 +572,12 @@ def copy_rel_area_from_union_to_grid(res_union: GeoDataFrame, grid: GeoDataFrame
 
     # Loop over the union GeoDataFrame, take relative area/grid weight and write it to corresponding cell in grid
     # GeoDataFrame.
+    grid_column_name: str = f"{hru_short_name}_area_rel"
     for index, row in res_union.iterrows():
         cell_id_old_value = res_union.at[index, "cell_id"]
-        area_rel_old_value = res_union.at[index, "area_rel"]
+        area_rel_old_value = res_union.at[index, grid_column_name]
         ind = grid[grid['cell_id'] == cell_id_old_value].index.tolist()
-        grid.at[ind[0], "area_rel"] = area_rel_old_value
+        grid.at[ind[0], grid_column_name] = area_rel_old_value
     return grid
 
 
@@ -632,7 +669,37 @@ def glacier_extent(ctm_gdf: GeoDataFrame, glacier_gdf: GeoDataFrame):
     return ctm_glaciation, ctm_non_glaciation
 
 
-def glaciation_ratio_height(catchment_filepath: Path, glacier_shape_path: Path, dem_filepaths: list[Path]):
+def glacier_extent_from_shp(ctm_shp: Path, glacier_shp: Path):
+    ctm_gdf: GeoDataFrame = gpd.read_file(ctm_shp)
+    glacier_gdf: GeoDataFrame = gpd.read_file(glacier_shp)
+    ctm_glaciation: GeoDataFrame = ctm_gdf.overlay(glacier_gdf, how='intersection')
+    ctm_non_glaciation: GeoDataFrame = ctm_gdf.overlay(glacier_gdf, how='difference')
+
+    return ctm_glaciation, ctm_non_glaciation
+
+
+def area_ratio(catchment_filepath: Path, glacier_shape_path: Path):
+    ctm_gdf: GeoDataFrame = gpd.read_file(catchment_filepath)
+    ctm_gdf.set_crs(epsg="2056")
+    glacier_gdf: GeoDataFrame = gpd.read_file(glacier_shape_path)
+    glacier_gdf.set_crs(epsg='2056')
+    glaciated_area_gdf, non_glaciated_area_gdf = glacier_extent(ctm_gdf=ctm_gdf, glacier_gdf=glacier_gdf)
+
+    ctm_gdf_area = ctm_gdf.to_crs(epsg='32632')
+    non_glaciated_area_gdf_area = non_glaciated_area_gdf.to_crs(epsg='32632')
+    glaciated_area_gdf_area = glaciated_area_gdf.to_crs(epsg='32632')
+    ctm_total_area: float = ctm_gdf_area["geometry"].area.sum() / 10 ** 6
+    non_glaciation_area = non_glaciated_area_gdf_area["geometry"].area.sum() / 10 ** 6
+
+    if glaciated_area_gdf_area.empty:
+        return ctm_total_area, non_glaciation_area
+    else:
+        glaciation_area = glaciated_area_gdf_area["geometry"].area.sum() / 10 ** 6
+        return ctm_total_area, non_glaciation_area, glaciation_area
+
+
+def dfdf(catchment_filepath: Path, glacier_shape_path: Path, dem_filepaths: list[Path],
+         dem_out_path: Path, ctm_ch_id: str):
     ctm_gdf: GeoDataFrame = gpd.read_file(catchment_filepath)
     ctm_gdf.set_crs(epsg="2056")
     glacier_gdf: GeoDataFrame = gpd.read_file(glacier_shape_path)
@@ -641,11 +708,10 @@ def glaciation_ratio_height(catchment_filepath: Path, glacier_shape_path: Path, 
     non_glaciated_centroid = weighted_centroid(non_glaciated_area_gdf)
     non_glaciation_area = non_glaciated_area_gdf["geometry"].area.sum()
     ctm_area = ctm_gdf["geometry"].area.sum()
-    glaciation_area: float = 0.0
-    glaciation_ratio: float = 0.0
-    non_glaciation_ratio: float = 1.0
-    non_gla_height = hru_height(hru_area_gdf=non_glaciated_area_gdf.to_crs(epsg='2056'), dem_filepaths=dem_filepaths)
-    gla_height: float = 0.0
+
+    non_gla_height = hru_height(hru_area_gdf=non_glaciated_area_gdf.to_crs(epsg='2056'), dem_filepaths=dem_filepaths,
+                                dem_out_dir=dem_out_path, ctm_ch_id=ctm_ch_id)
+
     if glaciated_area_gdf.empty:
         return glaciation_ratio, gla_height, non_glaciation_ratio, non_gla_height, Point(0, 0), non_glaciated_centroid
     else:
@@ -655,11 +721,13 @@ def glaciation_ratio_height(catchment_filepath: Path, glacier_shape_path: Path, 
         glaciation_ratio = (glaciation_area * 1000000) / (ctm_area * 1000000)
         non_glaciation_ratio: float = (non_glaciation_area * 1000000) / (ctm_area * 1000000)
 
-        gla_height = hru_height(hru_area_gdf=glaciated_area_gdf.to_crs(epsg='2056'), dem_filepaths=dem_filepaths)
+        gla_height = hru_height(hru_area_gdf=glaciated_area_gdf.to_crs(epsg='2056'), dem_filepaths=dem_filepaths,
+                                dem_out_dir=dem_out_path, ctm_ch_id=ctm_ch_id, glacier=True)
         return glaciation_ratio, gla_height, non_glaciation_ratio, non_gla_height, glaciacted_centroid, non_glaciated_centroid
 
 
 def weighted_centroid(feature_gdf: GeoDataFrame):
+    feature_gdf.set_crs(epsg='2056')
     feature_gdf.to_crs(epsg='32632', inplace=True)
     area = np.array(feature_gdf.geometry.area)
     centroids_x = np.array(feature_gdf.geometry.centroid.x)
@@ -669,10 +737,23 @@ def weighted_centroid(feature_gdf: GeoDataFrame):
     weighted_centroid_x, weighted_centroid_y = crs_old_to_new(weighted_centroid_x, weighted_centroid_y,
                                                               32632, 4326)
     weighted_centroid_point = Point(weighted_centroid_x, weighted_centroid_y)
-    return weighted_centroid_point
+    return weighted_centroid_y, weighted_centroid_x
 
 
-def hru_height(hru_area_gdf: GeoDataFrame, dem_filepaths: list[Path]):
+def hru_height(hru_area_gdf: GeoDataFrame, dem_filepaths: list[Path], dem_out_dir: Path, ctm_ch_id, glacier=False):
+    dem_im = clip_dem_file(dem_filepaths)
+
+    try:
+
+        dem_mean = dem_clipped.mean(dim=["x", "y"], skipna=True).to_numpy()
+        mean_height = dem_mean.tolist()
+        return mean_height
+    except ValueError:
+        logger.exception("There has been an error clipping the DEM")
+        pass
+
+
+def clip_dem_file(hru_area_gdf, dem_filepaths, glacier, dem_out_dir, ctm_ch_id):
     import rasterio as rio
     from rasterio import merge
     import rioxarray as rxr
@@ -683,31 +764,23 @@ def hru_height(hru_area_gdf: GeoDataFrame, dem_filepaths: list[Path]):
     rio.merge.merge(datasets=file_handler, dtype='float32',
                     dst_path=memfile.name)
     dataset = memfile.open(driver='GTiff')
-
     dem_im = rxr.open_rasterio(dataset.name, masked=True).squeeze()
-    # f, ax = plt.subplots(figsize=(10, 5))
-    # dem_im.plot.imshow(ax=ax)
-    # glaciated_area_gdf.plot(ax=ax, alpha=.8)
-    # ax.set(title="Raster Layer with Shapefile overlayed")
-    # ax.set_axis_off()
-    # plt.show()
 
-    try:
+    dem_clipped = dem_im.rio.clip(hru_area_gdf.geometry.apply(mapping))
+    if glacier:
+        dem_out_filepath = Path(dem_out_dir, "dem_clipped", f"dem_{ctm_ch_id}_glacier.tif")
+    else:
+        dem_out_filepath = Path(dem_out_dir, "dem_clipped", f"dem_{ctm_ch_id}.tif")
+    dem_clipped.rio.to_raster(dem_out_filepath)
 
-        dem_clipped = dem_im.rio.clip(hru_area_gdf.geometry.apply(mapping))
-        # f, ax = plt.subplots(figsize=(10, 4))
-        # dem_clipped.plot(ax=ax)
-        # ax.set(title="Raster Layer cropped to GeoDataFrame extent")
-        # ax.set_axis_off()
-        # plt.show()
-        dem_mean = dem_clipped.mean(dim=["x", "y"], skipna=True).to_numpy()
 
-        mean_height = dem_mean.tolist()
+def dem_mean(filepath: Path):
+    import rioxarray as rxr
 
-        return mean_height
-    except ValueError:
-        logger.exception("There has been an error clipping the DEM")
-        pass
+    dem_im = rxr.open_rasterio(filepath, masked=True).squeeze()
+    dem_mean_raster = dem_im.mean(dim=["x", "y"], skipna=True).to_numpy()
+    mean = dem_mean_raster.tolist()
+    return mean
 
 
 def crs_old_to_new(lat_old, lon_old, epsg_old: int, epsg_new: int):

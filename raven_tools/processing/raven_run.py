@@ -2,10 +2,12 @@
 Tools to generate Raven .rv* files needed to run Raven models.
 """
 import logging
+import math
 import os
 from pathlib import Path
 
 import pandas
+import pandas as pd
 
 import processing.raven_preprocess
 import raven_tools.config.variables
@@ -72,7 +74,7 @@ def create_header(catchment_ch_id: str, author=conf['Author'], creation_date=gen
         pass
 
 
-def forcing_block(start_year: int, end_year: int, catchment_ch_id: str):
+def forcing_block(start_year: int, end_year: int, catchment_ch_id: str, glacier: bool = False):
     """Create Dictionary of forcing data to write in RVT file.
 
     This function creates a Dictionary of forcing data to be written into an RVT file. From a start and end year,
@@ -90,44 +92,88 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str):
             The forcing data block
 
     """
+    forcing_rainfall = [
+        ":GriddedForcing           Rainfall",
+        "    :ForcingType          RAINFALL",
+        f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/out/RhiresD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
+        "    :VarNameNC            RhiresD",
+        "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
+        f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
+        ":EndGriddedForcing"]
+    forcing_temp_ave = [
+        ":GriddedForcing           Average Temperature",
+        "    :ForcingType          TEMP_AVE",
+        f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/out/TabsD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
+        "    :VarNameNC            TabsD",
+        "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
+        f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
+        ":EndGriddedForcing"]
+    forcing_temp_max = [
+        ":GriddedForcing           Maximum Temperature",
+        "    :ForcingType          TEMP_MAX",
+        f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/out/TmaxD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
+        "    :VarNameNC            TmaxD",
+        "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
+        f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
+        ":EndGriddedForcing"]
+    forcing_temp_min = [
+        ":GriddedForcing           Minimum Temperature",
+        "    :ForcingType          TEMP_MIN",
+        f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/out/TminD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
+        "    :VarNameNC            TminD",
+        "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
+        f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
+        ":EndGriddedForcing"
+    ]
+    # if glacier:
+    #     forcing_rainfall = [
+    #         ":GriddedForcing           Rainfall",
+    #         "    :ForcingType          RAINFALL",
+    #         f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/out/RhiresD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
+    #         "    :VarNameNC            RhiresD",
+    #         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
+    #         f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
+    #         f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_glacier.txt",
+    #         ":EndGriddedForcing"]
+    #     forcing_temp_ave = [
+    #         ":GriddedForcing           Average Temperature",
+    #         "    :ForcingType          TEMP_AVE",
+    #         f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/out/TabsD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
+    #         "    :VarNameNC            TabsD",
+    #         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
+    #         f"    :RedirectToFile       data_obs/TabsD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
+    #         f"    :RedirectToFile       data_obs/TabsD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_glacier.txt",
+    #         ":EndGriddedForcing"]
+    #     forcing_temp_max = [
+    #         ":GriddedForcing           Maximum Temperature",
+    #         "    :ForcingType          TEMP_MAX",
+    #         f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/out/TmaxD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
+    #         "    :VarNameNC            TmaxD",
+    #         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
+    #         f"    :RedirectToFile       data_obs/TmaxD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
+    #         f"    :RedirectToFile       data_obs/TmaxD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_glacier.txt",
+    #         ":EndGriddedForcing"]
+    #     forcing_temp_min = [
+    #         ":GriddedForcing           Minimum Temperature",
+    #         "    :ForcingType          TEMP_MIN",
+    #         f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/out/TminD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
+    #         "    :VarNameNC            TminD",
+    #         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
+    #         f"    :RedirectToFile       data_obs/TminD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
+    #         f"    :RedirectToFile       data_obs/TminD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_glacier.txt",
+    #         ":EndGriddedForcing"
+    #     ]
 
-    forcing_data: dict[str, list[str]] = {
-        'Rainfall': [
-            ":GriddedForcing           Rainfall",
-            "    :ForcingType          RAINFALL",
-            f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/out/RhiresD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
-            "    :VarNameNC            RhiresD",
-            "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
-            ":EndGriddedForcing"],
-        'Average Temperature': [
-            ":GriddedForcing           Average Temperature",
-            "    :ForcingType          TEMP_AVE",
-            f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/out/TabsD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
-            "    :VarNameNC            TabsD",
-            "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
-            ":EndGriddedForcing"],
-        'Maximum Temperature': [
-            ":GriddedForcing           Maximum Temperature",
-            "    :ForcingType          TEMP_MAX",
-            f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/out/TmaxD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
-            "    :VarNameNC            TmaxD",
-            "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
-            ":EndGriddedForcing"],
-        'Minimum Temperature': [
-            ":GriddedForcing           Minimum Temperature",
-            "    :ForcingType          TEMP_MIN",
-            f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/out/TminD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
-            "    :VarNameNC            TminD",
-            "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-            f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
-            ":EndGriddedForcing"
-        ]
+    forcing_data = {
+        'Rainfall':
+            forcing_rainfall,
+        'Average Temperature':
+            forcing_temp_ave,
+        'Maximum Temperature':
+            forcing_temp_max,
+        'Minimum Temperature':
+            forcing_temp_min
     }
-
-    # forcing_header = f"# Years: {start_year} to {end_year}\n"
 
     return forcing_data
 
@@ -135,6 +181,7 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str):
 def write_rvt(start_year: int,
               end_year: int,
               catchment_ch_id: str,
+              hru_info: dict,
               model_dir=model_dir,
               model_type=model_type,
               project_dir=project_dir,
@@ -175,6 +222,10 @@ def write_rvt(start_year: int,
         file_path: Path = Path(model_dir, file_name)
         logger.debug(f"file_path = {file_path}")
 
+    if not math.isnan(hru_info['GlaArea']):
+        glacier: bool = True
+    else:
+        glacier: bool = False
     gauge_header = f":Gauge {gauge_short_code}\n"
     gauge_end = f":EndGauge{newline}{newline}"
     gauge_info = [
@@ -220,7 +271,7 @@ def write_rvt(start_year: int,
         ff.writelines(f"{line}{newline}" for line in
                       create_header(author=author, catchment_ch_id=catchment_ch_id, model=model_type, rvx_type="rvt"))
         ff.write(f"# meteorological forcings\n")
-        for f in forcing_block(start_year, end_year, catchment_ch_id=catchment_ch_id).values():
+        for f in forcing_block(start_year, end_year, catchment_ch_id=catchment_ch_id, glacier=glacier).values():
             for t in f:
                 ff.write(f"{t}\n")
 
@@ -231,12 +282,11 @@ def write_rvt(start_year: int,
         shutil.copy(file_path, dst_path)
 
 
-def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_type, params=default_params,
+def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, model_type=model_type,
+                          params=default_params,
                           param_or_name="names",
                           start_year: int = start_year, end_year: int = end_year,
-                          cali_end_year: str = cali_end_year, glaciation_ratio: float = 0,
-                          glacier_alti: float = 0, non_glaciation_ratio: float = 0,
-                          non_glacier_alti: float = 0) -> dict:
+                          cali_end_year: str = cali_end_year) -> dict:
     """Generates template text which can be written to .rvX file.
 
         Args:
@@ -259,8 +309,72 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
     logger.debug("model_type is in the list of supported models.")
     end_date = f"{end_year + 1}-01-01 00:00:00"
     logger.debug("Trying to create rvx_params dictionary...")
-    glaciated_area: float = float(csv_file.loc['area_ch1903plus']['values']) * float(glaciation_ratio)
-    non_glaciated_area: float = float(csv_file.loc['area_ch1903plus']['values']) * float(non_glaciation_ratio)
+    non_glaciated_area: float = float(hru_info['NonGlaArea'])
+    non_glacier_altitude: float = float(hru_info['NonGlaAlti'])
+    non_glacier_lat: float = float(hru_info['NonGlaLat'])
+    non_glacier_lon: float = float(hru_info['NonGlaLon'])
+    non_glacier_aspect: float = float(hru_info['NonGlaAspect'])
+    non_glacier_slope: float = float(hru_info['NonGlaSlope'])
+    if not math.isnan(hru_info['GlaArea']):
+        glaciated_area: float = float(hru_info['GlaArea'])
+        glacier_altitude: float = float(hru_info['GlaAlti'])
+        glacier_lat: float = float(hru_info['GlaLat'])
+        glacier_lon: float = float(hru_info['GlaLon'])
+        glacier_aspect: float = float(hru_info['GlaAspect'])
+        glacier_slope: float = float(hru_info['GlaSlope'])
+        hru_list = \
+            [
+                ":HRUs",
+                "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
+                "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
+                f"            1, {non_glaciated_area},     {non_glacier_altitude},   {non_glacier_lat},     {non_glacier_lon},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {non_glacier_slope},  {non_glacier_aspect}",
+                f"            2, {glaciated_area}, {glacier_altitude}, {glacier_lat},     {glacier_lon}, 1,        GLACIER,   GLACIER,    GLACIER,          [NONE],        [NONE],   {glacier_slope},  {glacier_aspect}",
+                ":EndHRUs"
+            ]
+        land_use_classes = \
+            [
+                ":LandUseClasses",
+                "   :Attributes, IMPERM, FOREST_COV",
+                "   :Units, frac, frac",
+                f"   LU_ALL, {int(csv_file.loc['a0425_clc18_5_aurbv1_0']['values']) / 100}, {int(csv_file.loc['a0418_clc18_5_afrtv1_0']['values']) / 100}",
+                "    GLACIER, 0.0, 0.0",
+                ":EndLandUseClasses"
+            ]
+        vegetation_classes = \
+            [
+                ":VegetationClasses",
+                "   :Attributes, MAX_HT, MAX_LAI, MAX_LEAF_COND",
+                "   :Units, m, none, mm_per_s",
+                "   VEG_ALL, 0.0, 0.0, 0.0",
+                "   GLACIER, 0.0, 0.0, 0.0",
+                ":EndVegetationClasses"
+            ]
+    else:
+        hru_list = \
+            [
+                ":HRUs",
+                "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
+                "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
+                f"            1, {non_glaciated_area},     {non_glacier_altitude},   {non_glacier_lat},     {non_glacier_lon},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {non_glacier_slope},  {non_glacier_aspect}",
+                ":EndHRUs"
+            ]
+        land_use_classes = \
+            [
+                ":LandUseClasses",
+                "   :Attributes, IMPERM, FOREST_COV",
+                "   :Units, frac, frac",
+                f"   LU_ALL, {int(csv_file.loc['a0425_clc18_5_aurbv1_0']['values']) / 100}, {int(csv_file.loc['a0418_clc18_5_afrtv1_0']['values']) / 100}",
+                ":EndLandUseClasses"
+            ]
+        vegetation_classes = \
+            [
+                ":VegetationClasses",
+                "   :Attributes, MAX_HT, MAX_LAI, MAX_LEAF_COND",
+                "   :Units, m, none, mm_per_s",
+                "   VEG_ALL, 0.0, 0.0, 0.0",
+                ":EndVegetationClasses"
+            ]
+
     rvx_params = \
         {
             "GR4J":
@@ -283,28 +397,14 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     "#     name,#horizons,{soiltype,thickness}x{#horizons}",
                                     "#     GR4J_X1 is thickness of first layer (SOIL_PROD), here 0.529",
                                     ":SoilProfiles",
-                                    f"#   GLACIER, 0",
+                                    f"   GLACIER, 0",
                                     f"   DEFAULT_P, 4, SOIL_PROD, {params[param_or_name]['GR4J']['GR4J_X1']}, SOIL_ROUT, 0.300, SOIL_TEMP, 1.000, SOIL_GW, 1.000,",
                                     ":EndSoilProfiles"
                                 ],
                             "Vegetation Classes":
-                                [
-                                    ":VegetationClasses",
-                                    "   :Attributes, MAX_HT, MAX_LAI, MAX_LEAF_COND",
-                                    "   :Units, m, none, mm_per_s",
-                                    "   VEG_ALL, 0.0, 0.0, 0.0",
-                                    "#   GLACIER, 0.0, 0.0, 0.0",
-                                    ":EndVegetationClasses"
-                                ],
+                                vegetation_classes,
                             "Land Use Classes":
-                                [
-                                    ":LandUseClasses",
-                                    "   :Attributes, IMPERM, FOREST_COV",
-                                    "   :Units, frac, frac",
-                                    f"   LU_ALL, {int(csv_file.loc['a0425_clc18_5_aurbv1_0']['values']) / 100}, {int(csv_file.loc['a0418_clc18_5_afrtv1_0']['values']) / 100}",
-                                    "#    GLACIER, 0.0, 0.0",
-                                    ":EndLandUseClasses"
-                                ],
+                                land_use_classes,
                             "Global Parameters":
                                 [
                                     ":GlobalParameter RAINSNOW_TEMP       0.0",
@@ -341,14 +441,8 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                 ":EndSubBasins"
                             ],
                             "HRUs":
-                                [
-                                    ":HRUs",
-                                    "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
-                                    "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
-                                    f"            1, {non_glaciated_area},     {non_glacier_alti},   {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
-                                    f"#            2, {glaciated_area}, {glacier_alti}, {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']}, 1,        GLACIER,   GLACIER,    GLACIER,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
-                                    ":EndHRUs"
-                                ]},
+                                hru_list
+                        },
                     "rvi":
                         {"Model Organisation":
                             [
@@ -441,26 +535,15 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     ":SoilProfiles",
                                     "   LAKE, 0,",
                                     "   ROCK, 0,",
+                                    "   GLACIER, 0,",
                                     "   # DEFAULT_P,      2, TOPSOIL,  HYMOD_PARA_2, GWSOIL, 10.0",
                                     f"   DEFAULT_P, 2, TOPSOIL, {params[param_or_name]['HYMOD']['HYMOD_Param_02']}, GWSOIL, 10.0",
                                     ":EndSoilProfiles"
                                 ],
                             "Land Use Classes":
-                                [
-                                    ":LandUseClasses",
-                                    "   :Attributes, IMPERM, FOREST_COV,",
-                                    "   :Units, frac, frac,",
-                                    f"       LU_ALL, {int(csv_file.loc['a0425_clc18_5_aurbv1_0']['values']) / 100}, {int(csv_file.loc['a0418_clc18_5_afrtv1_0']['values']) / 100}",
-                                    ":EndLandUseClasses"
-                                ],
+                                land_use_classes,
                             "Vegetation Classes":
-                                [
-                                    ":VegetationClasses,",
-                                    "   :Attributes, MAX_HT, MAX_LAI, MAX_LEAF_COND,",
-                                    "   :Units, m, none, mm_per_s,",
-                                    "       VEG_ALL, 0.0, 0.0, 0.0",
-                                    ":EndVegetationClasses"
-                                ],
+                                vegetation_classes,
                             "Global Parameters":
                                 [
                                     f":GlobalParameter RAINSNOW_TEMP {params[param_or_name]['HYMOD']['HYMOD_Param_03']}",
@@ -497,13 +580,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                 ":EndSubBasins"
                             ],
                             "HRUs":
-                                [
-                                    ":HRUs",
-                                    "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
-                                    "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
-                                    f"            1, {csv_file.loc['area_ch1903plus']['values']},     {csv_file.loc['a0401_eu_dem_v11_e40n20crp_chv1_0']['values']},   {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
-                                    ":EndHRUs"
-                                ],
+                                hru_list,
                             "Subbasin Properties":
                                 [
                                     ":SubBasinProperties",
@@ -584,26 +661,15 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     ":SoilProfiles",
                                     "   LAKE, 0",
                                     "   ROCK, 0",
+                                    "   GLACIER, 0",
                                     "   # DEFAULT_P, 2, TOPSOIL,          x(20)/1000, PHREATIC,         x(21)/1000,",
                                     f"  DEFAULT_P, 2, TOPSOIL,     {params[param_or_name]['HMETS']['HMETS_Param_20b']}, PHREATIC,     {params[param_or_name]['HMETS']['HMETS_Param_21b']},",
                                     ":EndSoilProfiles"
                                 ],
                             "Vegetation Classes":
-                                [
-                                    ":VegetationClasses",
-                                    "   :Attributes, MAX_HT, MAX_LAI, MAX_LEAF_COND,",
-                                    "   :Units, m, none, mm_per_s,",
-                                    "       FOREST,             4,             5,             5,",
-                                    ":EndVegetationClasses"
-                                ],
+                                vegetation_classes,
                             "Land Use Classes":
-                                [
-                                    ":LandUseClasses",
-                                    "   :Attributes, IMPERM, FOREST_COV,",
-                                    "   :Units, frac, frac,",
-                                    "       FOREST, 0.0, 1.0",
-                                    ":EndLandUseClasses"
-                                ],
+                                land_use_classes,
                             "Global Parameters":
                                 [
                                     f":GlobalParameter  SNOW_SWI_MIN {params[param_or_name]['HMETS']['HMETS_Param_09a']} # x(9)",
@@ -657,13 +723,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                 ":EndSubBasins"
                             ],
                             "HRUs":
-                                [
-                                    ":HRUs",
-                                    "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
-                                    "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
-                                    f"            1, {csv_file.loc['area_ch1903plus']['values']},     {csv_file.loc['a0401_eu_dem_v11_e40n20crp_chv1_0']['values']},   {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']},        1,        FOREST,   FOREST,    DEFAULT_P,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
-                                    ":EndHRUs"
-                                ]
+                                hru_list
                         },
                     "rvi":
                         {"Model Organisation":
@@ -750,17 +810,12 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     "#     name,#horizons,{soiltype,thickness}x{#horizons}",
                                     "# ",
                                     ":SoilProfiles",
+                                    "    GLACIER, 0",
                                     f"   DEFAULT_P,      3,    TOPSOIL,            {params[param_or_name]['HBV']['HBV_Param_17']},   FAST_RES,    100.0, SLOW_RES,    100.0",
                                     ":EndSoilProfiles"
                                 ],
                             "Vegetation Classes":
-                                [
-                                    ":VegetationClasses",
-                                    "   :Attributes, MAX_HT, MAX_LAI, MAX_LEAF_COND,",
-                                    "   :Units, m, none, mm_per_s,",
-                                    "       VEG_ALL, 0.0, 0.0, 0.0",
-                                    ":EndVegetationClasses"
-                                ],
+                                vegetation_classes,
                             "Vegetation Parameters":
                                 [
                                     ":VegetationParameterList",
@@ -770,13 +825,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     ":EndVegetationParameterList"
                                 ],
                             "Land Use Classes":
-                                [
-                                    ":LandUseClasses",
-                                    "   :Attributes, IMPERM, FOREST_COV,",
-                                    "   :Units, frac, frac,",
-                                    f"       LU_ALL, {int(csv_file.loc['a0425_clc18_5_aurbv1_0']['values']) / 100}, {int(csv_file.loc['a0418_clc18_5_afrtv1_0']['values']) / 100}",
-                                    ":EndLandUseClasses"
-                                ],
+                                land_use_classes,
                             "Global Parameters":
                                 [
                                     f":GlobalParameter RAINSNOW_TEMP       {params[param_or_name]['HBV']['HBV_Param_01']}",
@@ -826,13 +875,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                 ":EndSubBasins"
                             ],
                             "HRUs":
-                                [
-                                    ":HRUs",
-                                    "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
-                                    "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
-                                    f"            1, {csv_file.loc['area_ch1903plus']['values']},     {csv_file.loc['a0401_eu_dem_v11_e40n20crp_chv1_0']['values']},   {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
-                                    ":EndHRUs"
-                                ],
+                                hru_list,
                             "Subbasin Properties":
                                 [
                                     ":SubBasinProperties",
@@ -951,18 +994,13 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     ":SoilProfiles",
                                     "   LAKE, 0",
                                     "   ROCK, 0",
+                                    "   GLACIER, 0",
                                     "#  DEFAULT_P,      2, TOPSOIL, MOHYSE_PARA_5, GWSOIL, 10.0",
                                     f"   DEFAULT_P,      2, TOPSOIL,     {params[param_or_name]['MOHYSE']['MOHYSE_Param_05']}, GWSOIL, 10.0",
                                     ":EndSoilProfiles"
                                 ],
                             "Vegetation Classes":
-                                [
-                                    ":VegetationClasses",
-                                    "   :Attributes, MAX_HT, MAX_LAI, MAX_LEAF_COND,",
-                                    "   :Units, m, none, mm_per_s,",
-                                    "       VEG_ALL, 0.0, 0.0, 0.0",
-                                    ":EndVegetationClasses"
-                                ],
+                                vegetation_classes,
                             "Vegetation Parameters":
                                 [
                                     ":VegetationParameterList",
@@ -972,13 +1010,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                     ":EndVegetationParameterList"
                                 ],
                             "Land Use Classes":
-                                [
-                                    ":LandUseClasses",
-                                    "   :Attributes, IMPERM, FOREST_COV,",
-                                    "   :Units, frac, frac,",
-                                    f"       LU_ALL, {int(csv_file.loc['a0425_clc18_5_aurbv1_0']['values']) / 100}, {int(csv_file.loc['a0418_clc18_5_afrtv1_0']['values']) / 100}",
-                                    ":EndLandUseClasses"
-                                ],
+                                land_use_classes,
                             "Global Parameters":
                                 [
                                     "#:GlobalParameter      RAINSNOW_TEMP              -2.0",
@@ -1017,13 +1049,7 @@ def generate_template_rvx(catchment_ch_id: str, csv_file=None, model_type=model_
                                 ":EndSubBasins"
                             ],
                             "HRUs":
-                                [
-                                    ":HRUs",
-                                    "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
-                                    "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
-                                    f"            1, {csv_file.loc['area_ch1903plus']['values']},     {csv_file.loc['a0401_eu_dem_v11_e40n20crp_chv1_0']['values']},   {csv_file.loc['lab_y']['values']},     {csv_file.loc['lab_x']['values']},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {csv_file.loc['a0404_eu_dem_v11_e40n20_slp8v1_0']['values']},  {csv_file.loc['a0407_eu_dem_v11_asp8sm_maskv1_0']['values']}",
-                                    ":EndHRUs"
-                                ],
+                                hru_list,
                             "Subbasin Properties":
                                 [
                                     ":SubBasinProperties",
@@ -1150,6 +1176,35 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"PenaltyFunction APM",
         f"EndGCOP",
     ]
+    algorithm_settings = [
+        f"#Algorithm should be last in this file (see p51 for APDDS):",
+        f"",
+        f"BeginParallelDDSAlg",
+        f"PerturbationValue 0.20",
+        f"MaxIterations 50",
+        f"#	UseRandomParamValues",
+        f"# UseInitialParamValues",
+        f"# Note: above intializes DDS to parameter values IN the initial",
+        f"#       model input files IF 'extract' option used in BeginParams",
+        f"#       block (column 'init')",
+        f"EndParallelDDSAlg"
+    ]
+    random_seed = [
+        f"# Randomsed control added",
+        f"RandomSeed 3333",
+    ]
+    general_options = [
+        f"ProgramType  	    ParallelDDS",
+        f"ObjectiveFunction   GCOP",
+        f"ModelExecutable     ./Ost-RAVEN.sh",
+        f"PreserveBestModel   ./save_best.sh",
+        f"",
+        f"ModelSubdir processor_",
+        f"",
+        f"# OstrichWarmStart yes",
+        f"# CheckSensitivities yes"
+    ]
+
     ost_params = {
         "GR4J":
             {
@@ -1164,17 +1219,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"# Generation Date: {generation_date}"
                             ],
                         "General Options":
-                            [
-                                f"ProgramType  	    ParallelDDS",
-                                f"ObjectiveFunction   GCOP",
-                                f"ModelExecutable     ./Ost-RAVEN.sh",
-                                f"PreserveBestModel   ./save_best.sh",
-                                f"",
-                                f"ModelSubdir processor_",
-                                f"",
-                                f"# OstrichWarmStart yes",
-                                f"# CheckSensitivities yes"
-                            ],
+                            general_options,
                         "Extra Directories":
                             [
                                 f"BeginExtraDirs",
@@ -1212,27 +1257,11 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"EndTiedParams"
                             ],
                         "Response Variables":
-                            [
-                                f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
-                                f"BeginResponseVars",
-                                f"#name	  filename			        keyword		line	col	token                               augmented?",
-                                f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
-                                f"EndResponseVars",
-                            ],
+                            response_variables,
                         "Tied Response Variables":
-                            [
-                                f"#Negative Non-Parametric Kling-Gupta efficiency",
-                                f"BeginTiedRespVars",
-                                f"NegKGE 1 KGE_NP wsum -1.00",
-                                f"EndTiedRespVars",
-                            ],
+                            tied_response_variables,
                         "GCOP Options":
-                            [
-                                f"BeginGCOP",
-                                f"CostFunction NegKGE",
-                                f"PenaltyFunction APM",
-                                f"EndGCOP",
-                            ],
+                            gcop_options,
                         "Constraints":
                             [
                                 f"BeginConstraints",
@@ -1241,24 +1270,9 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"EndConstraints",
                             ],
                         "Random Seed Control":
-                            [
-                                f"# Randomsed control added",
-                                f"RandomSeed 3333",
-                            ],
+                            random_seed,
                         "Algorithm Settings":
-                            [
-                                f"#Algorithm should be last in this file (see p51 for APDDS):",
-                                f"",
-                                f"BeginParallelDDSAlg",
-                                f"PerturbationValue 0.20",
-                                f"MaxIterations 50",
-                                f"#	UseRandomParamValues",
-                                f"# UseInitialParamValues",
-                                f"# Note: above intializes DDS to parameter values IN the initial",
-                                f"#       model input files IF 'extract' option used in BeginParams",
-                                f"#       block (column 'init')",
-                                f"EndParallelDDSAlg"
-                            ]
+                            algorithm_settings
                     },
                 "save_best":
                     {
@@ -1330,17 +1344,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"# Generation Date: {generation_date}"
                             ],
                         "General Options":
-                            [
-                                f"ProgramType  	    ParallelDDS",
-                                f"ObjectiveFunction   GCOP",
-                                f"ModelExecutable     ./Ost-RAVEN.sh",
-                                f"PreserveBestModel   ./save_best.sh",
-                                f"",
-                                f"ModelSubdir processor_",
-                                f"",
-                                f"# OstrichWarmStart yes",
-                                f"# CheckSensitivities yes"
-                            ],
+                            general_options,
                         "Extra Directories":
                             [
                                 f"BeginExtraDirs",
@@ -1375,30 +1379,11 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"EndParams"
                             ],
                         "Response Variables":
-                            [
-                                f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
-                                f"BeginResponseVars",
-                                f"#name	  filename			        keyword		line	col	token                               augmented?",
-                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
-                                f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
-                                f"EndResponseVars",
-                            ],
+                            response_variables,
                         "Tied Response Variables":
-                            [
-                                f"#Negative Nash-Sutcliffe efficiency",
-                                f"BeginTiedRespVars",
-                                f"NegNSE 1 NSE wsum -1.00",
-                                f"NegKGE 1 KGE_NP wsum -1.00",
-                                f"EndTiedRespVars",
-                            ],
+                            tied_response_variables,
                         "GCOP Options":
-                            [
-                                f"BeginGCOP",
-                                f"#CostFunction NegNSE",
-                                f"CostFunction NegKGE",
-                                f"PenaltyFunction APM",
-                                f"EndGCOP",
-                            ],
+                            gcop_options,
                         "Constraints":
                             [
                                 f"BeginConstraints",
@@ -1407,24 +1392,9 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"EndConstraints",
                             ],
                         "Random Seed Control":
-                            [
-                                f"# Randomsed control added",
-                                f"RandomSeed 3333",
-                            ],
+                            random_seed,
                         "Algorithm Settings":
-                            [
-                                f"#Algorithm should be last in this file (see p51 for APDDS):",
-                                f"",
-                                f"BeginParallelDDSAlg",
-                                f"PerturbationValue 0.20",
-                                f"MaxIterations 50",
-                                f"#	UseRandomParamValues",
-                                f"# UseInitialParamValues",
-                                f"# Note: above intializes DDS to parameter values IN the initial",
-                                f"#       model input files IF 'extract' option used in BeginParams",
-                                f"#       block (column 'init')",
-                                f"EndParallelDDSAlg"
-                            ]
+                            algorithm_settings
                     },
                 "save_best":
                     {
@@ -1493,17 +1463,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"# Generation Date: {generation_date}"
                             ],
                         "General Options":
-                            [
-                                f"ProgramType  	    ParallelDDS",
-                                f"ObjectiveFunction   GCOP",
-                                f"ModelExecutable     ./Ost-RAVEN.sh",
-                                f"PreserveBestModel   ./save_best.sh",
-                                f"",
-                                f"ModelSubdir processor_",
-                                f"",
-                                f"# OstrichWarmStart yes",
-                                f"# CheckSensitivities yes"
-                            ],
+                            general_options,
                         "Extra Directories":
                             [
                                 f"BeginExtraDirs",
@@ -1562,30 +1522,11 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"EndTiedParams"
                             ],
                         "Response Variables":
-                            [
-                                f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
-                                f"BeginResponseVars",
-                                f"#name	  filename			        keyword		line	col	token                               augmented?",
-                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
-                                f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
-                                f"EndResponseVars",
-                            ],
+                            response_variables,
                         "Tied Response Variables":
-                            [
-                                f"#Negative Nash-Sutcliffe efficiency",
-                                f"BeginTiedRespVars",
-                                f"NegNSE 1 NSE wsum -1.00",
-                                f"NegKGE 1 KGE_NP wsum -1.00",
-                                f"EndTiedRespVars",
-                            ],
+                            tied_response_variables,
                         "GCOP Options":
-                            [
-                                f"BeginGCOP",
-                                f"#CostFunction NegNSE",
-                                f"CostFunction NegKGE",
-                                f"PenaltyFunction APM",
-                                f"EndGCOP",
-                            ],
+                            gcop_options,
                         "Constraints":
                             [
                                 f"BeginConstraints",
@@ -1594,24 +1535,9 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"EndConstraints",
                             ],
                         "Random Seed Control":
-                            [
-                                f"# Randomsed control added",
-                                f"RandomSeed 3333",
-                            ],
+                            random_seed,
                         "Algorithm Settings":
-                            [
-                                f"#Algorithm should be last in this file (see p51 for APDDS):",
-                                f"",
-                                f"BeginParallelDDSAlg",
-                                f"PerturbationValue 0.20",
-                                f"MaxIterations 50",
-                                f"#	UseRandomParamValues",
-                                f"# UseInitialParamValues",
-                                f"# Note: above intializes DDS to parameter values IN the initial",
-                                f"#       model input files IF 'extract' option used in BeginParams",
-                                f"#       block (column 'init')",
-                                f"EndParallelDDSAlg"
-                            ]
+                            algorithm_settings
                     },
                 "save_best":
                     {
@@ -1678,17 +1604,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"# Generation Date: {generation_date}"
                             ],
                         "General Options":
-                            [
-                                f"ProgramType  	    ParallelDDS",
-                                f"ObjectiveFunction   GCOP",
-                                f"ModelExecutable     ./Ost-RAVEN.sh",
-                                f"PreserveBestModel   ./save_best.sh",
-                                f"",
-                                f"ModelSubdir processor_",
-                                f"",
-                                f"# OstrichWarmStart yes",
-                                f"# CheckSensitivities yes"
-                            ],
+                            general_options,
                         "Extra Directories":
                             [
                                 f"BeginExtraDirs",
@@ -1744,30 +1660,11 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"EndTiedParams"
                             ],
                         "Response Variables":
-                            [
-                                f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
-                                f"BeginResponseVars",
-                                f"#name	  filename			        keyword		line	col	token                               augmented?",
-                                f"NSE      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
-                                f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
-                                f"EndResponseVars",
-                            ],
+                            response_variables,
                         "Tied Response Variables":
-                            [
-                                f"#Negative Nash-Sutcliffe efficiency",
-                                f"BeginTiedRespVars",
-                                f"NegNSE 1 NSE wsum -1.00",
-                                f"NegKGE 1 KGE_NP wsum -1.00",
-                                f"EndTiedRespVars",
-                            ],
+                            tied_response_variables,
                         "GCOP Options":
-                            [
-                                f"BeginGCOP",
-                                f"#CostFunction NegNSE",
-                                f"CostFunction NegKGE",
-                                f"PenaltyFunction APM",
-                                f"EndGCOP",
-                            ],
+                            gcop_options,
                         "Constraints":
                             [
                                 f"BeginConstraints",
@@ -1776,24 +1673,9 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"EndConstraints",
                             ],
                         "Random Seed Control":
-                            [
-                                f"# Randomsed control added",
-                                f"RandomSeed 3333",
-                            ],
+                            random_seed,
                         "Algorithm Settings":
-                            [
-                                f"#Algorithm should be last in this file (see p51 for APDDS):",
-                                f"",
-                                f"BeginParallelDDSAlg",
-                                f"PerturbationValue 0.20",
-                                f"MaxIterations 50",
-                                f"#	UseRandomParamValues",
-                                f"# UseInitialParamValues",
-                                f"# Note: above intializes DDS to parameter values IN the initial",
-                                f"#       model input files IF 'extract' option used in BeginParams",
-                                f"#       block (column 'init')",
-                                f"EndParallelDDSAlg"
-                            ]
+                            algorithm_settings
                     },
                 "save_best":
                     {
@@ -1862,17 +1744,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"# Generation Date: {generation_date}"
                             ],
                         "General Options":
-                            [
-                                f"ProgramType  	    ParallelDDS",
-                                f"ObjectiveFunction   GCOP",
-                                f"ModelExecutable     ./Ost-RAVEN.sh",
-                                f"PreserveBestModel   ./save_best.sh",
-                                f"",
-                                f"ModelSubdir processor_",
-                                f"",
-                                f"# OstrichWarmStart yes",
-                                f"# CheckSensitivities yes"
-                            ],
+                            general_options,
                         "Extra Directories":
                             [
                                 f"BeginExtraDirs",
@@ -1920,24 +1792,9 @@ def generate_template_ostrich(catchment_ch_id: str,
                                 f"EndConstraints",
                             ],
                         "Random Seed Control":
-                            [
-                                f"# Randomsed control added",
-                                f"RandomSeed 3333",
-                            ],
+                            random_seed,
                         "Algorithm Settings":
-                            [
-                                f"#Algorithm should be last in this file (see p51 for APDDS):",
-                                f"",
-                                f"BeginParallelDDSAlg",
-                                f"PerturbationValue 0.20",
-                                f"MaxIterations 50",
-                                f"#	UseRandomParamValues",
-                                f"# UseInitialParamValues",
-                                f"# Note: above intializes DDS to parameter values IN the initial",
-                                f"#       model input files IF 'extract' option used in BeginParams",
-                                f"#       block (column 'init')",
-                                f"EndParallelDDSAlg"
-                            ]
+                            algorithm_settings
                     },
                 "save_best":
                     {
@@ -2025,6 +1882,7 @@ def subsection_header(title: str) -> list[str]:
 
 
 def write_rvx(catchment_ch_id: str,
+              hru_info: dict,
               model_dir: str = model_dir,
               model_type: str = model_type,
               data_dir: str = data_dir,
@@ -2037,8 +1895,7 @@ def write_rvx(catchment_ch_id: str,
               author=conf['Author'],
               start_year: int = start_year,
               end_year: int = end_year,
-              glaciation_ratio: float = 0,
-              glacier_alti: float = 2000):
+              ):
     import shutil
     """Writes .rvX file(s), either as an Ostrich or Raven template.
     Args:
@@ -2060,6 +1917,7 @@ def write_rvx(catchment_ch_id: str,
     assert model_type in config.variables.supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
                                                             f"supported_models."
     attribute_csv_name = f"{raven_tools.config.variables.catchments[catchment_ch_id]['catchment_id']}_attributes.csv"
+    csv_file = pd.DataFrame
     try:
         logger.debug(
             f"Trying to read catchment attribute CSV file {Path(project_dir, data_dir, attribute_csv_dir, attribute_csv_name)}...")
@@ -2075,15 +1933,14 @@ def write_rvx(catchment_ch_id: str,
     logger.debug(f".{rvx_type} file path set to {file_path}.")
     template_sections = {}
     logger.debug("Empty dict template_sections created.")
-
     logger.debug("Entering if-tree for template type...")
     if template_type == "Raven":
         logger.debug(f"template_type is {template_type}.")
         logger.debug(f"Trying to generate .{rvx_type} template sections with function generate_template()...")
-        template_sections = generate_template_rvx(model_type=model_type, csv_file=csv_file, params=params,
+        template_sections = generate_template_rvx(model_type=model_type, hru_info=hru_info, csv_file=csv_file,
+                                                  params=params,
                                                   param_or_name="params", start_year=start_year, end_year=end_year,
-                                                  catchment_ch_id=catchment_ch_id, glaciation_ratio=glaciation_ratio,
-                                                  glacier_alti=glacier_alti)
+                                                  catchment_ch_id=catchment_ch_id)
         logger.debug(f"Wrote .{rvx_type} template sections generated by generate_template() to dict template_sections")
     if template_type == "Ostrich":
         file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, file_name)
@@ -2092,10 +1949,10 @@ def write_rvx(catchment_ch_id: str,
         file_path = Path((str(file_path) + ".tpl"))
         logger.debug(f"New file_path: {file_path}")
         logger.debug(f"Trying to generate .{rvx_type}.tpl template sections with function generate_template()...")
-        template_sections = generate_template_rvx(model_type=model_type, csv_file=csv_file, params=params,
+        template_sections = generate_template_rvx(model_type=model_type, hru_info=hru_info, csv_file=csv_file,
+                                                  params=params,
                                                   param_or_name="names", start_year=start_year, end_year=end_year,
-                                                  catchment_ch_id=catchment_ch_id, glaciation_ratio=glaciation_ratio,
-                                                  glacier_alti=glacier_alti)
+                                                  catchment_ch_id=catchment_ch_id)
         logger.debug(
             f"Wrote .{rvx_type}.tpl template sections generated by generate_template() to dict template_sections")
 

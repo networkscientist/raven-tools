@@ -7,6 +7,8 @@ import re
 import shutil
 from pathlib import Path
 
+import pandas as pd
+
 # import raven_tools as rt
 
 logger = logging.getLogger(__name__)
@@ -105,8 +107,8 @@ class RavenModel:
                       mode='r') as csv_file:
                 csv_reader = csv.DictReader(csv_file, delimiter=';')
                 for row in csv_reader:
-                    self.glaciation_ratio = float(row['Glac_Ratio'])
-                    self.glacier_alti = float(row['Alti'])
+                    self.glaciation_ratio = float(row['Gla_Ratio'])
+                    self.glacier_alti = float(row['Gla_Alti'])
                     # print(f"Attribute: {row[0]} - Value: {row[1]}")
         except:
             logger.exception("Error reading glacier data")
@@ -414,6 +416,54 @@ class RavenModel:
         assert isinstance(value, float), f"glacier_alti should be float, is type {type(value)} instead."
         self._glacier_alti = value
 
+    @property
+    def glacier_slope(self) -> float:
+        """Returns glacier_slope."""
+        assert isinstance(self._glacier_slope,
+                          float), f"glacier_slope should be float, is type {type(self._glacier_slope)} instead."
+        return self._glacier_slope
+
+    @glacier_slope.setter
+    def glacier_slope(self, value: float):
+        assert isinstance(value, float), f"glacier_slope should be float, is type {type(value)} instead."
+        self._glacier_slope = value
+
+    @property
+    def glacier_aspect(self) -> float:
+        """Returns glacier_aspect."""
+        assert isinstance(self._glacier_aspect,
+                          float), f"glacier_aspect should be float, is type {type(self._glacier_aspect)} instead."
+        return self._glacier_aspect
+
+    @glacier_aspect.setter
+    def glacier_aspect(self, value: float):
+        assert isinstance(value, float), f"glacier_aspect should be float, is type {type(value)} instead."
+        self._glacier_aspect = value
+
+    @property
+    def non_glacier_slope(self) -> float:
+        """Returns non_glacier_slope."""
+        assert isinstance(self._non_glacier_slope,
+                          float), f"non_glacier_slope should be float, is type {type(self._non_glacier_slope)} instead."
+        return self._non_glacier_slope
+
+    @non_glacier_slope.setter
+    def non_glacier_slope(self, value: float):
+        assert isinstance(value, float), f"non_glacier_slope should be float, is type {type(value)} instead."
+        self._non_glacier_slope = value
+
+    @property
+    def non_glacier_aspect(self) -> float:
+        """Returns non_glacier_aspect."""
+        assert isinstance(self._non_glacier_aspect,
+                          float), f"non_glacier_aspect should be float, is type {type(self._non_glacier_aspect)} instead."
+        return self._non_glacier_aspect
+
+    @non_glacier_aspect.setter
+    def non_glacier_aspect(self, value: float):
+        assert isinstance(value, float), f"non_glacier_aspect should be float, is type {type(value)} instead."
+        self._non_glacier_aspect = value
+
     def create_dirs(self):
         """Create model (sub-)directories.
 
@@ -580,28 +630,39 @@ class RavenModel:
         :type ostrich_template: bool
 
         """
+        hru_info_dict = {}
         assert rvx_type in config.variables.raven_filetypes, f"Raven suffix .{rvx_type} is not in list of accepted suffixes."
         # TODO: Implement discharge and forcings time series.
+
+        # try:
+        #     glacier_props_df = pd.read_csv(
+        #         f"/home/mainman/PycharmProjects/raven-tools/RAVEN/data/glaciers/glaciation_ratio_{self.catchment_ch_id}.txt",
+        #         sep=';')
+        #     glacier_props = glacier_props_df.to_dict('records')[0]
+        try:
+            hru_info_df = pd.read_csv(Path(self.data_dir, "Catchment", "hru_info.csv"), na_values='-')
+            hru_info_df = hru_info_df[hru_info_df['Ctm'] == self.catchment_ch_id]
+            hru_info_dict = hru_info_df.to_dict('records')[0]
+
+        except FileNotFoundError:
+            logger.exception("Glacier properties file could not be found. Maybe you need to create it first.")
         logger.debug("Starting if-tree for template type...")
         if raven_template is True:
             logger.debug("Variable raven_template is True...")
             logger.debug(f"Trying to call rr.write_rvx function to create .{rvx_type} for Raven...")
-            rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment_ch_id=self.catchment_ch_id,
-                         params=self.default_params,
-                         template_type="Raven",
-                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year,
-                         glaciation_ratio=self.glaciation_ratio, glacier_alti=self.glacier_alti)
+            rr.write_rvx(catchment_ch_id=self.catchment_ch_id, hru_info=hru_info_dict, model_dir="models",
+                         model_type=self.model_type,
+                         project_dir=self.root_dir, params=self.default_params, template_type="Raven",
+                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year)
             logger.debug(f".{rvx_type} for Raven created by rr.write_rvx function")
         if ostrich_template is True:
             logger.debug("Variable ostrich_template is True...")
             logger.debug(f"Trying to call rr.write_rvx function to create .{rvx_type}.tpl for Ostrich...")
-            rr.write_rvx(model_dir="models", model_type=self.model_type, project_dir=self.root_dir,
-                         catchment_ch_id=self.catchment_ch_id,
-                         params=self.default_params,
-                         template_type="Ostrich",
-                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year,
-                         glaciation_ratio=self.glaciation_ratio, glacier_alti=self.glacier_alti)
+            rr.write_rvx(catchment_ch_id=self.catchment_ch_id, hru_info=hru_info_dict, model_dir="models",
+                         model_type=self.model_type,
+                         project_dir=self.root_dir, params=self.default_params, template_type="Ostrich",
+                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year)
+
             logger.debug(f".{rvx_type}.tpl for Ostrich created by rr.write_rvx function")
         if ostrich_template is False and raven_template is False:
             logger.debug("Variables ostrich_template and raven_template set to False.")
@@ -657,11 +718,18 @@ class RavenModel:
     def create_bbox(self):
         rpe.create_bbox(extent_shape_file_path=Path(self.data_dir, "Catchment", "reproject_2056",
                                                     f"{self.catchment_ch_id}.shp"),
-                        bb_file_path=Path(self.data_dir, "Catchment", f"{self.stream_name}_bbox.shp"),
+                        bb_file_path=Path(self.data_dir, "Catchment", f"{self.catchment_ch_id}_bbox.shp"),
                         create_bbox_shp=True)
 
     def write_rvt(self, ostrich_template: bool = True, raven_template: bool = True):
 
+        hru_info_dict = {}
+        try:
+            hru_info_df = pd.read_csv(Path(self.data_dir, "Catchment", "hru_info.csv"), na_values='-')
+            hru_info_df = hru_info_df[hru_info_df['Ctm'] == self.catchment_ch_id]
+            hru_info_dict = hru_info_df.to_dict('records')[0]
+        except FileNotFoundError:
+            logger.exception("Glacier properties file could not be found. Maybe you need to create it first.")
         if ostrich_template:
             rr.write_rvt(start_year=self.start_year,
                          end_year=self.end_year,
@@ -676,7 +744,8 @@ class RavenModel:
                          station_elevation=self.station_elevation,
                          catchment_gauge_id=str(self.ctm_info),
                          params=self.default_params,
-                         template_type="Ostrich")
+                         template_type="Ostrich",
+                         hru_info=hru_info_dict)
         if raven_template:
             rr.write_rvt(start_year=self.start_year,
                          end_year=self.end_year,
@@ -691,14 +760,16 @@ class RavenModel:
                          station_elevation=self.station_elevation,
                          catchment_gauge_id=str(self.ctm_info),
                          params=self.default_params,
-                         template_type="Raven")
+                         template_type="Raven",
+                         hru_info=hru_info_dict)
 
     def camels_to_rvt(self):
         rpe.camels_to_rvt(data_dir=self.data_dir, gauge_id=self.gauge_id,
                           gauge_short_code=self.gauge_short_code, start_date=f"{self.start_year}-01-01",
                           end_date=f"{self.end_year + 1}-01-01")
 
-    def create_grid_weights(self, forcing_name):
+    def create_grid_weights(self, forcing_name, glacier: bool = False):
+        import geopandas as gpd
         if forcing_name == "RhiresD_v2.0_swiss.lv95":
             forcing_suffix = "ch01h.swiss.lv95"
         else:
@@ -708,21 +779,54 @@ class RavenModel:
                                 f"{forcing_name}_{self.start_year}01010000_{self.end_year}12310000_{self.catchment_ch_id}_clipped.nc")
         catchment_filepath = Path(self.data_dir, "Catchment", "reproject_2056",
                                   f"{config.variables.catchments[self.catchment_ch_id]['catchment_id']}.shp")
-        out_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "out",
-                        f"grid_weights_{self.catchment_ch_id}")
-        grid = rpe.create_grid(netcdf_filepath=netcdf_file_path, bounding_box_filename=self.bbox_filepath,
-                               out_path=out_path,
-                               forcing_name=forcing_name, start_year=self.start_year)
+        bbox_shape_filepath = Path(self.data_dir, "Catchment", f"{self.catchment_ch_id}_bbox.shp")
+
+        # Non-Glacier Part
+        # ------------------------------------------------
+        #
+        hru_short_name: str = "non_gla"
+        non_gla_out_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "out",
+                                f"grid_weights_{self.catchment_ch_id}")
+        basic_grid = rpe.create_grid(netcdf_filepath=netcdf_file_path, bounding_box_filename=self.bbox_filepath,
+                                     out_path=non_gla_out_path,
+                                     forcing_name=forcing_name, start_year=self.start_year)
 
         # Create union and difference overlay GeoDataFrames
-        res_union = rpe.create_overlay(grd=grid, catchment_filepath=catchment_filepath)
 
+        non_gla_res_union = rpe.create_overlay(grd=basic_grid, ctm_gdf=gpd.read_file(catchment_filepath))
         # Compute the relative area a.k.a grid weight and write to shape files
-        res_union = rpe.calc_relative_area(res_union)
-        grid.set_index("cell_id")
-        grid = rpe.copy_rel_area_from_union_to_grid(res_union=res_union, grid=grid)
-        rpe.write_weights_to_file(grd=grid, grid_dir_path=out_path, catchment=self.stream_name)
-        logger.debug(f"grid weight written to file {out_path}")
+        non_gla_rel_area = rpe.calc_relative_area(gdf=non_gla_res_union, hru_short_name=hru_short_name, glacier=False)
+        # grid_non_gla.set_index("cell_id", inplace=True)
+        # grid_rel_area_non_gla = grid_non_gla.join(other=non_gla_rel_area, rsuffix="_ng")
+        # grid_non_gla = rpe.copy_rel_area_from_union_to_grid(res_union=non_gla_rel_area, grid=grid_non_gla,
+        #                                                     hru_short_name=hru_short_name)
+        basic_grid = basic_grid.set_index('cell_id').join(other=non_gla_rel_area.set_index('cell_id'),
+                                                          rsuffix='_ng')
+        grid = {'1': basic_grid}
+
+        # Glacier part
+        # --------------------------------
+        #
+        if glacier:
+            hru_short_name = "gla"
+            glacier_shape_path = Path(self.data_dir, "glaciers", "SGI_2016_glaciers.shp")
+            gla_out_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "out",
+                                f"grid_weights_{self.catchment_ch_id}_glacier")
+            catchment_glaciation, catchment_non_glaciation = rpe.glacier_extent_from_shp(ctm_shp=catchment_filepath,
+                                                                                         glacier_shp=glacier_shape_path)
+
+            gla_res_union = rpe.create_overlay(grd=non_gla_res_union, ctm_gdf=catchment_glaciation)
+            gla_rel_area = rpe.calc_relative_area(gla_res_union, hru_short_name=hru_short_name, glacier=True)
+
+            grid_rel_area_gla = basic_grid.join(other=non_gla_rel_area, rsuffix="_ng")
+            gla_grid = non_gla_rel_area.set_index('cell_id').join(other=gla_rel_area.set_index('cell_id'),
+                                                                  rsuffix='_ng')
+            grid['2'] = gla_grid
+        else:
+            grid['2'] = gpd.GeoDataFrame
+        rpe.write_weights_to_file(grd=grid, grid_dir_path=non_gla_out_path, glacier=True)
+
+        logger.debug(f"grid weight written to file {non_gla_out_path}")
 
     def glacier_ratio(self, dem_tif_filenames):
         catchment_filepath: Path = Path(self.data_dir, "Catchment", "reproject_2056",
@@ -740,13 +844,74 @@ class RavenModel:
             glaciation_ratio, glacier_height, non_glaciation_ratio, non_gla_height, glaciated_centroid, non_glaciated_centroid = rpe.glaciation_ratio_height(
                 catchment_filepath=catchment_filepath,
                 glacier_shape_path=glacier_extent_filepath,
-                dem_filepaths=dem_filepaths)
+                dem_filepaths=dem_filepaths,
+                dem_out_path=Path(self.data_dir, "DEM"),
+                ctm_ch_id=self.catchment_ch_id)
             # glaciation_ratio_height["glaciation_ratio"].append(glaciation_ratio)
             # glaciation_ratio_height["glaciation_height"].append(glacier_height)
             return glaciation_ratio, glacier_height, non_glaciation_ratio, non_gla_height, glaciated_centroid, non_glaciated_centroid
         except ValueError:
             logger.exception("Error clipping DEM")
             pass
+
+    def hru_dem_props(self, glacier: bool = False):
+
+        columns = [
+            "NonGlaArea",
+            "GlaArea",
+            "NonGlaAlti",
+            "GlaAlti",
+            "NonGlaLat",
+            "GlaLat",
+            "NonGlaLon",
+            "GlaLon",
+            "NonGlaAspect",
+            "GlaAspect",
+            "NonGlaSlope",
+            "GlaSlope"
+        ]
+        catchment_filepath: Path = Path(self.data_dir, "Catchment", "reproject_2056",
+                                        f"{config.variables.catchments[self.catchment_ch_id]['catchment_id']}.shp")
+        glacier_extent_filepath: Path = Path(self.data_dir, "glaciers", "SGI_2016_glaciers.shp")
+        aspect_slope = pd.DataFrame(columns=columns)
+        aspect_slope.rename_axis("Ctm", inplace=True)
+        ctm_glaciation_gdf, ctm_non_glaciation_gdf = rpe.glacier_extent_from_shp(ctm_shp=catchment_filepath,
+                                                                                 glacier_shp=glacier_extent_filepath)
+        if glacier:
+            filepath_aspect = Path(self.data_dir, "DEM", "dem_clipped", "aspects",
+                                   f"dem_{self.catchment_ch_id}_glacier_aspects.tif")
+            filepath_slope = Path(self.data_dir, "DEM", "dem_clipped", "slopes",
+                                  f"dem_{self.catchment_ch_id}_glacier_slopes.tif")
+            filepath_hru = Path(self.data_dir, "DEM", "dem_clipped", f"dem_{self.catchment_ch_id}_glacier.tif")
+            aspect_slope.loc[self.catchment_ch_id, f"GlaAspect"] = rpe.dem_mean(filepath_aspect)
+            aspect_slope.loc[self.catchment_ch_id, f"GlaSlope"] = rpe.dem_mean(filepath_slope)
+            aspect_slope.loc[self.catchment_ch_id, f"GlaAlti"] = rpe.dem_mean(filepath_hru)
+            ctm_total_area, non_glaciation_area, glaciation_area = rpe.area_ratio(
+                catchment_filepath=catchment_filepath, glacier_shape_path=glacier_extent_filepath)
+            aspect_slope.loc[self.catchment_ch_id, f"GlaArea"] = glaciation_area
+
+            gla_lat, gla_lon = rpe.weighted_centroid(ctm_glaciation_gdf)
+            aspect_slope.loc[self.catchment_ch_id, f"GlaLat"] = gla_lat
+            aspect_slope.loc[self.catchment_ch_id, f"GlaLon"] = gla_lon
+        else:
+            ctm_total_area, non_glaciation_area = rpe.area_ratio(catchment_filepath=catchment_filepath,
+                                                                 glacier_shape_path=glacier_extent_filepath)
+
+        aspect_slope.loc[self.catchment_ch_id, f"NonGlaArea"] = non_glaciation_area
+        filepath_aspect = Path(self.data_dir, "DEM", "dem_clipped", "aspects",
+                               f"dem_{self.catchment_ch_id}_aspects.tif")
+        filepath_slope = Path(self.data_dir, "DEM", "dem_clipped", "slopes",
+                              f"dem_{self.catchment_ch_id}_slopes.tif")
+        filepath_hru = Path(self.data_dir, "DEM", "dem_clipped", f"dem_{self.catchment_ch_id}.tif")
+        aspect_slope.loc[self.catchment_ch_id, f"NonGlaAspect"] = rpe.dem_mean(filepath_aspect)
+        aspect_slope.loc[self.catchment_ch_id, f"NonGlaSlope"] = rpe.dem_mean(filepath_slope)
+
+        aspect_slope.loc[self.catchment_ch_id, f"NonGlaAlti"] = rpe.dem_mean(filepath_hru)
+        non_gla_lat, non_gla_lon = rpe.weighted_centroid(ctm_non_glaciation_gdf)
+        aspect_slope.loc[self.catchment_ch_id, f"NonGlaLat"] = non_gla_lat
+        aspect_slope.loc[self.catchment_ch_id, f"NonGlaLon"] = non_gla_lon
+        aspect_slope = aspect_slope[columns]
+        return aspect_slope
 
 
 def ch1903_to_wgs84(lat_1903, lon_1903):
