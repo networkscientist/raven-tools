@@ -211,7 +211,7 @@ def write_rvt(start_year: int,
     """
     logger.debug("Entered write_rvt function.")
     if template_type == "Raven":
-        param_or_name = "params"
+        param_or_name = "init"
         file_name: str = f"{catchment_ch_id}_{model_type}.rvt"
         logger.debug(f"file_name = {file_name}")
         file_path: Path = Path(model_dir, file_name)
@@ -241,8 +241,8 @@ def write_rvt(start_year: int,
 
     if model_type == "HBV":
         gauge_correction = [
-            f"  :RainCorrection    {params[param_or_name]['HBV']['HBV_Param_20']}{newline}",
-            f"  :SnowCorrection    {params[param_or_name]['HBV']['HBV_Param_21']}{newline}{newline}"
+            f"  :RainCorrection    {params['HBV'][param_or_name]['HBV_Param_20']}{newline}",
+            f"  :SnowCorrection    {params['HBV'][param_or_name]['HBV_Param_21']}{newline}{newline}"
         ]
         pet_monthly_ave, temp_monthly_ave = processing.raven_preprocess.pet_temp_monthly_ave(
             pet_filepath=Path("/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_ets150m0_1_data.txt"),
@@ -375,751 +375,751 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                 ":EndVegetationClasses"
             ]
 
-    rvx_params = \
-        {
-            "GR4J":
-                {
-                    "rvp":
-                        {
-                            "Soil Classes":
-                                [
-                                    ":SoilClasses",
-                                    "   :Attributes",
-                                    "   :Units",
-                                    "       SOIL_PROD",
-                                    "       SOIL_ROUT",
-                                    "       SOIL_TEMP",
-                                    "       SOIL_GW",
-                                    ":EndSoilClasses"
-                                ],
-                            "Soil Profiles":
-                                [
-                                    "#     name,#horizons,{soiltype,thickness}x{#horizons}",
-                                    "#     GR4J_X1 is thickness of first layer (SOIL_PROD), here 0.529",
-                                    ":SoilProfiles",
-                                    f"   GLACIER, 0",
-                                    f"   DEFAULT_P, 4, SOIL_PROD, {params[param_or_name]['GR4J']['GR4J_X1']}, SOIL_ROUT, 0.300, SOIL_TEMP, 1.000, SOIL_GW, 1.000,",
-                                    ":EndSoilProfiles"
-                                ],
-                            "Vegetation Classes":
-                                vegetation_classes,
-                            "Land Use Classes":
-                                land_use_classes,
-                            "Global Parameters":
-                                [
-                                    ":GlobalParameter RAINSNOW_TEMP       0.0",
-                                    ":GlobalParameter RAINSNOW_DELTA      1.0",
-                                    f":GlobalParameter AIRSNOW_COEFF     {params[param_or_name]['GR4J']['Airsnow_Coeff']} # [1/d] = 1.0 - CEMANEIGE_X2 = 1.0 - x6",
-                                    f":GlobalParameter AVG_ANNUAL_SNOW    {params[param_or_name]['GR4J']['Cemaneige_X1']} # [mm]  =       CEMANEIGE_X1 =       x5",
-                                    "#:GlobalParameter PRECIP_LAPSE     0.0004 I assume not necessary for gridded data",
-                                    "#:GlobalParameter ADIABATIC_LAPSE  0.0065 not necessary for gridded data"
-                                ],
-                            "Soil Parameters":
-                                [
-                                    ":SoilParameterList",
-                                    "   :Parameters, POROSITY, GR4J_X3, GR4J_X2",
-                                    "   :Units, none, mm, mm / d",
-                                    f"   [DEFAULT], 1.0, {params[param_or_name]['GR4J']['GR4J_X3']}, {params[param_or_name]['GR4J']['GR4J_X2']}",
-                                    ":EndSoilParameterList"
-                                ],
-                            "Land Use Parameters":
-                                [
-                                    ":LandUseParameterList",
-                                    "   :Parameters, GR4J_X4, MELT_FACTOR",
-                                    "   :Units, d, mm / d / C",
-                                    f"   [DEFAULT], {params[param_or_name]['GR4J']['GR4J_X4']}, 3.5",
-                                    ":EndLandUseParameterList"
-                                ]
-                        },
-                    "rvh":
-                        {"Subbasins":
-                            [
-                                ":SubBasins",
-                                "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
-                                "  :Units     ,          none,          none,   none,          km,         none",
-                                f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
-                                ":EndSubBasins"
-                            ],
-                            "HRUs":
-                                hru_list
-                        },
-                    "rvi":
-                        {"Model Organisation":
-                            [
-                                f":StartDate             {start_year}-01-01 00:00:00",
-                                f":EndDate               {end_date}",
-                                ":TimeStep              1.0",
-                                ":Method                ORDERED_SERIES",
-                                f":RunName               {catchment_ch_id}_GR4J"
-                            ],
-                            "Model Options":
-                                [
-                                    ":SoilModel             SOIL_MULTILAYER  4",
-                                    ":Routing               ROUTE_NONE",
-                                    ":CatchmentRoute        ROUTE_DUMP",
-                                    ":Evaporation           PET_HAMON",
-                                    ":RainSnowFraction      RAINSNOW_DINGMAN",
-                                    ":PotentialMeltMethod   POTMELT_DEGREE_DAY",
-                                    ":OroTempCorrect        OROCORR_SIMPLELAPSE",
-                                    ":OroPrecipCorrect      OROCORR_SIMPLELAPSE",
-                                    f":EvaluationPeriod CALIBRATION {start_year}-01-01 {cali_end_year}-12-31",
-                                    f":EvaluationPeriod VALIDATION {int(cali_end_year) + 1}-01-01 {end_year}-12-31"
-                                ],
-                            "Soil Layer Alias Definitions":
-                                [
-                                    ":Alias PRODUCT_STORE      SOIL[0]",
-                                    ":Alias ROUTING_STORE      SOIL[1]",
-                                    ":Alias TEMP_STORE         SOIL[2]",
-                                    ":Alias GW_STORE           SOIL[3]"
-                                ],
-                            "Hydrologic Process Order":
-                                [
-                                    ":HydrologicProcesses",
-                                    "   :Precipitation            PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
-                                    "   :SnowTempEvolve           SNOTEMP_NEWTONS    SNOW_TEMP",
-                                    "   :SnowBalance              SNOBAL_CEMA_NIEGE  SNOW            PONDED_WATER",
-                                    "   :OpenWaterEvaporation     OPEN_WATER_EVAP    PONDED_WATER    ATMOSPHERE     	 # Pn",
-                                    "   :Infiltration             INF_GR4J           PONDED_WATER    MULTIPLE       	 # Ps-",
-                                    "   :SoilEvaporation          SOILEVAP_GR4J      PRODUCT_STORE   ATMOSPHERE     	 # Es",
-                                    "   :Percolation              PERC_GR4J          PRODUCT_STORE   TEMP_STORE     	 # Perc",
-                                    "       :Flush                    RAVEN_DEFAULT      SURFACE_WATER   TEMP_STORE     	 # Pn-Ps",
-                                    "   :Split                    RAVEN_DEFAULT      TEMP_STORE      CONVOLUTION[0] CONVOLUTION[1] 0.9  # Split Pr",
-                                    "   :Convolve                 CONVOL_GR4J_1      CONVOLUTION[0]  ROUTING_STORE  	 # Q9",
-                                    "   :Convolve                 CONVOL_GR4J_2      CONVOLUTION[1]  TEMP_STORE     	 # Q1",
-                                    "   :Percolation              PERC_GR4JEXCH      ROUTING_STORE   GW_STORE       	 # F(x1)",
-                                    "   :Percolation              PERC_GR4JEXCH2     TEMP_STORE      GW_STORE       	 # F(x1)",
-                                    "       :Flush                    RAVEN_DEFAULT      TEMP_STORE      SURFACE_WATER  	 # Qd",
-                                    "   :Baseflow                 BASE_GR4J          ROUTING_STORE   SURFACE_WATER  	 # Qr",
-                                    ":EndHydrologicProcesses"
-                                ],
-                            "Output Options":
-                                [
-                                ]
-                        },
-                    "rvc":
-                        {
-                            "Soil Profiles":
-                                [
-                                    "# SOIL[0] = GR4J_X1 * 1000. / 2.0 (initialize to 1/2 full)",
-                                    "# SOIL[1] = 0.3m * 1000. / 2.0   (initialize to 1/2 full)"
-                                ],
-                            "HRU States":
-                                [
-                                    ":HRUStateVariableTable",
-                                    "   :Attributes SOIL[0] SOIL[1]",
-                                    "   :Units      mm      mm",
-                                    f"   1           {params[param_or_name]['GR4J']['GR4J_X1b']},   15.0",
-                                    ":EndHRUStateVariableTable"
-                                ]
-                        },
-                    "rvt":
-                        {}
-                },
-            "HYMOD":
-                {
-                    "rvp":
-                        {
-                            "Soil Classes":
-                                [
-                                    ":SoilClasses",
-                                    "   :Attributes",
-                                    "   :Units",
-                                    "       TOPSOIL",
-                                    "       GWSOIL",
-                                    ":EndSoilClasses"
-                                ],
-                            "Soil Profiles":
-                                [
-                                    "#     name,#horizons,{soiltype,thickness}x{#horizons}",
-                                    "# ",
-                                    ":SoilProfiles",
-                                    "   LAKE, 0,",
-                                    "   ROCK, 0,",
-                                    "   GLACIER, 0,",
-                                    "   # DEFAULT_P,      2, TOPSOIL,  HYMOD_PARA_2, GWSOIL, 10.0",
-                                    f"   DEFAULT_P, 2, TOPSOIL, {params[param_or_name]['HYMOD']['HYMOD_Param_02']}, GWSOIL, 10.0",
-                                    ":EndSoilProfiles"
-                                ],
-                            "Land Use Classes":
-                                land_use_classes,
-                            "Vegetation Classes":
-                                vegetation_classes,
-                            "Global Parameters":
-                                [
-                                    f":GlobalParameter RAINSNOW_TEMP {params[param_or_name]['HYMOD']['HYMOD_Param_03']}",
-                                    "   #:GlobalParameter      RAINSNOW_TEMP    HYMOD_PARA_3"
-                                ],
-                            "Soil Parameters":
-                                [
-                                    ":SoilParameterList",
-                                    "   :Parameters, POROSITY, PET_CORRECTION, BASEFLOW_COEFF,",
-                                    "   :Units, -, -, 1 / d,",
-                                    "       # TOPSOIL,            1.0 ,    HYMOD_PARA_8,               0.0,",
-                                    "       #  GWSOIL,            1.0 ,             1.0,   HYMOD_PARA_4=Ks,",
-                                    f"       TOPSOIL, 1.0, {params[param_or_name]['HYMOD']['HYMOD_Param_08']}, 0.0,",
-                                    f"       GWSOIL, 1.0, 1.0, {params[param_or_name]['HYMOD']['HYMOD_Param_04']},",
-                                    ":EndSoilParameterList"
-                                ],
-                            "Land Use Parameters":
-                                [
-                                    ":LandUseParameterList",
-                                    "   :Parameters, MELT_FACTOR, DD_MELT_TEMP, PDM_B,",
-                                    "   :Units, mm / d / K, degC, -,",
-                                    "       # [DEFAULT],    HYMOD_PARA_5,    HYMOD_PARA_6,  HYMOD_PARA_7=Bexp,",
-                                    f"       [DEFAULT], {params[param_or_name]['HYMOD']['HYMOD_Param_05']}, {params[param_or_name]['HYMOD']['HYMOD_Param_06']}, {params[param_or_name]['HYMOD']['HYMOD_Param_07']},",
-                                    ":EndLandUseParameterList"
-                                ]
-                        },
-                    "rvh":
-                        {"Subbasins":
-                            [
-                                ":SubBasins",
-                                "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
-                                "  :Units     ,          none,          none,   none,          km,         none",
-                                f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
-                                ":EndSubBasins"
-                            ],
-                            "HRUs":
-                                hru_list,
-                            "Subbasin Properties":
-                                [
-                                    ":SubBasinProperties",
-                                    "#                         HYMOD_PARA_1,                  3,",
-                                    "   :Parameters,           RES_CONSTANT,     NUM_RESERVOIRS,",
-                                    "   :Units,                         1/d,                  -,",
-                                    f"              1,          {params[param_or_name]['HYMOD']['HYMOD_Param_01']},                  3,",
-                                    ":EndSubBasinProperties"
-                                ]
-                        },
-                    "rvi":
-                        {"Model Organisation":
-                            [
-                                f":StartDate          {start_year}-01-01 00:00:00",
-                                f":EndDate            {end_date}",
-                                ":TimeStep           1.0",
-                                ":Method             ORDERED_SERIES",
-                                f":RunName            {catchment_ch_id}_HYMOD"
-                            ],
-                            "Model Options":
-                                [
-                                    ":Routing             ROUTE_NONE",
-                                    ":CatchmentRoute      ROUTE_RESERVOIR_SERIES",
-                                    ":Evaporation         PET_HAMON",
-                                    ":OW_Evaporation      PET_HAMON",
-                                    ":SWRadiationMethod   SW_RAD_NONE",
-                                    ":LWRadiationMethod   LW_RAD_NONE",
-                                    ":CloudCoverMethod    CLOUDCOV_NONE",
-                                    ":RainSnowFraction    RAINSNOW_THRESHOLD",
-                                    ":PotentialMeltMethod POTMELT_DEGREE_DAY",
-                                    ":PrecipIceptFract    PRECIP_ICEPT_NONE",
-                                    ":SoilModel           SOIL_MULTILAYER 2",
-                                    f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
-                                    f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
-                                ],
-                            "Hydrologic Process Order":
-                                [
-                                    ":HydrologicProcesses",
-                                    "   :Precipitation     PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
-                                    "   :SnowBalance       SNOBAL_SIMPLE_MELT SNOW            PONDED_WATER",
-                                    "   :Infiltration      INF_PDM            PONDED_WATER    MULTIPLE",
-                                    "#  :Flush            RAVEN_DEFAULT      SURFACE_WATER   SOIL[1]   HYMOD_PARAM_9=ALPHA",
-                                    f"  :Flush             RAVEN_DEFAULT      SURFACE_WATER   SOIL[1]          {params[param_or_name]['HYMOD']['HYMOD_Param_09']}",
-                                    "   :SoilEvaporation   SOILEVAP_PDM       SOIL[0]         ATMOSPHERE",
-                                    "   :Baseflow          BASE_LINEAR        SOIL[1]         SURFACE_WATER",
-                                    ":EndHydrologicProcesses"
-                                ],
-                            "Output Options":
-                                [
-                                ]
-                        },
-                    "rvc":
-                        {"Empty":
-                            [
-                                "# Nothing to set here."
-                            ]
-                        },
-                    "rvt":
-                        {}
+    gr4j = {
+        "rvp":
+            {
+                "Soil Classes":
+                    [
+                        ":SoilClasses",
+                        "   :Attributes",
+                        "   :Units",
+                        "       SOIL_PROD",
+                        "       SOIL_ROUT",
+                        "       SOIL_TEMP",
+                        "       SOIL_GW",
+                        ":EndSoilClasses"
+                    ],
+                "Soil Profiles":
+                    [
+                        "#     name,#horizons,{soiltype,thickness}x{#horizons}",
+                        "#     GR4J_X1 is thickness of first layer (SOIL_PROD), here 0.529",
+                        ":SoilProfiles",
+                        f"   GLACIER, 0",
+                        f"   DEFAULT_P, 4, SOIL_PROD, {params['GR4J'][param_or_name]['GR4J_X1']}, SOIL_ROUT, 0.300, SOIL_TEMP, 1.000, SOIL_GW, 1.000,",
+                        ":EndSoilProfiles"
+                    ],
+                "Vegetation Classes":
+                    vegetation_classes,
+                "Land Use Classes":
+                    land_use_classes,
+                "Global Parameters":
+                    [
+                        ":GlobalParameter RAINSNOW_TEMP       0.0",
+                        ":GlobalParameter RAINSNOW_DELTA      1.0",
+                        f":GlobalParameter AIRSNOW_COEFF     {params['GR4J'][param_or_name]['Airsnow_Coeff']} # [1/d] = 1.0 - CEMANEIGE_X2 = 1.0 - x6",
+                        f"#CN_X2 = {params['GR4J'][param_or_name]['GR4J_Cemaneige_X2']}",
+                        f":GlobalParameter AVG_ANNUAL_SNOW    {params['GR4J'][param_or_name]['Cemaneige_X1']} # [mm]  =       CEMANEIGE_X1 =       x5",
+                        "#:GlobalParameter PRECIP_LAPSE     0.0004 I assume not necessary for gridded data",
+                        "#:GlobalParameter ADIABATIC_LAPSE  0.0065 not necessary for gridded data"
+                    ],
+                "Soil Parameters":
+                    [
+                        ":SoilParameterList",
+                        "   :Parameters, POROSITY, GR4J_X3, GR4J_X2",
+                        "   :Units, none, mm, mm / d",
+                        f"   [DEFAULT], 1.0, {params['GR4J'][param_or_name]['GR4J_X3']}, {params['GR4J'][param_or_name]['GR4J_X2']}",
+                        ":EndSoilParameterList"
+                    ],
+                "Land Use Parameters":
+                    [
+                        ":LandUseParameterList",
+                        "   :Parameters, GR4J_X4, MELT_FACTOR",
+                        "   :Units, d, mm / d / C",
+                        f"   [DEFAULT], {params['GR4J'][param_or_name]['GR4J_X4']}, 3.5",
+                        ":EndLandUseParameterList"
+                    ]
+            },
+        "rvh":
+            {"Subbasins":
+                [
+                    ":SubBasins",
+                    "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
+                    "  :Units     ,          none,          none,   none,          km,         none",
+                    f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
+                    ":EndSubBasins"
+                ],
+                "HRUs":
+                    hru_list
+            },
+        "rvi":
+            {"Model Organisation":
+                [
+                    f":StartDate             {start_year}-01-01 00:00:00",
+                    f":EndDate               {end_date}",
+                    ":TimeStep              1.0",
+                    ":Method                ORDERED_SERIES",
+                    f":RunName               {catchment_ch_id}_GR4J"
+                ],
+                "Model Options":
+                    [
+                        ":SoilModel             SOIL_MULTILAYER  4",
+                        ":Routing               ROUTE_NONE",
+                        ":CatchmentRoute        ROUTE_DUMP",
+                        ":Evaporation           PET_HAMON",
+                        ":RainSnowFraction      RAINSNOW_DINGMAN",
+                        ":PotentialMeltMethod   POTMELT_DEGREE_DAY",
+                        ":OroTempCorrect        OROCORR_SIMPLELAPSE",
+                        ":OroPrecipCorrect      OROCORR_SIMPLELAPSE",
+                        f":EvaluationPeriod CALIBRATION {start_year}-01-01 {cali_end_year}-12-31",
+                        f":EvaluationPeriod VALIDATION {int(cali_end_year) + 1}-01-01 {end_year}-12-31"
+                    ],
+                "Soil Layer Alias Definitions":
+                    [
+                        ":Alias PRODUCT_STORE      SOIL[0]",
+                        ":Alias ROUTING_STORE      SOIL[1]",
+                        ":Alias TEMP_STORE         SOIL[2]",
+                        ":Alias GW_STORE           SOIL[3]"
+                    ],
+                "Hydrologic Process Order":
+                    [
+                        ":HydrologicProcesses",
+                        "   :Precipitation            PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
+                        "   :SnowTempEvolve           SNOTEMP_NEWTONS    SNOW_TEMP",
+                        "   :SnowBalance              SNOBAL_CEMA_NIEGE  SNOW            PONDED_WATER",
+                        "   :OpenWaterEvaporation     OPEN_WATER_EVAP    PONDED_WATER    ATMOSPHERE     	 # Pn",
+                        "   :Infiltration             INF_GR4J           PONDED_WATER    MULTIPLE       	 # Ps-",
+                        "   :SoilEvaporation          SOILEVAP_GR4J      PRODUCT_STORE   ATMOSPHERE     	 # Es",
+                        "   :Percolation              PERC_GR4J          PRODUCT_STORE   TEMP_STORE     	 # Perc",
+                        "       :Flush                    RAVEN_DEFAULT      SURFACE_WATER   TEMP_STORE     	 # Pn-Ps",
+                        "   :Split                    RAVEN_DEFAULT      TEMP_STORE      CONVOLUTION[0] CONVOLUTION[1] 0.9  # Split Pr",
+                        "   :Convolve                 CONVOL_GR4J_1      CONVOLUTION[0]  ROUTING_STORE  	 # Q9",
+                        "   :Convolve                 CONVOL_GR4J_2      CONVOLUTION[1]  TEMP_STORE     	 # Q1",
+                        "   :Percolation              PERC_GR4JEXCH      ROUTING_STORE   GW_STORE       	 # F(x1)",
+                        "   :Percolation              PERC_GR4JEXCH2     TEMP_STORE      GW_STORE       	 # F(x1)",
+                        "       :Flush                    RAVEN_DEFAULT      TEMP_STORE      SURFACE_WATER  	 # Qd",
+                        "   :Baseflow                 BASE_GR4J          ROUTING_STORE   SURFACE_WATER  	 # Qr",
+                        ":EndHydrologicProcesses"
+                    ],
+                "Output Options":
+                    [
+                    ]
+            },
+        "rvc":
+            {
+                "Soil Profiles":
+                    [
+                        "# SOIL[0] = GR4J_X1 * 1000. / 2.0 (initialize to 1/2 full)",
+                        "# SOIL[1] = 0.3m * 1000. / 2.0   (initialize to 1/2 full)"
+                    ],
+                "HRU States":
+                    [
+                        ":HRUStateVariableTable",
+                        "   :Attributes SOIL[0] SOIL[1]",
+                        "   :Units      mm      mm",
+                        f"   1           {params['GR4J'][param_or_name]['GR4J_Soil_0']},   15.0",
+                        ":EndHRUStateVariableTable"
+                    ]
+            },
+        "rvt":
+            {}
+    }
+    hbv = {
+        "rvp":
+            {
+                "Soil Classes":
+                    [
+                        ":SoilClasses",
+                        "   :Attributes,",
+                        "   :Units,",
+                        "       TOPSOIL,      1.0,    0.0,       0",
+                        "       SLOW_RES,     1.0,    0.0,       0",
+                        "       FAST_RES,     1.0,    0.0,       0",
+                        ":EndSoilClasses"
+                    ],
+                "Soil Profiles":
+                    [
+                        "#     name,#horizons,{soiltype,thickness}x{#horizons}",
+                        "# ",
+                        ":SoilProfiles",
+                        "    GLACIER, 0",
+                        f"   DEFAULT_P,      3,    TOPSOIL,            {params['HBV'][param_or_name]['HBV_Param_17']},   FAST_RES,    100.0, SLOW_RES,    100.0",
+                        ":EndSoilProfiles"
+                    ],
+                "Vegetation Classes":
+                    vegetation_classes,
+                "Vegetation Parameters":
+                    [
+                        ":VegetationParameterList",
+                        "   :Parameters,  MAX_CAPACITY, MAX_SNOW_CAPACITY,  TFRAIN,  TFSNOW,",
+                        "   :Units,                 mm,                mm,    frac,    frac,",
+                        "       VEG_ALL,             10000,             10000,    0.88,    0.88,",
+                        ":EndVegetationParameterList"
+                    ],
+                "Land Use Classes":
+                    land_use_classes,
+                "Global Parameters":
+                    [
+                        f":GlobalParameter RAINSNOW_TEMP       {params['HBV'][param_or_name]['HBV_Param_01']}",
+                        ":GlobalParameter RAINSNOW_DELTA      1.0 #constant",
+                        f":GlobalParameter PRECIP_LAPSE     {params['HBV'][param_or_name]['HBV_Param_12']} # I assume not necessary for gridded data, HBV_PARA_12=PCALT",
+                        f":GlobalParameter ADIABATIC_LAPSE  {params['HBV'][param_or_name]['HBV_Param_13']} # not necessary for gridded data, HBV_PARA_13=TCALT",
+                        f":GlobalParameter SNOW_SWI  {params['HBV'][param_or_name]['HBV_Param_04']} #HBV_PARA_04"
+                    ],
+                "Land Use Parameters":
+                    [
+                        ":LandUseParameterList",
+                        "  :Parameters,   MELT_FACTOR, MIN_MELT_FACTOR,   HBV_MELT_FOR_CORR, REFREEZE_FACTOR, HBV_MELT_ASP_CORR",
+                        "  :Units     ,        mm/d/K,          mm/d/K,                none,          mm/d/K,              none",
+                        "  #              HBV_PARA_02,        CONSTANT,         HBV_PARA_18,     HBV_PARA_03,          CONSTANT",
+                        f"    [DEFAULT],  {params['HBV'][param_or_name]['HBV_Param_02']},             2.2,        {params['HBV'][param_or_name]['HBV_Param_18']},    {params['HBV'][param_or_name]['HBV_Param_03']},              0.48",
+                        ":EndLandUseParameterList",
+                        "",
+                        ":LandUseParameterList",
+                        " :Parameters, HBV_MELT_GLACIER_CORR,   HBV_GLACIER_KMIN, GLAC_STORAGE_COEFF, HBV_GLACIER_AG",
+                        " :Units     ,                  none,                1/d,                1/d,           1/mm",
+                        "   #                       CONSTANT,           CONSTANT,        HBV_PARA_19,       CONSTANT,",
+                        f"   [DEFAULT],                  1.64,               0.05,       {params['HBV'][param_or_name]['HBV_Param_19']},           0.05",
+                        ":EndLandUseParameterList"
 
-                },
-            "HMETS":
-                {
-                    "rvp":
-                        {
-                            "Soil Classes":
-                                [
-                                    ":SoilClasses",
-                                    "   :Attributes,",
-                                    "   :Units,",
-                                    "       TOPSOIL,",
-                                    "       PHREATIC,",
-                                    ":EndSoilClasses"
-                                ],
-                            "Soil Profiles":
-                                [
-                                    "#     name,#horizons,{soiltype,thickness}x{#horizons}",
-                                    ":SoilProfiles",
-                                    "   LAKE, 0",
-                                    "   ROCK, 0",
-                                    "   GLACIER, 0",
-                                    "   # DEFAULT_P, 2, TOPSOIL,          x(20)/1000, PHREATIC,         x(21)/1000,",
-                                    f"  DEFAULT_P, 2, TOPSOIL,     {params[param_or_name]['HMETS']['HMETS_Param_20b']}, PHREATIC,     {params[param_or_name]['HMETS']['HMETS_Param_21b']},",
-                                    ":EndSoilProfiles"
-                                ],
-                            "Vegetation Classes":
-                                vegetation_classes,
-                            "Land Use Classes":
-                                land_use_classes,
-                            "Global Parameters":
-                                [
-                                    f":GlobalParameter  SNOW_SWI_MIN {params[param_or_name]['HMETS']['HMETS_Param_09a']} # x(9)",
-                                    f":GlobalParameter  SNOW_SWI_MAX {params[param_or_name]['HMETS']['HMETS_Param_09b']} # x(9)+x(10)",
-                                    f":GlobalParameter  SWI_REDUCT_COEFF {params[param_or_name]['HMETS']['HMETS_Param_11']} # x(11)",
-                                    ":GlobalParameter SNOW_SWI 0.05 #not sure why/if needed"
-                                ],
-                            "Vegetation Parameters":
-                                [
-                                    ":VegetationParameterList",
-                                    "   :Parameters,  RAIN_ICEPT_PCT,  SNOW_ICEPT_PCT,",
-                                    "   :Units,               -,               -,",
-                                    "       [DEFAULT],             0.0,             0.0,",
-                                    ":EndVegetationParameterList"
-                                ],
-                            "Land Use Parameters":
-                                [
-                                    ":LandUseParameterList",
-                                    "   :Parameters, MIN_MELT_FACTOR, MAX_MELT_FACTOR,    DD_MELT_TEMP,  DD_AGGRADATION, REFREEZE_FACTOR,    REFREEZE_EXP, DD_REFREEZE_TEMP, HMETS_RUNOFF_COEFF,",
-                                    "   :Units,          mm/d/C,          mm/d/C,               C,            1/mm,          mm/d/C,               -,                C,                  -,",
-                                    f"      [DEFAULT],  {params[param_or_name]['HMETS']['HMETS_Param_05a']}, {params[param_or_name]['HMETS']['HMETS_Param_05b']},  {params[param_or_name]['HMETS']['HMETS_Param_07']},  {params[param_or_name]['HMETS']['HMETS_Param_08']},  {params[param_or_name]['HMETS']['HMETS_Param_13']},  {params[param_or_name]['HMETS']['HMETS_Param_14']},   {params[param_or_name]['HMETS']['HMETS_Param_12']},     {params[param_or_name]['HMETS']['HMETS_Param_16']},",
-                                    "#      x(5),       x(5)+x(6),            x(7),            x(8),           x(13),           x(14),            x(12),              x(16),",
-                                    ":EndLandUseParameterList",
-                                    "",
-                                    ":LandUseParameterList",
-                                    "   :Parameters,     GAMMA_SHAPE,     GAMMA_SCALE,    GAMMA_SHAPE2,    GAMMA_SCALE2,",
-                                    "   :Units,               -,             1/d,               -,             1/d,",
-                                    f"      [DEFAULT],  {params[param_or_name]['HMETS']['HMETS_Param_01']},  {params[param_or_name]['HMETS']['HMETS_Param_02']},  {params[param_or_name]['HMETS']['HMETS_Param_03']},  {params[param_or_name]['HMETS']['HMETS_Param_04']},",
-                                    "#      x(1),            x(2),            x(3),            x(4),",
-                                    ":EndLandUseParameterList"
-                                ],
-                            "Soil Parameters":
-                                [
-                                    ":SoilParameterList",
-                                    "   :Parameters,        POROSITY,      PERC_COEFF,  PET_CORRECTION, BASEFLOW_COEFF",
-                                    "   :Units,               -,             1/d,               -,            1/d",
-                                    f"      TOPSOIL,             1.0,  {params[param_or_name]['HMETS']['HMETS_Param_17']},  {params[param_or_name]['HMETS']['HMETS_Param_15']}, {params[param_or_name]['HMETS']['HMETS_Param_18']}",
-                                    f"      PHREATIC,             1.0,             0.0,             0.0, {params[param_or_name]['HMETS']['HMETS_Param_19']}",
-                                    "#      TOPSOIL,             1.0,           x(17),           x(15),          x(18)",
-                                    "#      PHREATIC,             1.0,             0.0,             0.0,          x(19)",
-                                    ":EndSoilParameterList"
-                                ]
-                        },
-                    "rvh":
-                        {"Subbasins":
-                            [
-                                ":SubBasins",
-                                "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
-                                "  :Units     ,          none,          none,   none,          km,         none",
-                                f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
-                                ":EndSubBasins"
-                            ],
-                            "HRUs":
-                                hru_list
-                        },
-                    "rvi":
-                        {"Model Organisation":
-                            [
-                                f":StartDate               {start_year}-01-01 00:00:00",
-                                f":EndDate                {end_date}",
-                                ":TimeStep                1.0",
-                                ":Method                  ORDERED_SERIES",
-                                f":RunName                 {catchment_ch_id}_HMETS"
-                            ],
-                            "Model Options":
-                                [
-                                    ":PotentialMeltMethod     POTMELT_HMETS",
-                                    ":RainSnowFraction        RAINSNOW_DATA",
-                                    "#:Evaporation             PET_DATA",
-                                    ":Evaporation            PET_OUDIN",
-                                    ":CatchmentRoute          ROUTE_DUMP",
-                                    ":Routing                 ROUTE_NONE",
-                                    ":SoilModel               SOIL_TWO_LAYER",
-                                    f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
-                                    f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
-                                ],
-                            "Alias Definitions":
-                                [
-                                    ":Alias DELAYED_RUNOFF CONVOLUTION[1]"
-                                ],
-                            "Hydrologic Process Order":
-                                [
-                                    ":HydrologicProcesses",
-                                    "   :SnowBalance     SNOBAL_HMETS    MULTIPLE     MULTIPLE",
-                                    "   :Precipitation   RAVEN_DEFAULT   ATMOS_PRECIP MULTIPLE",
-                                    "   :Infiltration    INF_HMETS       PONDED_WATER MULTIPLE",
-                                    "   :Overflow      OVERFLOW_RAVEN  SOIL[0]      DELAYED_RUNOFF",
-                                    "   :Baseflow        BASE_LINEAR     SOIL[0]      SURFACE_WATER   # interflow, really",
-                                    "   :Percolation     PERC_LINEAR     SOIL[0]      SOIL[1]         # recharge",
-                                    "   :Overflow      OVERFLOW_RAVEN  SOIL[1]      DELAYED_RUNOFF",
-                                    "   :SoilEvaporation SOILEVAP_ALL    SOIL[0]      ATMOSPHERE      # AET",
-                                    "   :Convolve        CONVOL_GAMMA    CONVOLUTION[0] SURFACE_WATER #'surface runoff'",
-                                    "   :Convolve        CONVOL_GAMMA_2  DELAYED_RUNOFF SURFACE_WATER #'delayed runoff'",
-                                    "   :Baseflow        BASE_LINEAR     SOIL[1]      SURFACE_WATER",
-                                    ":EndHydrologicProcesses"
-                                ],
-                            "Output Options":
-                                [
-                                ]
-                        },
-                    "rvc":
-                        {"Initial Storage":
-                            [
-                                "# initialize to 1/2 full",
-                                "# x(20)/2",
-                                f":UniformInitialConditions SOIL[0] {params[param_or_name]['HMETS']['HMETS_Param_20b']}",
-                                "# x(21)/2",
-                                f":UniformInitialConditions SOIL[1] {params[param_or_name]['HMETS']['HMETS_Param_21b']}"
-                            ],
-                            "HRUs":
-                                [
-                                    ":HRUStateVariableTable",
-                                    ":Attributes SOIL[0] SOIL[1]",
-                                    ":Units mm mm",
-                                    "1 155.36055 458.09735",
-                                    ":EndHRUStateVariableTable",
-                                ]
-                        },
-                    "rvt":
-                        {}
-                },
-            "HBV":
-                {
-                    "rvp":
-                        {
-                            "Soil Classes":
-                                [
-                                    ":SoilClasses",
-                                    "   :Attributes,",
-                                    "   :Units,",
-                                    "       TOPSOIL,      1.0,    0.0,       0",
-                                    "       SLOW_RES,     1.0,    0.0,       0",
-                                    "       FAST_RES,     1.0,    0.0,       0",
-                                    ":EndSoilClasses"
-                                ],
-                            "Soil Profiles":
-                                [
-                                    "#     name,#horizons,{soiltype,thickness}x{#horizons}",
-                                    "# ",
-                                    ":SoilProfiles",
-                                    "    GLACIER, 0",
-                                    f"   DEFAULT_P,      3,    TOPSOIL,            {params[param_or_name]['HBV']['HBV_Param_17']},   FAST_RES,    100.0, SLOW_RES,    100.0",
-                                    ":EndSoilProfiles"
-                                ],
-                            "Vegetation Classes":
-                                vegetation_classes,
-                            "Vegetation Parameters":
-                                [
-                                    ":VegetationParameterList",
-                                    "   :Parameters,  MAX_CAPACITY, MAX_SNOW_CAPACITY,  TFRAIN,  TFSNOW,",
-                                    "   :Units,                 mm,                mm,    frac,    frac,",
-                                    "       VEG_ALL,             10000,             10000,    0.88,    0.88,",
-                                    ":EndVegetationParameterList"
-                                ],
-                            "Land Use Classes":
-                                land_use_classes,
-                            "Global Parameters":
-                                [
-                                    f":GlobalParameter RAINSNOW_TEMP       {params[param_or_name]['HBV']['HBV_Param_01']}",
-                                    ":GlobalParameter RAINSNOW_DELTA      1.0 #constant",
-                                    f":GlobalParameter PRECIP_LAPSE     {params[param_or_name]['HBV']['HBV_Param_12']} # I assume not necessary for gridded data, HBV_PARA_12=PCALT",
-                                    f":GlobalParameter ADIABATIC_LAPSE  {params[param_or_name]['HBV']['HBV_Param_13']} # not necessary for gridded data, HBV_PARA_13=TCALT",
-                                    f":GlobalParameter SNOW_SWI  {params[param_or_name]['HBV']['HBV_Param_04']} #HBV_PARA_04"
-                                ],
-                            "Land Use Parameters":
-                                [
-                                    ":LandUseParameterList",
-                                    "  :Parameters,   MELT_FACTOR, MIN_MELT_FACTOR,   HBV_MELT_FOR_CORR, REFREEZE_FACTOR, HBV_MELT_ASP_CORR",
-                                    "  :Units     ,        mm/d/K,          mm/d/K,                none,          mm/d/K,              none",
-                                    "  #              HBV_PARA_02,        CONSTANT,         HBV_PARA_18,     HBV_PARA_03,          CONSTANT",
-                                    f"    [DEFAULT],  {params[param_or_name]['HBV']['HBV_Param_02']},             2.2,        {params[param_or_name]['HBV']['HBV_Param_18']},    {params[param_or_name]['HBV']['HBV_Param_03']},              0.48",
-                                    ":EndLandUseParameterList",
-                                    "",
-                                    ":LandUseParameterList",
-                                    " :Parameters, HBV_MELT_GLACIER_CORR,   HBV_GLACIER_KMIN, GLAC_STORAGE_COEFF, HBV_GLACIER_AG",
-                                    " :Units     ,                  none,                1/d,                1/d,           1/mm",
-                                    "   #                       CONSTANT,           CONSTANT,        HBV_PARA_19,       CONSTANT,",
-                                    f"   [DEFAULT],                  1.64,               0.05,       {params[param_or_name]['HBV']['HBV_Param_19']},           0.05",
-                                    ":EndLandUseParameterList"
+                    ],
+                "Soil Parameters":
+                    [
+                        ":SoilParameterList",
+                        "  :Parameters,                POROSITY,FIELD_CAPACITY,     SAT_WILT,     HBV_BETA, MAX_CAP_RISE_RATE,  MAX_PERC_RATE,  BASEFLOW_COEFF,            BASEFLOW_N",
+                        "  :Units     ,                    none,          none,         none,         none,              mm/d,           mm/d,             1/d,                  none",
+                        "  #                        HBV_PARA_05,   HBV_PARA_06,  HBV_PARA_14,  HBV_PARA_07,       HBV_PARA_16,       CONSTANT,        CONSTANT,              CONSTANT,",
+                        f"    [DEFAULT],            {params['HBV'][param_or_name]['HBV_Param_05']},  {params['HBV'][param_or_name]['HBV_Param_06']}, {params['HBV'][param_or_name]['HBV_Param_14']}, {params['HBV'][param_or_name]['HBV_Param_07']},      {params['HBV'][param_or_name]['HBV_Param_16']},            0.0,             0.0,                   0.0",
+                        "  #                                                        CONSTANT,                                     HBV_PARA_08,     HBV_PARA_09, 1+HBV_PARA_15=1+ALPHA,",
+                        f"     FAST_RES,                _DEFAULT,      _DEFAULT,          0.0,     _DEFAULT,          _DEFAULT,   {params['HBV'][param_or_name]['HBV_Param_08']},    {params['HBV'][param_or_name]['HBV_Param_09']},              1.877607",
+                        "  #                                                        CONSTANT,                                                      HBV_PARA_10,              CONSTANT,",
+                        f"     SLOW_RES,                _DEFAULT,      _DEFAULT,          0.0,     _DEFAULT,          _DEFAULT,       _DEFAULT,    {params['HBV'][param_or_name]['HBV_Param_10']},                   1.0",
+                        ":EndSoilParameterList"
+                    ]
+            },
+        "rvh":
+            {"Subbasins":
+                [
+                    ":SubBasins",
+                    "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
+                    "  :Units     ,          none,          none,   none,          km,         none",
+                    f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
+                    ":EndSubBasins"
+                ],
+                "HRUs":
+                    hru_list,
+                "Subbasin Properties":
+                    [
+                        ":SubBasinProperties",
+                        "#                       HBV_PARA_11, DERIVED FROM HBV_PARA_11,",
+                        "#                            MAXBAS,                 MAXBAS/2,",
+                        "   :Parameters,           TIME_CONC,             TIME_TO_PEAK,",
+                        "   :Units,                        d,                        d,",
+                        f"              1,          {params['HBV'][param_or_name]['HBV_Param_11']},                  {params['HBV'][param_or_name]['HBV_Param_11b']},",
+                        ":EndSubBasinProperties"
+                    ]
+            },
+        "rvi":
+            {"Model Organisation":
+                [
+                    f":StartDate             {start_year}-01-01 00:00:00",
+                    f":EndDate               {end_date}",
+                    ":TimeStep              1.0",
+                    f":RunName               {catchment_ch_id}_HBV"
+                ],
+                "Model Options":
+                    [
+                        ":Routing             	    ROUTE_NONE",
+                        ":CatchmentRoute      	    TRIANGULAR_UH",
+                        ":Evaporation         	    PET_FROMMONTHLY",
+                        ":OW_Evaporation      	    PET_FROMMONTHLY",
+                        ":SWRadiationMethod   	    SW_RAD_DEFAULT",
+                        ":SWCloudCorrect      	    SW_CLOUD_CORR_NONE",
+                        ":SWCanopyCorrect     	    SW_CANOPY_CORR_NONE",
+                        ":LWRadiationMethod   	    LW_RAD_DEFAULT",
+                        ":RainSnowFraction    	    RAINSNOW_HBV",
+                        ":PotentialMeltMethod 	    POTMELT_HBV",
+                        ":OroTempCorrect      	    OROCORR_HBV",
+                        ":OroPrecipCorrect    	    OROCORR_HBV",
+                        ":OroPETCorrect       	    OROCORR_HBV",
+                        ":CloudCoverMethod    	    CLOUDCOV_NONE",
+                        ":PrecipIceptFract    	    PRECIP_ICEPT_USER",
+                        ":MonthlyInterpolationMethod MONTHINT_LINEAR_21",
+                        ":SoilModel                  SOIL_MULTILAYER 3",
+                        f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
+                        f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
+                    ],
+                "Soil Alias Layer Definitions":
+                    [
+                        ":Alias       FAST_RESERVOIR SOIL[1]",
+                        ":Alias       SLOW_RESERVOIR SOIL[2]",
+                        ":LakeStorage SLOW_RESERVOIR"
+                    ],
+                "Hydrologic Process Order":
+                    [
+                        ":HydrologicProcesses",
+                        "   :SnowRefreeze      FREEZE_DEGREE_DAY  SNOW_LIQ        SNOW",
+                        "   :Precipitation     PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
+                        "   :CanopyEvaporation CANEVP_ALL         CANOPY          ATMOSPHERE",
+                        "   :CanopySnowEvap    CANEVP_ALL         CANOPY_SNOW     ATMOSPHERE",
+                        "   :SnowBalance       SNOBAL_SIMPLE_MELT SNOW            SNOW_LIQ",
+                        "       :-->Overflow     RAVEN_DEFAULT      SNOW_LIQ        PONDED_WATER",
+                        "   :Flush             RAVEN_DEFAULT      PONDED_WATER    GLACIER",
+                        "       :-->Conditional HRU_TYPE IS GLACIER",
+                        "   :GlacierMelt       GMELT_HBV          GLACIER_ICE     GLACIER",
+                        "   :GlacierRelease    GRELEASE_HBV_EC    GLACIER         SURFACE_WATER",
+                        "   :Infiltration      INF_HBV            PONDED_WATER    MULTIPLE",
+                        "   :Flush             RAVEN_DEFAULT      SURFACE_WATER   FAST_RESERVOIR",
+                        "       :-->Conditional HRU_TYPE IS_NOT GLACIER",
+                        "   :SoilEvaporation   SOILEVAP_HBV       SOIL[0]         ATMOSPHERE",
+                        "   :CapillaryRise     RISE_HBV           FAST_RESERVOIR 	SOIL[0]",
+                        "   :LakeEvaporation   LAKE_EVAP_BASIC    SLOW_RESERVOIR  ATMOSPHERE",
+                        "   :Percolation       PERC_CONSTANT      FAST_RESERVOIR 	SLOW_RESERVOIR",
+                        "   :Baseflow          BASE_POWER_LAW     FAST_RESERVOIR  SURFACE_WATER",
+                        "   :Baseflow          BASE_LINEAR        SLOW_RESERVOIR  SURFACE_WATER",
+                        ":EndHydrologicProcesses"
+                    ],
+                "Output Options":
+                    [
+                    ]
+            },
+        "rvc":
+            {"Basin":
+                [
+                    ":BasinInitialConditions",
+                    ":Attributes, ID,              Q",
+                    ":Units,      none,         m3/s",
+                    "#                  HBV_PARA_???",
+                    "1,             1.0",
+                    ":EndBasinInitialConditions"
+                ],
+                "Lower Groundwater Storage":
+                    [
+                        "# Initial Lower groundwater storage - for each HRU",
+                        "",
+                        ":InitialConditions SOIL[2]",
+                        "# derived from thickness: HBV_PARA_17 [m] * 1000.0 / 2.0",
+                        f"{params['HBV'][param_or_name]['HBV_Param_17b']}",
+                        ":EndInitialConditions"
+                    ]
+            },
+        "rvt":
+            {}
+    }
+    hmets = {
+        "rvp":
+            {
+                "Soil Classes":
+                    [
+                        ":SoilClasses",
+                        "   :Attributes,",
+                        "   :Units,",
+                        "       TOPSOIL,",
+                        "       PHREATIC,",
+                        ":EndSoilClasses"
+                    ],
+                "Soil Profiles":
+                    [
+                        "#     name,#horizons,{soiltype,thickness}x{#horizons}",
+                        ":SoilProfiles",
+                        "   LAKE, 0",
+                        "   ROCK, 0",
+                        "   GLACIER, 0",
+                        "   # DEFAULT_P, 2, TOPSOIL,          x(20)/1000, PHREATIC,         x(21)/1000,",
+                        f"  DEFAULT_P, 2, TOPSOIL,     {params['HMETS'][param_or_name]['HMETS_Param_20b']}, PHREATIC,     {params['HMETS'][param_or_name]['HMETS_Param_21b']},",
+                        ":EndSoilProfiles"
+                    ],
+                "Vegetation Classes":
+                    vegetation_classes,
+                "Land Use Classes":
+                    land_use_classes,
+                "Global Parameters":
+                    [
+                        f":GlobalParameter  SNOW_SWI_MIN {params['HMETS'][param_or_name]['HMETS_Param_09a']} # x(9)",
+                        f":GlobalParameter  SNOW_SWI_MAX {params['HMETS'][param_or_name]['HMETS_Param_09b']} # x(9)+x(10) = {params['HMETS'][param_or_name]['HMETS_Param_09a']} + {params['HMETS'][param_or_name]['HMETS_Param_10']}",
+                        f":GlobalParameter  SWI_REDUCT_COEFF {params['HMETS'][param_or_name]['HMETS_Param_11']} # x(11)",
+                        ":GlobalParameter SNOW_SWI 0.05 #not sure why/if needed"
+                    ],
+                "Vegetation Parameters":
+                    [
+                        ":VegetationParameterList",
+                        "   :Parameters,  RAIN_ICEPT_PCT,  SNOW_ICEPT_PCT,",
+                        "   :Units,               -,               -,",
+                        "       [DEFAULT],             0.0,             0.0,",
+                        ":EndVegetationParameterList"
+                    ],
+                "Land Use Parameters":
+                    [
+                        ":LandUseParameterList",
+                        "   :Parameters, MIN_MELT_FACTOR, MAX_MELT_FACTOR,    DD_MELT_TEMP,  DD_AGGRADATION, REFREEZE_FACTOR,    REFREEZE_EXP, DD_REFREEZE_TEMP, HMETS_RUNOFF_COEFF,",
+                        "   :Units,          mm/d/C,          mm/d/C,               C,            1/mm,          mm/d/C,               -,                C,                  -,",
+                        f"      [DEFAULT],  {params['HMETS'][param_or_name]['HMETS_Param_05a']}, {params['HMETS'][param_or_name]['HMETS_Param_05b']},  {params['HMETS'][param_or_name]['HMETS_Param_07']},  {params['HMETS'][param_or_name]['HMETS_Param_08']},  {params['HMETS'][param_or_name]['HMETS_Param_13']},  {params['HMETS'][param_or_name]['HMETS_Param_14']},   {params['HMETS'][param_or_name]['HMETS_Param_12']},     {params['HMETS'][param_or_name]['HMETS_Param_16']},",
+                        f"#      x(5),       x(5)+x(6) = {params['HMETS'][param_or_name]['HMETS_Param_05a']} + {params['HMETS'][param_or_name]['HMETS_Param_06']},            x(7),            x(8),           x(13),           x(14),            x(12),              x(16),",
+                        ":EndLandUseParameterList",
+                        "",
+                        ":LandUseParameterList",
+                        "   :Parameters,     GAMMA_SHAPE,     GAMMA_SCALE,    GAMMA_SHAPE2,    GAMMA_SCALE2,",
+                        "   :Units,               -,             1/d,               -,             1/d,",
+                        f"      [DEFAULT],  {params['HMETS'][param_or_name]['HMETS_Param_01']},  {params['HMETS'][param_or_name]['HMETS_Param_02']},  {params['HMETS'][param_or_name]['HMETS_Param_03']},  {params['HMETS'][param_or_name]['HMETS_Param_04']},",
+                        "#      x(1),            x(2),            x(3),            x(4),",
+                        ":EndLandUseParameterList"
+                    ],
+                "Soil Parameters":
+                    [
+                        ":SoilParameterList",
+                        "   :Parameters,        POROSITY,      PERC_COEFF,  PET_CORRECTION, BASEFLOW_COEFF",
+                        "   :Units,               -,             1/d,               -,            1/d",
+                        f"      TOPSOIL,             1.0,  {params['HMETS'][param_or_name]['HMETS_Param_17']},  {params['HMETS'][param_or_name]['HMETS_Param_15']}, {params['HMETS'][param_or_name]['HMETS_Param_18']}",
+                        f"      PHREATIC,             1.0,             0.0,             0.0, {params['HMETS'][param_or_name]['HMETS_Param_19']}",
+                        "#      TOPSOIL,             1.0,           x(17),           x(15),          x(18)",
+                        "#      PHREATIC,             1.0,             0.0,             0.0,          x(19)",
+                        ":EndSoilParameterList"
+                    ]
+            },
+        "rvh":
+            {"Subbasins":
+                [
+                    ":SubBasins",
+                    "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
+                    "  :Units     ,          none,          none,   none,          km,         none",
+                    f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
+                    ":EndSubBasins"
+                ],
+                "HRUs":
+                    hru_list
+            },
+        "rvi":
+            {"Model Organisation":
+                [
+                    f":StartDate               {start_year}-01-01 00:00:00",
+                    f":EndDate                {end_date}",
+                    ":TimeStep                1.0",
+                    ":Method                  ORDERED_SERIES",
+                    f":RunName                 {catchment_ch_id}_HMETS"
+                ],
+                "Model Options":
+                    [
+                        ":PotentialMeltMethod     POTMELT_HMETS",
+                        ":RainSnowFraction        RAINSNOW_DATA",
+                        "#:Evaporation             PET_DATA",
+                        ":Evaporation            PET_OUDIN",
+                        ":CatchmentRoute          ROUTE_DUMP",
+                        ":Routing                 ROUTE_NONE",
+                        ":SoilModel               SOIL_TWO_LAYER",
+                        f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
+                        f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
+                    ],
+                "Alias Definitions":
+                    [
+                        ":Alias DELAYED_RUNOFF CONVOLUTION[1]"
+                    ],
+                "Hydrologic Process Order":
+                    [
+                        ":HydrologicProcesses",
+                        "   :SnowBalance     SNOBAL_HMETS    MULTIPLE     MULTIPLE",
+                        "   :Precipitation   RAVEN_DEFAULT   ATMOS_PRECIP MULTIPLE",
+                        "   :Infiltration    INF_HMETS       PONDED_WATER MULTIPLE",
+                        "   :Overflow      OVERFLOW_RAVEN  SOIL[0]      DELAYED_RUNOFF",
+                        "   :Baseflow        BASE_LINEAR     SOIL[0]      SURFACE_WATER   # interflow, really",
+                        "   :Percolation     PERC_LINEAR     SOIL[0]      SOIL[1]         # recharge",
+                        "   :Overflow      OVERFLOW_RAVEN  SOIL[1]      DELAYED_RUNOFF",
+                        "   :SoilEvaporation SOILEVAP_ALL    SOIL[0]      ATMOSPHERE      # AET",
+                        "   :Convolve        CONVOL_GAMMA    CONVOLUTION[0] SURFACE_WATER #'surface runoff'",
+                        "   :Convolve        CONVOL_GAMMA_2  DELAYED_RUNOFF SURFACE_WATER #'delayed runoff'",
+                        "   :Baseflow        BASE_LINEAR     SOIL[1]      SURFACE_WATER",
+                        ":EndHydrologicProcesses"
+                    ],
+                "Output Options":
+                    [
+                    ]
+            },
+        "rvc":
+            {"Initial Storage":
+                [
+                    "# initialize to 1/2 full",
+                    "# x(20b)/2",
+                    f"#:UniformInitialConditions SOIL[0] {params['HMETS'][param_or_name]['HMETS_Param_20b']}",
+                    "# x(21b)/2",
+                    f"#:UniformInitialConditions SOIL[1] {params['HMETS'][param_or_name]['HMETS_Param_21b']}"
+                ],
+                "HRUs":
+                    [
+                        ":HRUStateVariableTable # (according to rchlumsk-BMSC-cf9a83c, modelname.rvc.tpl: formerly :InitialConditionsTable)",
+                        ":Attributes SOIL[0] SOIL[1]",
+                        ":Units mm mm",
+                        f"1 {params['HMETS'][param_or_name]['HMETS_Param_20a']} {params['HMETS'][param_or_name]['HMETS_Param_21a']}",
+                        ":EndHRUStateVariableTable",
+                    ]
+            },
+        "rvt":
+            {}
+    }
+    hymod = {
+        "rvp":
+            {
+                "Soil Classes":
+                    [
+                        ":SoilClasses",
+                        "   :Attributes",
+                        "   :Units",
+                        "       TOPSOIL",
+                        "       GWSOIL",
+                        ":EndSoilClasses"
+                    ],
+                "Soil Profiles":
+                    [
+                        "#     name,#horizons,{soiltype,thickness}x{#horizons}",
+                        "# ",
+                        ":SoilProfiles",
+                        "   LAKE, 0,",
+                        "   ROCK, 0,",
+                        "   GLACIER, 0,",
+                        "   # DEFAULT_P,      2, TOPSOIL,  HYMOD_PARA_2, GWSOIL, 10.0",
+                        f"   DEFAULT_P, 2, TOPSOIL, {params['HYMOD'][param_or_name]['HYMOD_Param_02']}, GWSOIL, 10.0",
+                        ":EndSoilProfiles"
+                    ],
+                "Land Use Classes":
+                    land_use_classes,
+                "Vegetation Classes":
+                    vegetation_classes,
+                "Global Parameters":
+                    [
+                        f":GlobalParameter RAINSNOW_TEMP {params['HYMOD'][param_or_name]['HYMOD_Param_03']}",
+                        "   #:GlobalParameter      RAINSNOW_TEMP    HYMOD_PARA_3"
+                    ],
+                "Soil Parameters":
+                    [
+                        ":SoilParameterList",
+                        "   :Parameters, POROSITY, PET_CORRECTION, BASEFLOW_COEFF,",
+                        "   :Units, -, -, 1 / d,",
+                        "       # TOPSOIL,            1.0 ,    HYMOD_PARA_8,               0.0,",
+                        "       #  GWSOIL,            1.0 ,             1.0,   HYMOD_PARA_4=Ks,",
+                        f"       TOPSOIL, 1.0, {params['HYMOD'][param_or_name]['HYMOD_Param_08']}, 0.0,",
+                        f"       GWSOIL, 1.0, 1.0, {params['HYMOD'][param_or_name]['HYMOD_Param_04']},",
+                        ":EndSoilParameterList"
+                    ],
+                "Land Use Parameters":
+                    [
+                        ":LandUseParameterList",
+                        "   :Parameters, MELT_FACTOR, DD_MELT_TEMP, PDM_B,",
+                        "   :Units, mm / d / K, degC, -,",
+                        "       # [DEFAULT],    HYMOD_PARA_5,    HYMOD_PARA_6,  HYMOD_PARA_7=Bexp,",
+                        f"       [DEFAULT], {params['HYMOD'][param_or_name]['HYMOD_Param_05']}, {params['HYMOD'][param_or_name]['HYMOD_Param_06']}, {params['HYMOD'][param_or_name]['HYMOD_Param_07']},",
+                        ":EndLandUseParameterList"
+                    ]
+            },
+        "rvh":
+            {"Subbasins":
+                [
+                    ":SubBasins",
+                    "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
+                    "  :Units     ,          none,          none,   none,          km,         none",
+                    f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
+                    ":EndSubBasins"
+                ],
+                "HRUs":
+                    hru_list,
+                "Subbasin Properties":
+                    [
+                        ":SubBasinProperties",
+                        "#                         HYMOD_PARA_1,                  3,",
+                        "   :Parameters,           RES_CONSTANT,     NUM_RESERVOIRS,",
+                        "   :Units,                         1/d,                  -,",
+                        f"              1,          {params['HYMOD'][param_or_name]['HYMOD_Param_01']},                  3,",
+                        ":EndSubBasinProperties"
+                    ]
+            },
+        "rvi":
+            {"Model Organisation":
+                [
+                    f":StartDate          {start_year}-01-01 00:00:00",
+                    f":EndDate            {end_date}",
+                    ":TimeStep           1.0",
+                    ":Method             ORDERED_SERIES",
+                    f":RunName            {catchment_ch_id}_HYMOD"
+                ],
+                "Model Options":
+                    [
+                        ":Routing             ROUTE_NONE",
+                        ":CatchmentRoute      ROUTE_RESERVOIR_SERIES",
+                        ":Evaporation         PET_HAMON",
+                        ":OW_Evaporation      PET_HAMON",
+                        ":SWRadiationMethod   SW_RAD_NONE",
+                        ":LWRadiationMethod   LW_RAD_NONE",
+                        ":CloudCoverMethod    CLOUDCOV_NONE",
+                        ":RainSnowFraction    RAINSNOW_THRESHOLD",
+                        ":PotentialMeltMethod POTMELT_DEGREE_DAY",
+                        ":PrecipIceptFract    PRECIP_ICEPT_NONE",
+                        ":SoilModel           SOIL_MULTILAYER 2",
+                        f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
+                        f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
+                    ],
+                "Hydrologic Process Order":
+                    [
+                        ":HydrologicProcesses",
+                        "   :Precipitation     PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
+                        "   :SnowBalance       SNOBAL_SIMPLE_MELT SNOW            PONDED_WATER",
+                        "   :Infiltration      INF_PDM            PONDED_WATER    MULTIPLE",
+                        "#  :Flush            RAVEN_DEFAULT      SURFACE_WATER   SOIL[1]   HYMOD_PARAM_9=ALPHA",
+                        f"  :Flush             RAVEN_DEFAULT      SURFACE_WATER   SOIL[1]          {params['HYMOD'][param_or_name]['HYMOD_Param_09']}",
+                        "   :SoilEvaporation   SOILEVAP_PDM       SOIL[0]         ATMOSPHERE",
+                        "   :Baseflow          BASE_LINEAR        SOIL[1]         SURFACE_WATER",
+                        ":EndHydrologicProcesses"
+                    ],
+                "Output Options":
+                    [
+                    ]
+            },
+        "rvc":
+            {"Empty":
+                [
+                    "# Nothing to set here."
+                ]
+            },
+        "rvt":
+            {}
 
-                                ],
-                            "Soil Parameters":
-                                [
-                                    ":SoilParameterList",
-                                    "  :Parameters,                POROSITY,FIELD_CAPACITY,     SAT_WILT,     HBV_BETA, MAX_CAP_RISE_RATE,  MAX_PERC_RATE,  BASEFLOW_COEFF,            BASEFLOW_N",
-                                    "  :Units     ,                    none,          none,         none,         none,              mm/d,           mm/d,             1/d,                  none",
-                                    "  #                        HBV_PARA_05,   HBV_PARA_06,  HBV_PARA_14,  HBV_PARA_07,       HBV_PARA_16,       CONSTANT,        CONSTANT,              CONSTANT,",
-                                    f"    [DEFAULT],            {params[param_or_name]['HBV']['HBV_Param_05']},  {params[param_or_name]['HBV']['HBV_Param_06']}, {params[param_or_name]['HBV']['HBV_Param_14']}, {params[param_or_name]['HBV']['HBV_Param_07']},      {params[param_or_name]['HBV']['HBV_Param_16']},            0.0,             0.0,                   0.0",
-                                    "  #                                                        CONSTANT,                                     HBV_PARA_08,     HBV_PARA_09, 1+HBV_PARA_15=1+ALPHA,",
-                                    f"     FAST_RES,                _DEFAULT,      _DEFAULT,          0.0,     _DEFAULT,          _DEFAULT,   {params[param_or_name]['HBV']['HBV_Param_08']},    {params[param_or_name]['HBV']['HBV_Param_09']},              1.877607",
-                                    "  #                                                        CONSTANT,                                                      HBV_PARA_10,              CONSTANT,",
-                                    f"     SLOW_RES,                _DEFAULT,      _DEFAULT,          0.0,     _DEFAULT,          _DEFAULT,       _DEFAULT,    {params[param_or_name]['HBV']['HBV_Param_10']},                   1.0",
-                                    ":EndSoilParameterList"
-                                ]
-                        },
-                    "rvh":
-                        {"Subbasins":
-                            [
-                                ":SubBasins",
-                                "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
-                                "  :Units     ,          none,          none,   none,          km,         none",
-                                f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
-                                ":EndSubBasins"
-                            ],
-                            "HRUs":
-                                hru_list,
-                            "Subbasin Properties":
-                                [
-                                    ":SubBasinProperties",
-                                    "#                       HBV_PARA_11, DERIVED FROM HBV_PARA_11,",
-                                    "#                            MAXBAS,                 MAXBAS/2,",
-                                    "   :Parameters,           TIME_CONC,             TIME_TO_PEAK,",
-                                    "   :Units,                        d,                        d,",
-                                    f"              1,          {params[param_or_name]['HBV']['HBV_Param_11']},                  {params[param_or_name]['HBV']['HBV_Param_11b']},",
-                                    ":EndSubBasinProperties"
-                                ]
-                        },
-                    "rvi":
-                        {"Model Organisation":
-                            [
-                                f":StartDate             {start_year}-01-01 00:00:00",
-                                f":EndDate               {end_date}",
-                                ":TimeStep              1.0",
-                                f":RunName               {catchment_ch_id}_HBV"
-                            ],
-                            "Model Options":
-                                [
-                                    ":Routing             	    ROUTE_NONE",
-                                    ":CatchmentRoute      	    TRIANGULAR_UH",
-                                    ":Evaporation         	    PET_FROMMONTHLY",
-                                    ":OW_Evaporation      	    PET_FROMMONTHLY",
-                                    ":SWRadiationMethod   	    SW_RAD_DEFAULT",
-                                    ":SWCloudCorrect      	    SW_CLOUD_CORR_NONE",
-                                    ":SWCanopyCorrect     	    SW_CANOPY_CORR_NONE",
-                                    ":LWRadiationMethod   	    LW_RAD_DEFAULT",
-                                    ":RainSnowFraction    	    RAINSNOW_HBV",
-                                    ":PotentialMeltMethod 	    POTMELT_HBV",
-                                    ":OroTempCorrect      	    OROCORR_HBV",
-                                    ":OroPrecipCorrect    	    OROCORR_HBV",
-                                    ":OroPETCorrect       	    OROCORR_HBV",
-                                    ":CloudCoverMethod    	    CLOUDCOV_NONE",
-                                    ":PrecipIceptFract    	    PRECIP_ICEPT_USER",
-                                    ":MonthlyInterpolationMethod MONTHINT_LINEAR_21",
-                                    ":SoilModel                  SOIL_MULTILAYER 3",
-                                    f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
-                                    f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
-                                ],
-                            "Soil Alias Layer Definitions":
-                                [
-                                    ":Alias       FAST_RESERVOIR SOIL[1]",
-                                    ":Alias       SLOW_RESERVOIR SOIL[2]",
-                                    ":LakeStorage SLOW_RESERVOIR"
-                                ],
-                            "Hydrologic Process Order":
-                                [
-                                    ":HydrologicProcesses",
-                                    "   :SnowRefreeze      FREEZE_DEGREE_DAY  SNOW_LIQ        SNOW",
-                                    "   :Precipitation     PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
-                                    "   :CanopyEvaporation CANEVP_ALL         CANOPY          ATMOSPHERE",
-                                    "   :CanopySnowEvap    CANEVP_ALL         CANOPY_SNOW     ATMOSPHERE",
-                                    "   :SnowBalance       SNOBAL_SIMPLE_MELT SNOW            SNOW_LIQ",
-                                    "       :-->Overflow     RAVEN_DEFAULT      SNOW_LIQ        PONDED_WATER",
-                                    "   :Flush             RAVEN_DEFAULT      PONDED_WATER    GLACIER",
-                                    "       :-->Conditional HRU_TYPE IS GLACIER",
-                                    "   :GlacierMelt       GMELT_HBV          GLACIER_ICE     GLACIER",
-                                    "   :GlacierRelease    GRELEASE_HBV_EC    GLACIER         SURFACE_WATER",
-                                    "   :Infiltration      INF_HBV            PONDED_WATER    MULTIPLE",
-                                    "   :Flush             RAVEN_DEFAULT      SURFACE_WATER   FAST_RESERVOIR",
-                                    "       :-->Conditional HRU_TYPE IS_NOT GLACIER",
-                                    "   :SoilEvaporation   SOILEVAP_HBV       SOIL[0]         ATMOSPHERE",
-                                    "   :CapillaryRise     RISE_HBV           FAST_RESERVOIR 	SOIL[0]",
-                                    "   :LakeEvaporation   LAKE_EVAP_BASIC    SLOW_RESERVOIR  ATMOSPHERE",
-                                    "   :Percolation       PERC_CONSTANT      FAST_RESERVOIR 	SLOW_RESERVOIR",
-                                    "   :Baseflow          BASE_POWER_LAW     FAST_RESERVOIR  SURFACE_WATER",
-                                    "   :Baseflow          BASE_LINEAR        SLOW_RESERVOIR  SURFACE_WATER",
-                                    ":EndHydrologicProcesses"
-                                ],
-                            "Output Options":
-                                [
-                                ]
-                        },
-                    "rvc":
-                        {"Basin":
-                            [
-                                ":BasinInitialConditions",
-                                ":Attributes, ID,              Q",
-                                ":Units,      none,         m3/s",
-                                "#                  HBV_PARA_???",
-                                "1,             1.0",
-                                ":EndBasinInitialConditions"
-                            ],
-                            "Lower Groundwater Storage":
-                                [
-                                    "# Initial Lower groundwater storage - for each HRU",
-                                    "",
-                                    ":InitialConditions SOIL[2]",
-                                    "# derived from thickness: HBV_PARA_17 [m] * 1000.0 / 2.0",
-                                    f"{params[param_or_name]['HBV']['HBV_Param_17b']}",
-                                    ":EndInitialConditions"
-                                ]
-                        },
-                    "rvt":
-                        {}
-                },
-            "MOHYSE":
-                {
-                    "rvp":
-                        {
-                            "Soil Classes":
-                                [
-                                    ":SoilClasses",
-                                    "   :Attributes,",
-                                    "   :Units,",
-                                    "       TOPSOIL",
-                                    "       GWSOIL",
-                                    ":EndSoilClasses"
-                                ],
-                            "Soil Profiles":
-                                [
-                                    "#  name,#horizons,{soiltype,thickness}x{#horizons}",
-                                    "# ",
-                                    ":SoilProfiles",
-                                    "   LAKE, 0",
-                                    "   ROCK, 0",
-                                    "   GLACIER, 0",
-                                    "#  DEFAULT_P,      2, TOPSOIL, MOHYSE_PARA_5, GWSOIL, 10.0",
-                                    f"   DEFAULT_P,      2, TOPSOIL,     {params[param_or_name]['MOHYSE']['MOHYSE_Param_05']}, GWSOIL, 10.0",
-                                    ":EndSoilProfiles"
-                                ],
-                            "Vegetation Classes":
-                                vegetation_classes,
-                            "Vegetation Parameters":
-                                [
-                                    ":VegetationParameterList",
-                                    "   :Parameters,    SAI_HT_RATIO,  RAIN_ICEPT_PCT,  SNOW_ICEPT_PCT,",
-                                    "   :Units,               -,               -,               -, ",
-                                    "       [DEFAULT],             0.0,             0.0,             0.0,   ",
-                                    ":EndVegetationParameterList"
-                                ],
-                            "Land Use Classes":
-                                land_use_classes,
-                            "Global Parameters":
-                                [
-                                    "#:GlobalParameter      RAINSNOW_TEMP              -2.0",
-                                    ":GlobalParameter       TOC_MULTIPLIER              1.0",
-                                    f"# :GlobalParameter     MOHYSE_PET_COEFF  MOHYSE_PARA_01",
-                                    f":GlobalParameter       MOHYSE_PET_COEFF         {params[param_or_name]['MOHYSE']['MOHYSE_Param_01']}"
-                                ],
-                            "Land Use Parameters":
-                                [
-                                    ":LandUseParameterList",
-                                    "   :Parameters,     MELT_FACTOR,       AET_COEFF, FOREST_SPARSENESS, DD_MELT_TEMP,",
-                                    "   :Units,          mm/d/K,            mm/d,                 -,         degC,",
-                                    "#      [DEFAULT],   MOHYSE_PARA_3,   MOHYSE_PARA_2,               0.0,MOHYSE_PARA_4, ",
-                                    f"      [DEFAULT],          {params[param_or_name]['MOHYSE']['MOHYSE_Param_03']},          {params[param_or_name]['MOHYSE']['MOHYSE_Param_02']},               0.0,       {params[param_or_name]['MOHYSE']['MOHYSE_Param_04']},",
-                                    ":EndLandUseParameterList"
-                                ],
-                            "Soil Parameters":
-                                [
-                                    ":SoilParameterList",
-                                    "   :Parameters,        POROSITY,  PET_CORRECTION,        HBV_BETA,  BASEFLOW_COEFF,      PERC_COEFF, ",
-                                    "   :Units,               -,               -,               -,             1/d,             1/d, ",
-                                    "#      TOPSOIL,            1.0 ,             1.0,             1.0,   MOHYSE_PARA_7,   MOHYSE_PARA_6,",
-                                    "#      GWSOIL,            1.0 ,             1.0,             1.0,   MOHYSE_PARA_8,             0.0,",
-                                    f"      TOPSOIL,            1.0 ,             1.0,             1.0,          {params[param_or_name]['MOHYSE']['MOHYSE_Param_07']},          {params[param_or_name]['MOHYSE']['MOHYSE_Param_06']},",
-                                    f"      GWSOIL,            1.0 ,             1.0,             1.0,          {params[param_or_name]['MOHYSE']['MOHYSE_Param_08']},             0.0,",
-                                    ":EndSoilParameterList"
-                                ]
-                        },
-                    "rvh":
-                        {"Subbasins":
-                            [
-                                ":SubBasins",
-                                "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
-                                "  :Units     ,          none,          none,   none,          km,         none",
-                                f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
-                                ":EndSubBasins"
-                            ],
-                            "HRUs":
-                                hru_list,
-                            "Subbasin Properties":
-                                [
-                                    ":SubBasinProperties",
-                                    "#          1.0 / MOHYSE_PARA_10,   MOHYSE_PARA_9",
-                                    "   :Parameters,     GAMMA_SCALE,     GAMMA_SHAPE,",
-                                    "   :Units,                  1/d,               -",
-                                    f"              1,          {params[param_or_name]['MOHYSE']['MOHYSE_Param_10']},                  {params[param_or_name]['MOHYSE']['MOHYSE_Param_09']},",
-                                    ":EndSubBasinProperties"
-                                ]
-                        },
-                    "rvi":
-                        {"Model Organisation":
-                            [
-                                f":StartDate               {start_year}-01-01 00:00:00",
-                                f":EndDate                {end_date}",
-                                ":TimeStep                1.0",
-                                ":Method                  ORDERED_SERIES",
-                                f":RunName                 {catchment_ch_id}_MOHYSE"
-                            ],
-                            "Model Options":
-                                [
-                                    ":SoilModel             SOIL_TWO_LAYER",
-                                    ":PotentialMeltMethod   POTMELT_DEGREE_DAY",
-                                    ":Routing               ROUTE_NONE",
-                                    ":CatchmentRoute        ROUTE_GAMMA_CONVOLUTION",
-                                    ":Evaporation           PET_MOHYSE",
-                                    ":DirectEvaporation",
-                                    ":RainSnowFraction      RAINSNOW_DATA",
-                                    f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
-                                    f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
-                                ],
-                            # "Alias Definitions":
-                            #     [
-                            #         "# :Alias MOHYSE_PARA_1      1.5589    # :GlobalParameter         MOHYSE_PET_COEFF",
-                            #         "# :Alias MOHYSE_PARA_2	    0.9991    # LandUseParameterList --> AET_COEFF",
-                            #         "# :Alias MOHYSE_PARA_3	    2.1511    # LandUseParameterList --> MELT_FACTOR",
-                            #         "# :Alias MOHYSE_PARA_4	   -1.6101    # LandUseParameterList --> DD_MELT_TEMP",
-                            #         "# :Alias MOHYSE_PARA_5	    0.5000    # SoilProfiles         --> thickness of TOPSOIL (in mm????? must be m!!!)",
-                            #         "# :Alias MOHYSE_PARA_6	    0.1050    # SoilParameterList    --> PERC_COEFF (TOPSOIL)",
-                            #         "# :Alias MOHYSE_PARA_7	    0.0533    # SoilParameterList    --> BASEFLOW_COEFF (TOPSOIL)",
-                            #         "# :Alias MOHYSE_PARA_8	    0.0132    # SoilParameterList    --> BASEFLOW_COEFF (GWSOIL)",
-                            #         "# :Alias MOHYSE_PARA_9	    1.0474    # :SubBasinProperties  --> GAMMA_SHAPE",
-                            #         "# :Alias MOHYSE_PARA_10	    7.9628    # :SubBasinProperties  --> TIME_CONC = MOHYSE_PARA_10 / 0.3 = 26.542666666"
-                            #     ],
-                            "Hydrologic Process Order":
-                                [
-                                    ":HydrologicProcesses",
-                                    "   :SoilEvaporation  SOILEVAP_LINEAR    SOIL[0]            ATMOSPHERE",
-                                    "   :SnowBalance      SNOBAL_SIMPLE_MELT SNOW PONDED_WATER",
-                                    "   :Precipitation    RAVEN_DEFAULT      ATMOS_PRECIP       MULTIPLE",
-                                    "   :Infiltration     INF_HBV            PONDED_WATER       SOIL[0]",
-                                    "   :Baseflow         BASE_LINEAR        SOIL[0]            SURFACE_WATER",
-                                    "   :Percolation      PERC_LINEAR        SOIL[0]            SOIL[1]",
-                                    "   :Baseflow         BASE_LINEAR        SOIL[1]            SURFACE_WATER",
-                                    ":EndHydrologicProcesses"
-                                ],
-                            "Output Options":
-                                [
-                                ]
-                        },
-                    "rvc":
-                        {"Empty":
-                            [
-                                "# Nothing to set here."
-                            ]
-                        },
-                    "rvt":
-                        {}
-                }
-        }
+    }
+    mohyse = {
+        "rvp":
+            {
+                "Soil Classes":
+                    [
+                        ":SoilClasses",
+                        "   :Attributes,",
+                        "   :Units,",
+                        "       TOPSOIL",
+                        "       GWSOIL",
+                        ":EndSoilClasses"
+                    ],
+                "Soil Profiles":
+                    [
+                        "#  name,#horizons,{soiltype,thickness}x{#horizons}",
+                        "# ",
+                        ":SoilProfiles",
+                        "   LAKE, 0",
+                        "   ROCK, 0",
+                        "   GLACIER, 0",
+                        "#  DEFAULT_P,      2, TOPSOIL, MOHYSE_PARA_5, GWSOIL, 10.0",
+                        f"   DEFAULT_P,      2, TOPSOIL,     {params['MOHYSE'][param_or_name]['MOHYSE_Param_05']}, GWSOIL, 10.0",
+                        ":EndSoilProfiles"
+                    ],
+                "Vegetation Classes":
+                    vegetation_classes,
+                "Vegetation Parameters":
+                    [
+                        ":VegetationParameterList",
+                        "   :Parameters,    SAI_HT_RATIO,  RAIN_ICEPT_PCT,  SNOW_ICEPT_PCT,",
+                        "   :Units,               -,               -,               -, ",
+                        "       [DEFAULT],             0.0,             0.0,             0.0,   ",
+                        ":EndVegetationParameterList"
+                    ],
+                "Land Use Classes":
+                    land_use_classes,
+                "Global Parameters":
+                    [
+                        "#:GlobalParameter      RAINSNOW_TEMP              -2.0",
+                        ":GlobalParameter       TOC_MULTIPLIER              1.0",
+                        f"# :GlobalParameter     MOHYSE_PET_COEFF  MOHYSE_PARA_01",
+                        f":GlobalParameter       MOHYSE_PET_COEFF         {params['MOHYSE'][param_or_name]['MOHYSE_Param_01']}"
+                    ],
+                "Land Use Parameters":
+                    [
+                        ":LandUseParameterList",
+                        "   :Parameters,     MELT_FACTOR,       AET_COEFF, FOREST_SPARSENESS, DD_MELT_TEMP,",
+                        "   :Units,          mm/d/K,            mm/d,                 -,         degC,",
+                        "#      [DEFAULT],   MOHYSE_PARA_3,   MOHYSE_PARA_2,               0.0,MOHYSE_PARA_4, ",
+                        f"      [DEFAULT],          {params['MOHYSE'][param_or_name]['MOHYSE_Param_03']},          {params['MOHYSE'][param_or_name]['MOHYSE_Param_02']},               0.0,       {params['MOHYSE'][param_or_name]['MOHYSE_Param_04']},",
+                        ":EndLandUseParameterList"
+                    ],
+                "Soil Parameters":
+                    [
+                        ":SoilParameterList",
+                        "   :Parameters,        POROSITY,  PET_CORRECTION,        HBV_BETA,  BASEFLOW_COEFF,      PERC_COEFF, ",
+                        "   :Units,               -,               -,               -,             1/d,             1/d, ",
+                        "#      TOPSOIL,            1.0 ,             1.0,             1.0,   MOHYSE_PARA_7,   MOHYSE_PARA_6,",
+                        "#      GWSOIL,            1.0 ,             1.0,             1.0,   MOHYSE_PARA_8,             0.0,",
+                        f"      TOPSOIL,            1.0 ,             1.0,             1.0,          {params['MOHYSE'][param_or_name]['MOHYSE_Param_07']},          {params['MOHYSE'][param_or_name]['MOHYSE_Param_06']},",
+                        f"      GWSOIL,            1.0 ,             1.0,             1.0,          {params['MOHYSE'][param_or_name]['MOHYSE_Param_08']},             0.0,",
+                        ":EndSoilParameterList"
+                    ]
+            },
+        "rvh":
+            {"Subbasins":
+                [
+                    ":SubBasins",
+                    "  :Attributes,          NAME, DOWNSTREAM_ID,PROFILE,REACH_LENGTH,       GAUGED",
+                    "  :Units     ,          none,          none,   none,          km,         none",
+                    f"            1,        {catchment_ch_id},            -1,   NONE,       _AUTO,     1",
+                    ":EndSubBasins"
+                ],
+                "HRUs":
+                    hru_list,
+                "Subbasin Properties":
+                    [
+                        ":SubBasinProperties",
+                        "#          1.0 / MOHYSE_PARA_10,   MOHYSE_PARA_9",
+                        "   :Parameters,     GAMMA_SCALE,     GAMMA_SHAPE,",
+                        "   :Units,                  1/d,               -",
+                        f"              1,          {params['MOHYSE'][param_or_name]['MOHYSE_Param_10']},                  {params['MOHYSE'][param_or_name]['MOHYSE_Param_09']},",
+                        ":EndSubBasinProperties"
+                    ]
+            },
+        "rvi":
+            {"Model Organisation":
+                [
+                    f":StartDate               {start_year}-01-01 00:00:00",
+                    f":EndDate                {end_date}",
+                    ":TimeStep                1.0",
+                    ":Method                  ORDERED_SERIES",
+                    f":RunName                 {catchment_ch_id}_MOHYSE"
+                ],
+                "Model Options":
+                    [
+                        ":SoilModel             SOIL_TWO_LAYER",
+                        ":PotentialMeltMethod   POTMELT_DEGREE_DAY",
+                        ":Routing               ROUTE_NONE",
+                        ":CatchmentRoute        ROUTE_GAMMA_CONVOLUTION",
+                        ":Evaporation           PET_MOHYSE",
+                        ":DirectEvaporation",
+                        ":RainSnowFraction      RAINSNOW_DATA",
+                        f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
+                        f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
+                    ],
+                # "Alias Definitions":
+                #     [
+                #         "# :Alias MOHYSE_PARA_1      1.5589    # :GlobalParameter         MOHYSE_PET_COEFF",
+                #         "# :Alias MOHYSE_PARA_2	    0.9991    # LandUseParameterList --> AET_COEFF",
+                #         "# :Alias MOHYSE_PARA_3	    2.1511    # LandUseParameterList --> MELT_FACTOR",
+                #         "# :Alias MOHYSE_PARA_4	   -1.6101    # LandUseParameterList --> DD_MELT_TEMP",
+                #         "# :Alias MOHYSE_PARA_5	    0.5000    # SoilProfiles         --> thickness of TOPSOIL (in mm????? must be m!!!)",
+                #         "# :Alias MOHYSE_PARA_6	    0.1050    # SoilParameterList    --> PERC_COEFF (TOPSOIL)",
+                #         "# :Alias MOHYSE_PARA_7	    0.0533    # SoilParameterList    --> BASEFLOW_COEFF (TOPSOIL)",
+                #         "# :Alias MOHYSE_PARA_8	    0.0132    # SoilParameterList    --> BASEFLOW_COEFF (GWSOIL)",
+                #         "# :Alias MOHYSE_PARA_9	    1.0474    # :SubBasinProperties  --> GAMMA_SHAPE",
+                #         "# :Alias MOHYSE_PARA_10	    7.9628    # :SubBasinProperties  --> TIME_CONC = MOHYSE_PARA_10 / 0.3 = 26.542666666"
+                #     ],
+                "Hydrologic Process Order":
+                    [
+                        ":HydrologicProcesses",
+                        "   :SoilEvaporation  SOILEVAP_LINEAR    SOIL[0]            ATMOSPHERE",
+                        "   :SnowBalance      SNOBAL_SIMPLE_MELT SNOW PONDED_WATER",
+                        "   :Precipitation    RAVEN_DEFAULT      ATMOS_PRECIP       MULTIPLE",
+                        "   :Infiltration     INF_HBV            PONDED_WATER       SOIL[0]",
+                        "   :Baseflow         BASE_LINEAR        SOIL[0]            SURFACE_WATER",
+                        "   :Percolation      PERC_LINEAR        SOIL[0]            SOIL[1]",
+                        "   :Baseflow         BASE_LINEAR        SOIL[1]            SURFACE_WATER",
+                        ":EndHydrologicProcesses"
+                    ],
+                "Output Options":
+                    [
+                    ]
+            },
+        "rvc":
+            {"Empty":
+                [
+                    "# Nothing to set here."
+                ]
+            },
+        "rvt":
+            {}
+    }
+    rvx_params = {
+        "GR4J": gr4j,
+        "HBV": hbv,
+        "HMETS": hmets,
+        "HYMOD": hymod,
+        "MOHYSE": mohyse
+    }
     logger.debug("rvx_params dictionary created.")
     return rvx_params[model_type]
 
@@ -1134,7 +1134,8 @@ def generate_template_ostrich(catchment_ch_id: str,
                               params: dict = default_params,
                               catchment_name: str = catchment_name,
                               author: str = author,
-                              generation_date: str = generation_date) -> dict:
+                              generation_date: str = generation_date,
+                              run_number: int = 500) -> dict:
     """
     Generates template text which can be written to .rvp file
 
@@ -1152,27 +1153,42 @@ def generate_template_ostrich(catchment_ch_id: str,
     """
 
     file_name = f"{catchment_ch_id}_{model_type}"
-    param_or_name = "names"
     logger.debug("Entered generate_template() function.")
     assert model_type in config.variables.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
     logger.debug("model_type is in the list of supported models.")
     module_root_dir: Path = Path().resolve()
+    max_iterations = run_number
     response_variables = [
         f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
         f"BeginResponseVars",
         f"#name	  filename			        keyword		line	col	token                               augmented?",
-        f"KGE_NP      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
+        f"KGE_NP_CALI      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	2	',' yes",
+        f"PBIAS_CALI      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	3	',' yes",
+        f"RMSE_CALI      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	4	',' yes",
+        f"VE_CALI           ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	5	',' yes",
+        f"KGE_NP_Cost      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	6	',' no",
+        f"PBIAS_Cost      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_CALIBRATION	0	7	',' no",
+        f"KGE_NP_VALI      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_VALIDATION	0	2	',' yes",
+        f"PBIAS_VALI      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_VALIDATION	0	3	',' yes",
+        f"RMSE_VALI      ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_VALIDATION	0	4	',' yes",
+        f"VE_VALI           ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_VALIDATION	0	5	',' yes",
         f"EndResponseVars"
     ]
+    if model_type == "MOHYSE":
+        tied_response_variable_mohyse = f"#{params['MOHYSE']['names']['MOHYSE_Param_08b']}   3 {params['MOHYSE']['names']['MOHYSE_Param_06']} {params['MOHYSE']['names']['MOHYSE_Param_07']} {params['MOHYSE']['names']['MOHYSE_Param_08']} wsum 1.0 1.0 1.0"
+    else:
+        tied_response_variable_mohyse = "#"
     tied_response_variables = [
         f"#Negative Non-Parametric Kling-Gupta efficiency",
-        f"BeginTiedRespVars",
-        f"NegKGE 1 KGE_NP wsum -1.00",
-        f"EndTiedRespVars",
+        f"#BeginTiedRespVars",
+        f"#KGE_NP_Cost 1 KGE_NP linear -1.00 -1.00",
+        tied_response_variable_mohyse,
+        f"#EndTiedRespVars",
     ]
+
     gcop_options = [
         f"BeginGCOP",
-        f"CostFunction NegKGE",
+        f"CostFunction KGE_NP_Cost",
         f"PenaltyFunction APM",
         f"EndGCOP",
     ]
@@ -1181,7 +1197,7 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"",
         f"BeginParallelDDSAlg",
         f"PerturbationValue 0.20",
-        f"MaxIterations 50",
+        f"MaxIterations {max_iterations}",
         f"#	UseRandomParamValues",
         f"# UseInitialParamValues",
         f"# Note: above intializes DDS to parameter values IN the initial",
@@ -1204,655 +1220,649 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"# OstrichWarmStart yes",
         f"# CheckSensitivities yes"
     ]
-
-    ost_params = {
-        "GR4J":
-            {
-                "ost_in":
-                    {
-                        "Model Info":
-                            [
-                                f"# Model Type: {model_type}",
-                                f"# Catchment Name: {catchment_name}",
-                                f"# Catchment ID: {catchment_ch_id}",
-                                f"# Author: {author}",
-                                f"# Generation Date: {generation_date}"
-                            ],
-                        "General Options":
-                            general_options,
-                        "Extra Directories":
-                            [
-                                f"BeginExtraDirs",
-                                f"model",
-                                f"EndExtraDirs"
-                            ],
-                        "File Pairs":
-                            [
-                                f"BeginFilePairs",
-                                f"{file_name}.rvp.tpl;	{file_name}.rvp",
-                                f"{file_name}.rvc.tpl;  {file_name}.rvc",
-                                f"#can be multiple (.rvh, .rvi)",
-                                f"EndFilePairs"
-                            ],
-                        "Parameter Specification":
-                            [
-                                f"#Parameter/DV Specification",
-                                f"#name,initial value, lower bound, upper bound, input, output, internal transformations",
-                                f"#name exactly as in *.tpl",
-                                f"BeginParams",
-                                f"#parameter	   init.	 low		high	tx_in  tx_ost tx_out",
-                                f"{params[param_or_name]['GR4J']['GR4J_X1']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['GR4J']['GR4J_X2']}  	random	 	-15		10	none   none 	none",
-                                f"{params[param_or_name]['GR4J']['GR4J_X3']}  	random		10		700	none   none 	none",
-                                f"{params[param_or_name]['GR4J']['GR4J_X4']}  	random		0.5		7 	none   none	none",
-                                f"{params[param_or_name]['GR4J']['Cemaneige_X1']}  	random		0.5		30	none   none	none",
-                                f"{params[param_or_name]['GR4J']['Airsnow_Coeff']}  	random		0		1	none   none 	none",
-                                f"EndParams"
-                            ],
-                        "Tied Parameters":
-                            [
-                                f"BeginTiedParams",
-                                f"# 1-parameter linear (TLIN = 2*XVAL) ",
-                                f"{params[param_or_name]['GR4J']['GR4J_X1b']}   1 {params[param_or_name]['GR4J']['GR4J_X1']} linear 500 0.00 free # SOIL[0] ",
-                                f"EndTiedParams"
-                            ],
-                        "Response Variables":
-                            response_variables,
-                        "Tied Response Variables":
-                            tied_response_variables,
-                        "GCOP Options":
-                            gcop_options,
-                        "Constraints":
-                            [
-                                f"BeginConstraints",
-                                f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                                f"# name     type     penalty    lwr   upr   resp.var",
-                                f"EndConstraints",
-                            ],
-                        "Random Seed Control":
-                            random_seed,
-                        "Algorithm Settings":
-                            algorithm_settings
-                    },
-                "save_best":
-                    {
-                        "Save Best":
-                            [
-                                f"#!/bin/bash{newline}",
-                                f"set -e{newline}",
-                                f"echo \"saving input files for the best solution found...\"{newline}"
-                                f"if [ ! -e model_best ] ; then",
-                                f"\tmkdir model_best",
-                                f"fi{newline}",
-                                f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
-                                f"cp model/{file_name}.rvc                    model_best/{file_name}.rvc",
-                                f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
-                                f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
-                                f"exit 0",
-                            ]
-                    },
-                "ost_raven":
-                    {
-                        "Ost-Raven":
-                            [
-                                f"#!/bin/bash{newline}",
-                                f"set -e{newline}",
-                                f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                                f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
-                                f"# Copy the latest model files to the model folder",
-                                f"cp ./{file_name}.rvp model/{file_name}.rvp",
-                                f"cp ./{file_name}.rvc model/{file_name}.rvc{newline}",
-                                f"## cd into the model folder",
-                                f"cd model{newline}",
-                                f"# Run Raven.exe",
-                                f"./Raven.exe {file_name} -o output/",
-                                f"cd output",
-                                f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
-                                f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                                f"source {poetry_location}",
-                                f"# shellcheck disable=SC2086",
-                                f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
-                                f"exit 0",
-                            ]
-                    },
-                "ost_mpi_script":
-                    {
-                        "Ostrich MPI run":
-                            [
-                                f"#!/bin/bash{newline}{newline}",
-                                f"# match assignment to location of OSTRICH installation{newline}",
-                                f"cp ./{file_name}.rvi model/{file_name}.rvi",
-                                f"cp ./{file_name}.rvh model/{file_name}.rvh",
-                                f"cp ./{file_name}.rvt model/{file_name}.rvt",
-                                f"cp ./{file_name}.rvp model/{file_name}.rvp",
-                                f"cp ./{file_name}.rvc model/{file_name}.rvc",
-                                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
-                                f"mpirun $OSTRICH_MPI{newline}"
-                            ]
-                    }
-            },
-        "HYMOD":
-            {
-                "ost_in":
-                    {
-                        "Model Info":
-                            [
-                                f"# Model Type: {model_type}",
-                                f"# Catchment Name: {catchment_name}",
-                                f"# Catchment ID: {catchment_ch_id}",
-                                f"# Author: {author}",
-                                f"# Generation Date: {generation_date}"
-                            ],
-                        "General Options":
-                            general_options,
-                        "Extra Directories":
-                            [
-                                f"BeginExtraDirs",
-                                f"model",
-                                f"EndExtraDirs"
-                            ],
-                        "File Pairs":
-                            [
-                                f"BeginFilePairs",
-                                f"{file_name}.rvh.tpl;	{file_name}.rvh",
-                                f"{file_name}.rvp.tpl;	{file_name}.rvp",
-                                f"{file_name}.rvi.tpl;	{file_name}.rvi",
-                                f"#can be multiple (.rvh, .rvi)",
-                                f"EndFilePairs"
-                            ],
-                        "Parameter Specification":
-                            [
-                                f"#Parameter/DV Specification",
-                                f"#name,initial value, lower bound, upper bound, input, output, internal transformations",
-                                f"#name exactly as in *.tpl",
-                                f"BeginParams",
-                                f"#parameter	   init.	 low		high	tx_in  tx_ost tx_out",
-                                f"{params[param_or_name]['HYMOD']['HYMOD_Param_01']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HYMOD']['HYMOD_Param_02']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HYMOD']['HYMOD_Param_03']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HYMOD']['HYMOD_Param_04']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HYMOD']['HYMOD_Param_05']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HYMOD']['HYMOD_Param_06']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HYMOD']['HYMOD_Param_07']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HYMOD']['HYMOD_Param_08']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HYMOD']['HYMOD_Param_09']}		random		0.01		2.5	none   none 	none",
-                                f"EndParams"
-                            ],
-                        "Response Variables":
-                            response_variables,
-                        "Tied Response Variables":
-                            tied_response_variables,
-                        "GCOP Options":
-                            gcop_options,
-                        "Constraints":
-                            [
-                                f"BeginConstraints",
-                                f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                                f"# name     type     penalty    lwr   upr   resp.var",
-                                f"EndConstraints",
-                            ],
-                        "Random Seed Control":
-                            random_seed,
-                        "Algorithm Settings":
-                            algorithm_settings
-                    },
-                "save_best":
-                    {
-                        "Save Best":
-                            [
-                                f"#!/bin/bash{newline}",
-                                f"set -e{newline}",
-                                f"echo \"saving input files for the best solution found...\"{newline}"
-                                f"if [ ! -e model_best ] ; then",
-                                f"\tmkdir model_best",
-                                f"fi{newline}",
-                                f"cp model/{file_name}.rvi                    model_best/{file_name}.rvi",
-                                f"cp model/{file_name}.rvh                    model_best/{file_name}.rvh",
-                                f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
-                                f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
-                                f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
-                                f"exit 0",
-                            ]
-                    },
-                "ost_raven":
-                    {
-                        "Ost-Raven":
-                            [
-                                f"#!/bin/bash{newline}",
-                                f"set -e{newline}",
-                                f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                                f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
-                                f"# Copy the latest model files to the model folder",
-                                f"cp ./{file_name}.rvi model/{file_name}.rvi",
-                                f"cp ./{file_name}.rvh model/{file_name}.rvh",
-                                f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
-                                f"## cd into the model folder",
-                                f"cd model{newline}",
-                                f"# Run Raven.exe",
-                                f"./Raven.exe {file_name} -o output/",
-                                f"cd output",
-                                f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
-                                f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                                f"source {poetry_location}",
-                                f"# shellcheck disable=SC2086",
-                                f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
-                                f"exit 0",
-                            ]
-                    },
-                "ost_mpi_script":
-                    {
-                        "Ostrich MPI run":
-                            [
-                                f"#!/bin/bash{newline}{newline}",
-                                f"# match assignment to location of OSTRICH installation{newline}",
-                                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
-                                f"mpirun $OSTRICH_MPI{newline}"
-                            ]
-                    }
-            },
-        "HMETS":
-            {
-                "ost_in":
-                    {
-                        "Model Info":
-                            [
-                                f"# Model Type: {model_type}",
-                                f"# Catchment Name: {catchment_name}",
-                                f"# Catchment ID: {catchment_ch_id}",
-                                f"# Author: {author}",
-                                f"# Generation Date: {generation_date}"
-                            ],
-                        "General Options":
-                            general_options,
-                        "Extra Directories":
-                            [
-                                f"BeginExtraDirs",
-                                f"model",
-                                f"EndExtraDirs"
-                            ],
-                        "File Pairs":
-                            [
-                                f"BeginFilePairs",
-                                f"{file_name}.rvp.tpl;	{file_name}.rvp",
-                                f"#can be multiple (.rvh, .rvi)",
-                                f"EndFilePairs"
-                            ],
-                        "Parameter Specification":
-                            [
-                                f"#Parameter/DV Specification",
-                                f"#name,initial value, lower bound, upper bound, input, output, internal transformations",
-                                f"#name exactly as in *.tpl",
-                                f"BeginParams",
-                                f"#parameter	   init.	 low		high	tx_in  tx_ost tx_out",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_01']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_02']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_03']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_04']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_05a']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_05b']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_06']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_07']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_08']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_09a']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_09b']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_10']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_11']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_12']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_13']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_14']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_15']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_16']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_17']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_18']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_19']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_20a']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_20b']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_21a']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_21b']}		random		0.01		2.5	none   none 	none",
-                                f"EndParams"
-                            ],
-                        "Tied Parameters":
-                            [
-                                f"BeginTiedParams",
-                                f"# 1-parameter linear (TLIN = 2*XVAL) ",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_05b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # SNOW_SWI_MAX ",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_09b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # MAX_MELT_FACTOR ",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_20b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # :UniformInitialConditions SOIL[0] = HMETS_Param_20a/2 ",
-                                f"{params[param_or_name]['HMETS']['HMETS_Param_21b']} #  1 {params[param_or_name]['HMETS']['HMETS_Param_11']} linear 0.5 0.00 free # :UniformInitialConditions SOIL[1] = HMETS_Param_21a/2 ",
-                                f"EndTiedParams"
-                            ],
-                        "Response Variables":
-                            response_variables,
-                        "Tied Response Variables":
-                            tied_response_variables,
-                        "GCOP Options":
-                            gcop_options,
-                        "Constraints":
-                            [
-                                f"BeginConstraints",
-                                f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                                f"# name     type     penalty    lwr   upr   resp.var",
-                                f"EndConstraints",
-                            ],
-                        "Random Seed Control":
-                            random_seed,
-                        "Algorithm Settings":
-                            algorithm_settings
-                    },
-                "save_best":
-                    {
-                        "Save Best":
-                            [
-                                f"#!/bin/bash{newline}",
-                                f"set -e{newline}",
-                                f"echo \"saving input files for the best solution found...\"{newline}",
-                                f"if [ ! -e model_best ] ; then",
-                                f"\tmkdir model_best",
-                                f"fi{newline}",
-                                f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
-                                f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
-                                f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
-                                f"exit 0",
-                            ]
-                    },
-                "ost_raven":
-                    {
-                        "Ost-Raven":
-
-                            [
-                                f"#!/bin/bash{newline}",
-                                f"set -e{newline}",
-                                f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                                f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
-                                f"# Copy the latest model files to the model folder",
-                                f"cp ./{file_name}.rvc model/{file_name}.rvc",
-                                f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
-                                f"## cd into the model folder",
-                                f"cd model{newline}",
-                                f"# Run Raven.exe",
-                                f"./Raven.exe {file_name} -o output/",
-                                f"cd output",
-                                f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
-                                f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                                f"source {poetry_location}",
-                                f"# shellcheck disable=SC2086",
-                                f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
-                                f"exit 0",
-                            ]
-                    },
-                "ost_mpi_script":
-                    {
-                        "Ostrich MPI run":
-                            [
-                                f"#!/bin/bash{newline}{newline}",
-                                f"# match assignment to location of OSTRICH installation{newline}",
-                                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
-                                f"mpirun $OSTRICH_MPI{newline}"
-                            ]
-                    }
-            },
-        "HBV":
-            {
-                "ost_in":
-                    {
-                        "Model Info":
-                            [
-                                f"# Model Type: {model_type}",
-                                f"# Catchment Name: {catchment_name}",
-                                f"# Catchment ID: {catchment_ch_id}",
-                                f"# Author: {author}",
-                                f"# Generation Date: {generation_date}"
-                            ],
-                        "General Options":
-                            general_options,
-                        "Extra Directories":
-                            [
-                                f"BeginExtraDirs",
-                                f"model",
-                                f"EndExtraDirs"
-                            ],
-                        "File Pairs":
-                            [
-                                f"BeginFilePairs",
-                                f"{file_name}.rvp.tpl;	{file_name}.rvp",
-                                f"{file_name}.rvc.tpl;  {file_name}.rvc",
-                                f"{file_name}.rvh.tpl;  {file_name}.rvh",
-                                f"{file_name}.rvt.tpl;  {file_name}.rvt",
-                                f"#can be multiple (.rvh, .rvi)",
-                                f"EndFilePairs"
-                            ],
-                        "Parameter Specification":
-                            [
-                                f"#Parameter/DV Specification",
-                                f"#name,initial value, lower bound, upper bound, input, output, internal transformations",
-                                f"#name exactly as in *.tpl",
-                                f"BeginParams",
-                                f"#parameter	   init.	 low		high	tx_in  tx_ost tx_out",
-                                f"{params[param_or_name]['HBV']['HBV_Param_01']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_02']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_03']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_04']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_05']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_06']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_07']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_08']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_09']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_10']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_11']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_12']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_13']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_14']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_16']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_17']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_18']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_19']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_20']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['HBV']['HBV_Param_21']}		random		0.01		2.5	none   none 	none",
-
-                                f"EndParams"
-                            ],
-                        "Tied Parameters":
-                            [
-                                f"BeginTiedParams",
-                                f"# 1-parameter linear (TLIN = 2*XVAL) ",
-                                f"{params[param_or_name]['HBV']['HBV_Param_11b']} 1 {params[param_or_name]['HBV']['HBV_Param_11']} linear 0.5 0.00 free",
-                                f"{params[param_or_name]['HBV']['HBV_Param_17b']} 1 {params[param_or_name]['HBV']['HBV_Param_17']} linear 0.5 0.00 free",
-                                f"EndTiedParams"
-                            ],
-                        "Response Variables":
-                            response_variables,
-                        "Tied Response Variables":
-                            tied_response_variables,
-                        "GCOP Options":
-                            gcop_options,
-                        "Constraints":
-                            [
-                                f"BeginConstraints",
-                                f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                                f"# name     type     penalty    lwr   upr   resp.var",
-                                f"EndConstraints",
-                            ],
-                        "Random Seed Control":
-                            random_seed,
-                        "Algorithm Settings":
-                            algorithm_settings
-                    },
-                "save_best":
-                    {
-                        "Save Best":
-                            [
-                                f"#!/bin/bash{newline}",
-                                f"set -e{newline}",
-                                f"echo \"saving input files for the best solution found...\"{newline}"
-                                f"if [ ! -e model_best ] ; then",
-                                f"\tmkdir model_best",
-                                f"fi{newline}",
-                                f"cp model/{file_name}.rvh                    model_best/{file_name}.rvh",
-                                f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
-                                f"cp model/{file_name}.rvc                    model_best/{file_name}.rvc",
-                                f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
-                                f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
-                                f"exit 0",
-                            ]
-                    },
-                "ost_raven":
-                    {
-                        "Ost-Raven":
-                            [
-                                f"#!/bin/bash{newline}",
-                                f"set -e{newline}",
-                                f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                                f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
-                                f"# Copy the latest model files to the model folder",
-                                f"cp ./{file_name}.rvh model/{file_name}.rvh",
-                                f"cp ./{file_name}.rvc model/{file_name}.rvc",
-                                f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
-                                f"## cd into the model folder",
-                                f"cd model{newline}",
-                                f"# Run Raven.exe",
-                                f"./Raven.exe {file_name} -o output/",
-                                f"cd output",
-                                f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
-                                f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                                f"source {poetry_location}",
-                                f"# shellcheck disable=SC2086",
-                                f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
-                                f"exit 0",
-                            ]
-                    },
-                "ost_mpi_script":
-                    {
-                        "Ostrich MPI run":
-                            [
-                                f"#!/bin/bash{newline}{newline}",
-                                f"# match assignment to location of OSTRICH installation{newline}",
-                                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
-                                f"mpirun $OSTRICH_MPI{newline}"
-                            ]
-                    }
-            },
-        "MOHYSE":
-            {
-                "ost_in":
-                    {
-                        "Model Info":
-                            [
-                                f"# Model Type: {model_type}",
-                                f"# Catchment Name: {catchment_name}",
-                                f"# Catchment ID: {catchment_ch_id}",
-                                f"# Author: {author}",
-                                f"# Generation Date: {generation_date}"
-                            ],
-                        "General Options":
-                            general_options,
-                        "Extra Directories":
-                            [
-                                f"BeginExtraDirs",
-                                f"model",
-                                f"EndExtraDirs"
-                            ],
-                        "File Pairs":
-                            [
-                                f"BeginFilePairs",
-                                f"{file_name}.rvp.tpl;	{file_name}.rvp",
-                                f"{file_name}.rvh.tpl;  {file_name}.rvh",
-                                f"#can be multiple (.rvh, .rvi)",
-                                f"EndFilePairs"
-                            ],
-                        "Parameter Specification":
-                            [
-                                f"#Parameter/DV Specification",
-                                f"#name,initial value, lower bound, upper bound, input, output, internal transformations",
-                                f"#name exactly as in *.tpl",
-                                f"BeginParams",
-                                f"#parameter	   init.	 low		high	tx_in  tx_ost tx_out",
-                                f"{params[param_or_name]['MOHYSE']['MOHYSE_Param_01']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['MOHYSE']['MOHYSE_Param_02']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['MOHYSE']['MOHYSE_Param_03']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['MOHYSE']['MOHYSE_Param_04']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['MOHYSE']['MOHYSE_Param_05']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['MOHYSE']['MOHYSE_Param_06']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['MOHYSE']['MOHYSE_Param_07']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['MOHYSE']['MOHYSE_Param_08']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['MOHYSE']['MOHYSE_Param_09']}		random		0.01		2.5	none   none 	none",
-                                f"{params[param_or_name]['MOHYSE']['MOHYSE_Param_10']}		random		0.01		2.5	none   none 	none",
-                                f"EndParams"
-                            ],
-                        "Response Variables":
-                            response_variables,
-                        "Tied Response Variables":
-                            tied_response_variables,
-                        "GCOP Options":
-                            gcop_options,
-                        "Constraints":
-                            [
-                                f"BeginConstraints",
-                                f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                                f"# name     type     penalty    lwr   upr   resp.var",
-                                f"EndConstraints",
-                            ],
-                        "Random Seed Control":
-                            random_seed,
-                        "Algorithm Settings":
-                            algorithm_settings
-                    },
-                "save_best":
-                    {
-                        "Save Best":
-                            [
-                                f"#!/bin/bash{newline}",
-                                f"set -e{newline}",
-                                f"echo \"saving input files for the best solution found...\"{newline}"
-                                f"if [ ! -e model_best ] ; then",
-                                f"\tmkdir model_best",
-                                f"fi{newline}",
-                                f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
-                                f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
-                                f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
-                                f"exit 0",
-                            ]
-                    },
-                "ost_raven":
-                    {
-                        "Ost-Raven":
-                            [
-                                f"#!/bin/bash{newline}",
-                                f"set -e{newline}",
-                                f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                                f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
-                                f"# Copy the latest model files to the model folder",
-                                f"cp ./{file_name}.rvh model/{file_name}.rvh",
-                                f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
-                                f"## cd into the model folder",
-                                f"cd model{newline}",
-                                f"# Run Raven.exe",
-                                f"./Raven.exe {file_name} -o output/",
-                                f"cd output",
-                                f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
-                                f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                                f"source {poetry_location}",
-                                f"# shellcheck disable=SC2086",
-                                f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
-                                f"exit 0",
-                            ]
-                    },
-                "ost_mpi_script":
-                    {
-                        "Ostrich MPI run":
-                            [
-                                f"#!/bin/bash{newline}{newline}",
-                                f"# match assignment to location of OSTRICH installation{newline}",
-                                f"cp ./{file_name}.rvi model/{file_name}.rvi",
-                                f"cp ./{file_name}.rvh model/{file_name}.rvh",
-                                f"cp ./{file_name}.rvt model/{file_name}.rvt",
-                                f"cp ./{file_name}.rvp model/{file_name}.rvp",
-                                f"cp ./{file_name}.rvc model/{file_name}.rvc",
-                                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
-                                f"mpirun $OSTRICH_MPI{newline}"
-                            ]
-                    }
-            },
+    ost_mpi_script = {
+        "Ostrich MPI run":
+            [
+                f"#!/bin/bash{newline}{newline}",
+                f"SECONDS=0",
+                f"touch \"time_comp.txt\"",
+                f"# match assignment to location of OSTRICH installation{newline}",
+                f"cp ./{file_name}.rvi model/{file_name}.rvi",
+                f"cp ./{file_name}.rvh model/{file_name}.rvh",
+                f"cp ./{file_name}.rvt model/{file_name}.rvt",
+                f"cp ./{file_name}.rvp model/{file_name}.rvp",
+                f"cp ./{file_name}.rvc model/{file_name}.rvc",
+                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
+                f"mpirun $OSTRICH_MPI{newline}",
+                f"if (( $SECONDS > 3600 )) ; then",
+                f"    let \"hours=SECONDS/3600\"",
+                f"    let \"minutes=(SECONDS%3600)/60\"",
+                f"    let \"seconds=(SECONDS%3600)%60\"",
+                f"    echo \"Completed in $hours hour(s), $minutes minute(s) and $seconds second(s)\"",
+                f"    echo \"Completed in $hours hour(s), $minutes minute(s) and $seconds second(s)\" >> time_comp.txt",
+                f"elif (( $SECONDS > 60 )) ; then",
+                f"    let \"minutes=(SECONDS%3600)/60\"",
+                f"    let \"seconds=(SECONDS%3600)%60\"",
+                f"    echo \"Completed in $minutes minute(s) and $seconds second(s)\"",
+                f"    echo \"Completed in $minutes minute(s) and $seconds second(s)\" >> time_comp.txt",
+                f"else",
+                f"    echo \"Completed in $SECONDS seconds\"",
+                f"    echo \"Completed in $SECONDS seconds\" >> time_comp.txt",
+                f"fi",
+            ]
     }
+    # ost_save_output:
+    #     "Save Ostrich Run Output":
+    #         [
+    #             "# !/bin/bash\n",
+    #             f"set -e\n",
+    #             f"echo \"saving Ostrich run...\n",
+    #             f"if \[ ! -e "
+    #             "echo - e "Processor: $1" >>.. / preserve_out.txt",
+    #             "echo - e "Trial: $2" >>../ preserve_out.txt",
+    # "echo - e "Counter: $3" >>../ preserve_out.txt",
+    # "echo - e "Obj. Function Category: $4" >>../ preserve_out.txt",
+    # "exit 0"
+    #         ]
+    gr4j = {
+        "ost_in":
+            {
+                "Model Info":
+                    [
+                        f"# Model Type: {model_type}",
+                        f"# Catchment Name: {catchment_name}",
+                        f"# Catchment ID: {catchment_ch_id}",
+                        f"# Author: {author}",
+                        f"# Generation Date: {generation_date}"
+                    ],
+                "General Options":
+                    general_options,
+                "Extra Directories":
+                    [
+                        f"BeginExtraDirs",
+                        f"model",
+                        f"EndExtraDirs"
+                    ],
+                "File Pairs":
+                    [
+                        f"BeginFilePairs",
+                        f"{file_name}.rvp.tpl;	{file_name}.rvp",
+                        f"{file_name}.rvc.tpl;  {file_name}.rvc",
+                        f"#can be multiple (.rvh, .rvi)",
+                        f"EndFilePairs"
+                    ],
+                "Parameter Specification":
+                    [
+                        f"#Parameter/DV Specification",
+                        f"#name,initial value, lower bound, upper bound, input, output, internal transformations",
+                        f"#name exactly as in *.tpl",
+                        f"BeginParams",
+                        f"#parameter	   init.	 low		high	tx_in  tx_ost tx_out",
+                        f"{params['GR4J']['names']['GR4J_X1']}		random		{params['GR4J']['lower']['GR4J_X1']}		{params['GR4J']['upper']['GR4J_X1']}	none   none 	none",
+                        f"{params['GR4J']['names']['GR4J_X2']}  	random	 	{params['GR4J']['lower']['GR4J_X2']}		{params['GR4J']['upper']['GR4J_X2']}	none   none 	none",
+                        f"{params['GR4J']['names']['GR4J_X3']}  	random		{params['GR4J']['lower']['GR4J_X3']}		{params['GR4J']['upper']['GR4J_X3']}	none   none 	none",
+                        f"{params['GR4J']['names']['GR4J_X4']}  	random		{params['GR4J']['lower']['GR4J_X4']}		{params['GR4J']['upper']['GR4J_X4']} 	none   none	none",
+                        f"{params['GR4J']['names']['Cemaneige_X1']}  	random		{params['GR4J']['lower']['Cemaneige_X1']}		{params['GR4J']['upper']['Cemaneige_X1']}	none   none	none",
+                        f"{params['GR4J']['names']['GR4J_Cemaneige_X2']}  	random		{params['GR4J']['lower']['GR4J_Cemaneige_X2']}		{params['GR4J']['upper']['GR4J_Cemaneige_X2']}	none   none 	none",
+                        f"EndParams"
+                    ],
+                "Tied Parameters":
+                    [
+                        f"BeginTiedParams",
+                        f"# 1-parameter linear (TLIN = 2*XVAL) ",
+                        f"{params['GR4J']['names']['GR4J_Soil_0']}   1 {params['GR4J']['names']['GR4J_X1']} linear 500 0.00 free # SOIL[0] ",
+                        f"{params['GR4J']['names']['Airsnow_Coeff']}   1 {params['GR4J']['names']['GR4J_Cemaneige_X2']} linear -1.00 0.00 free #Airsnow_Coeff"
+                        f"EndTiedParams"
+                    ],
+                "Response Variables":
+                    response_variables,
+                "Tied Response Variables":
+                    tied_response_variables,
+                "GCOP Options":
+                    gcop_options,
+                "Constraints":
+                    [
+                        f"BeginConstraints",
+                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
+                        f"# name     type     penalty    lwr   upr   resp.var",
+                        f"EndConstraints",
+                    ],
+                "Random Seed Control":
+                    random_seed,
+                "Algorithm Settings":
+                    algorithm_settings
+            },
+        "save_best":
+            {
+                "Save Best":
+                    [
+                        f"#!/bin/bash{newline}",
+                        f"set -e{newline}",
+                        f"echo \"saving input files for the best solution found...\"{newline}"
+                        f"if [ ! -e model_best ] ; then",
+                        f"\tmkdir model_best",
+                        f"fi{newline}",
+                        f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
+                        f"cp model/{file_name}.rvc                    model_best/{file_name}.rvc",
+                        f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
+                        f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
+                        f"exit 0",
+                    ]
+            },
+        "ost_raven":
+            {
+                "Ost-Raven":
+                    [
+                        f"#!/bin/bash{newline}",
+                        f"set -e{newline}",
+                        f"# Get the latest version of the diagnostics script and copy it to the model folder",
+                        f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
+                        f"# Copy the latest model files to the model folder",
+                        f"cp ./{file_name}.rvp model/{file_name}.rvp",
+                        f"cp ./{file_name}.rvc model/{file_name}.rvc{newline}",
+                        f"## cd into the model folder",
+                        f"cd model{newline}",
+                        f"# Run Raven.exe",
+                        f"./Raven.exe {file_name} -o output/",
+                        f"cd output",
+                        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
+                        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
+                        f"source {poetry_location}",
+                        f"# shellcheck disable=SC2086",
+                        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
+                        f"exit 0",
+                    ]
+            },
+        "ost_mpi_script":
+            ost_mpi_script,
+        # "ost_save_output":
+    }
+    hbv = {
+        "ost_in":
+            {
+                "Model Info":
+                    [
+                        f"# Model Type: {model_type}",
+                        f"# Catchment Name: {catchment_name}",
+                        f"# Catchment ID: {catchment_ch_id}",
+                        f"# Author: {author}",
+                        f"# Generation Date: {generation_date}"
+                    ],
+                "General Options":
+                    general_options,
+                "Extra Directories":
+                    [
+                        f"BeginExtraDirs",
+                        f"model",
+                        f"EndExtraDirs"
+                    ],
+                "File Pairs":
+                    [
+                        f"BeginFilePairs",
+                        f"{file_name}.rvp.tpl;	{file_name}.rvp",
+                        f"{file_name}.rvc.tpl;  {file_name}.rvc",
+                        f"{file_name}.rvh.tpl;  {file_name}.rvh",
+                        f"{file_name}.rvt.tpl;  {file_name}.rvt",
+                        f"#can be multiple (.rvh, .rvi)",
+                        f"EndFilePairs"
+                    ],
+                "Parameter Specification":
+                    [
+                        f"#Parameter/DV Specification",
+                        f"#name,initial value, lower bound, upper bound, input, output, internal transformations",
+                        f"#name exactly as in *.tpl",
+                        f"BeginParams",
+                        f"#parameter	   init.	 low		high	tx_in  tx_ost tx_out",
+                        f"{params['HBV']['names']['HBV_Param_01']}              random          {params['HBV']['lower']['HBV_Param_01']}                {params['HBV']['upper']['HBV_Param_01']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_02']}              random          {params['HBV']['lower']['HBV_Param_02']}                {params['HBV']['upper']['HBV_Param_02']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_03']}              random          {params['HBV']['lower']['HBV_Param_03']}                {params['HBV']['upper']['HBV_Param_03']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_04']}              random          {params['HBV']['lower']['HBV_Param_04']}                {params['HBV']['upper']['HBV_Param_04']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_05']}              random          {params['HBV']['lower']['HBV_Param_05']}                {params['HBV']['upper']['HBV_Param_05']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_06']}              random          {params['HBV']['lower']['HBV_Param_06']}                {params['HBV']['upper']['HBV_Param_06']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_07']}              random          {params['HBV']['lower']['HBV_Param_07']}                {params['HBV']['upper']['HBV_Param_07']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_08']}              random          {params['HBV']['lower']['HBV_Param_08']}                {params['HBV']['upper']['HBV_Param_08']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_09']}              random          {params['HBV']['lower']['HBV_Param_09']}                {params['HBV']['upper']['HBV_Param_09']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_10']}              random          {params['HBV']['lower']['HBV_Param_10']}                {params['HBV']['upper']['HBV_Param_10']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_11']}              random          {params['HBV']['lower']['HBV_Param_11']}                {params['HBV']['upper']['HBV_Param_11']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_12']}              random          {params['HBV']['lower']['HBV_Param_12']}                {params['HBV']['upper']['HBV_Param_12']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_13']}              random          {params['HBV']['lower']['HBV_Param_13']}                {params['HBV']['upper']['HBV_Param_13']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_14']}              random          {params['HBV']['lower']['HBV_Param_14']}                {params['HBV']['upper']['HBV_Param_14']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_15']}              random          {params['HBV']['lower']['HBV_Param_15']}                {params['HBV']['upper']['HBV_Param_15']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_16']}              random          {params['HBV']['lower']['HBV_Param_16']}                {params['HBV']['upper']['HBV_Param_16']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_17']}              random          {params['HBV']['lower']['HBV_Param_17']}                {params['HBV']['upper']['HBV_Param_17']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_18']}              random          {params['HBV']['lower']['HBV_Param_18']}                {params['HBV']['upper']['HBV_Param_18']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_19']}              random          {params['HBV']['lower']['HBV_Param_19']}                {params['HBV']['upper']['HBV_Param_19']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_20']}              random          {params['HBV']['lower']['HBV_Param_20']}                {params['HBV']['upper']['HBV_Param_20']}        none   none     none",
+                        f"{params['HBV']['names']['HBV_Param_21']}              random          {params['HBV']['lower']['HBV_Param_21']}                {params['HBV']['upper']['HBV_Param_21']}        none   none     none",
+                        f"EndParams"
+                    ],
+                "Tied Parameters":
+                    [
+                        f"BeginTiedParams",
+                        f"# 1-parameter linear (TLIN = 2*XVAL) ",
+                        f"{params['HBV']['names']['HBV_Param_11b']} 1 {params['HBV']['names']['HBV_Param_11']} linear 0.5 0.00 free",
+                        f"{params['HBV']['names']['HBV_Param_17b']} 1 {params['HBV']['names']['HBV_Param_17']} linear 500 0.00 free",
+                        f"EndTiedParams"
+                    ],
+                "Response Variables":
+                    response_variables,
+                "Tied Response Variables":
+                    tied_response_variables,
+                "GCOP Options":
+                    gcop_options,
+                "Constraints":
+                    [
+                        f"BeginConstraints",
+                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
+                        f"# name     type     penalty    lwr   upr   resp.var",
+                        f"EndConstraints",
+                    ],
+                "Random Seed Control":
+                    random_seed,
+                "Algorithm Settings":
+                    algorithm_settings
+            },
+        "save_best":
+            {
+                "Save Best":
+                    [
+                        f"#!/bin/bash{newline}",
+                        f"set -e{newline}",
+                        f"echo \"saving input files for the best solution found...\"{newline}"
+                        f"if [ ! -e model_best ] ; then",
+                        f"\tmkdir model_best",
+                        f"fi{newline}",
+                        f"cp model/{file_name}.rvh                    model_best/{file_name}.rvh",
+                        f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
+                        f"cp model/{file_name}.rvc                    model_best/{file_name}.rvc",
+                        f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
+                        f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
+                        f"exit 0",
+                    ]
+            },
+        "ost_raven":
+            {
+                "Ost-Raven":
+                    [
+                        f"#!/bin/bash{newline}",
+                        f"set -e{newline}",
+                        f"# Get the latest version of the diagnostics script and copy it to the model folder",
+                        f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
+                        f"# Copy the latest model files to the model folder",
+                        f"cp ./{file_name}.rvh model/{file_name}.rvh",
+                        f"cp ./{file_name}.rvc model/{file_name}.rvc",
+                        f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
+                        f"## cd into the model folder",
+                        f"cd model{newline}",
+                        f"# Run Raven.exe",
+                        f"./Raven.exe {file_name} -o output/",
+                        f"cd output",
+                        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
+                        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
+                        f"source {poetry_location}",
+                        f"# shellcheck disable=SC2086",
+                        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
+                        f"exit 0",
+                    ]
+            },
+        "ost_mpi_script":
+            ost_mpi_script
+    }
+    hmets = {
+        "ost_in":
+            {
+                "Model Info":
+                    [
+                        f"# Model Type: {model_type}",
+                        f"# Catchment Name: {catchment_name}",
+                        f"# Catchment ID: {catchment_ch_id}",
+                        f"# Author: {author}",
+                        f"# Generation Date: {generation_date}"
+                    ],
+                "General Options":
+                    general_options,
+                "Extra Directories":
+                    [
+                        f"BeginExtraDirs",
+                        f"model",
+                        f"EndExtraDirs"
+                    ],
+                "File Pairs":
+                    [
+                        f"BeginFilePairs",
+                        f"{file_name}.rvp.tpl;	{file_name}.rvp",
+                        f"{file_name}.rvc.tpl;  {file_name}.rvc",
+                        f"#can be multiple (.rvh, .rvi)",
+                        f"EndFilePairs"
+                    ],
+                "Parameter Specification":
+                    [
+                        f"#Parameter/DV Specification",
+                        f"#name,initial value, lower bound, upper bound, input, output, internal transformations",
+                        f"#name exactly as in *.tpl",
+                        f"BeginParams",
+                        f"#parameter	   init.	 low		high	tx_in  tx_ost tx_out",
+                        f"{params['HMETS']['names']['HMETS_Param_01']}          random          {params['HMETS']['lower']['HMETS_Param_01']}            {params['HMETS']['upper']['HMETS_Param_01']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_02']}          random          {params['HMETS']['lower']['HMETS_Param_02']}            {params['HMETS']['upper']['HMETS_Param_02']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_03']}          random          {params['HMETS']['lower']['HMETS_Param_03']}            {params['HMETS']['upper']['HMETS_Param_03']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_04']}          random          {params['HMETS']['lower']['HMETS_Param_04']}            {params['HMETS']['upper']['HMETS_Param_04']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_05a']}          random          {params['HMETS']['lower']['HMETS_Param_05a']}            {params['HMETS']['upper']['HMETS_Param_05a']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_06']}          random          {params['HMETS']['lower']['HMETS_Param_06']}            {params['HMETS']['upper']['HMETS_Param_06']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_07']}          random          {params['HMETS']['lower']['HMETS_Param_07']}            {params['HMETS']['upper']['HMETS_Param_07']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_08']}          random          {params['HMETS']['lower']['HMETS_Param_08']}            {params['HMETS']['upper']['HMETS_Param_08']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_09a']}          random          {params['HMETS']['lower']['HMETS_Param_09a']}            {params['HMETS']['upper']['HMETS_Param_09a']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_10']}          random          {params['HMETS']['lower']['HMETS_Param_10']}            {params['HMETS']['upper']['HMETS_Param_10']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_11']}          random          {params['HMETS']['lower']['HMETS_Param_11']}            {params['HMETS']['upper']['HMETS_Param_11']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_12']}          random          {params['HMETS']['lower']['HMETS_Param_12']}            {params['HMETS']['upper']['HMETS_Param_12']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_13']}          random          {params['HMETS']['lower']['HMETS_Param_13']}            {params['HMETS']['upper']['HMETS_Param_13']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_14']}          random          {params['HMETS']['lower']['HMETS_Param_14']}            {params['HMETS']['upper']['HMETS_Param_14']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_15']}          random          {params['HMETS']['lower']['HMETS_Param_15']}            {params['HMETS']['upper']['HMETS_Param_15']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_16']}          random          {params['HMETS']['lower']['HMETS_Param_16']}            {params['HMETS']['upper']['HMETS_Param_16']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_17']}          random          {params['HMETS']['lower']['HMETS_Param_17']}            {params['HMETS']['upper']['HMETS_Param_17']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_18']}          random          {params['HMETS']['lower']['HMETS_Param_18']}            {params['HMETS']['upper']['HMETS_Param_18']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_19']}          random          {params['HMETS']['lower']['HMETS_Param_19']}            {params['HMETS']['upper']['HMETS_Param_19']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_20b']}          random          {params['HMETS']['lower']['HMETS_Param_20b']}            {params['HMETS']['upper']['HMETS_Param_20b']}    none   none     none",
+                        f"{params['HMETS']['names']['HMETS_Param_21b']}          random          {params['HMETS']['lower']['HMETS_Param_21b']}            {params['HMETS']['upper']['HMETS_Param_21b']}    none   none     none",
+                        f"EndParams"
+                    ],
+                "Tied Parameters":
+                    [
+                        f"BeginTiedParams",
+                        f"# 1-parameter linear (TLIN = 2*XVAL) ",
+                        f"{params['HMETS']['names']['HMETS_Param_05b']}  2 {params['HMETS']['names']['HMETS_Param_05a']} {params['HMETS']['names']['HMETS_Param_06']} linear 0.00 1.00 1.00 0.00 free",
+                        f"{params['HMETS']['names']['HMETS_Param_09b']}  2 {params['HMETS']['names']['HMETS_Param_09a']} {params['HMETS']['names']['HMETS_Param_10']} linear 0.00 1.00 1.00 0.00 free",
+                        f"{params['HMETS']['names']['HMETS_Param_20a']}  1 {params['HMETS']['names']['HMETS_Param_20b']} linear 500 0.00 free",
+                        f"{params['HMETS']['names']['HMETS_Param_21a']}  1 {params['HMETS']['names']['HMETS_Param_21b']} linear 500 0.00 free",
+                        f"EndTiedParams"
+                    ],
+                "Response Variables":
+                    response_variables,
+                "Tied Response Variables":
+                    tied_response_variables,
+                "GCOP Options":
+                    gcop_options,
+                "Constraints":
+                    [
+                        f"BeginConstraints",
+                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
+                        f"# name     type     penalty    lwr   upr   resp.var",
+                        f"EndConstraints",
+                    ],
+                "Random Seed Control":
+                    random_seed,
+                "Algorithm Settings":
+                    algorithm_settings
+            },
+        "save_best":
+            {
+                "Save Best":
+                    [
+                        f"#!/bin/bash{newline}",
+                        f"set -e{newline}",
+                        f"echo \"saving input files for the best solution found...\"{newline}",
+                        f"if [ ! -e model_best ] ; then",
+                        f"\tmkdir model_best",
+                        f"fi{newline}",
+                        f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
+                        f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
+                        f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
+                        f"exit 0",
+                    ]
+            },
+        "ost_raven":
+            {
+                "Ost-Raven":
+
+                    [
+                        f"#!/bin/bash{newline}",
+                        f"set -e{newline}",
+                        f"# Get the latest version of the diagnostics script and copy it to the model folder",
+                        f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
+                        f"# Copy the latest model files to the model folder",
+                        f"cp ./{file_name}.rvc model/{file_name}.rvc",
+                        f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
+                        f"## cd into the model folder",
+                        f"cd model{newline}",
+                        f"# Run Raven.exe",
+                        f"./Raven.exe {file_name} -o output/",
+                        f"cd output",
+                        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
+                        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
+                        f"source {poetry_location}",
+                        f"# shellcheck disable=SC2086",
+                        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
+                        f"exit 0",
+                    ]
+            },
+        "ost_mpi_script":
+            ost_mpi_script
+    }
+    hymod = {
+        "ost_in":
+            {
+                "Model Info":
+                    [
+                        f"# Model Type: {model_type}",
+                        f"# Catchment Name: {catchment_name}",
+                        f"# Catchment ID: {catchment_ch_id}",
+                        f"# Author: {author}",
+                        f"# Generation Date: {generation_date}"
+                    ],
+                "General Options":
+                    general_options,
+                "Extra Directories":
+                    [
+                        f"BeginExtraDirs",
+                        f"model",
+                        f"EndExtraDirs"
+                    ],
+                "File Pairs":
+                    [
+                        f"BeginFilePairs",
+                        f"{file_name}.rvh.tpl;	{file_name}.rvh",
+                        f"{file_name}.rvp.tpl;	{file_name}.rvp",
+                        f"{file_name}.rvi.tpl;	{file_name}.rvi",
+                        f"#can be multiple (.rvh, .rvi)",
+                        f"EndFilePairs"
+                    ],
+                "Parameter Specification":
+                    [
+                        f"#Parameter/DV Specification",
+                        f"#name,initial value, lower bound, upper bound, input, output, internal transformations",
+                        f"#name exactly as in *.tpl",
+                        f"BeginParams",
+                        f"#parameter	   init.	 low		high	tx_in  tx_ost tx_out",
+                        f"{params['HYMOD']['names']['HYMOD_Param_01']}          random          {params['HYMOD']['lower']['HYMOD_Param_01']}            {params['HYMOD']['upper']['HYMOD_Param_01']}    none   none     none",
+                        f"{params['HYMOD']['names']['HYMOD_Param_02']}          random          {params['HYMOD']['lower']['HYMOD_Param_02']}            {params['HYMOD']['upper']['HYMOD_Param_02']}    none   none     none",
+                        f"{params['HYMOD']['names']['HYMOD_Param_03']}          random          {params['HYMOD']['lower']['HYMOD_Param_03']}            {params['HYMOD']['upper']['HYMOD_Param_03']}    none   none     none",
+                        f"{params['HYMOD']['names']['HYMOD_Param_04']}          random          {params['HYMOD']['lower']['HYMOD_Param_04']}            {params['HYMOD']['upper']['HYMOD_Param_04']}    none   none     none",
+                        f"{params['HYMOD']['names']['HYMOD_Param_05']}          random          {params['HYMOD']['lower']['HYMOD_Param_05']}            {params['HYMOD']['upper']['HYMOD_Param_05']}    none   none     none",
+                        f"{params['HYMOD']['names']['HYMOD_Param_06']}          random          {params['HYMOD']['lower']['HYMOD_Param_06']}            {params['HYMOD']['upper']['HYMOD_Param_06']}    none   none     none",
+                        f"{params['HYMOD']['names']['HYMOD_Param_07']}          random          {params['HYMOD']['lower']['HYMOD_Param_07']}            {params['HYMOD']['upper']['HYMOD_Param_07']}    none   none     none",
+                        f"{params['HYMOD']['names']['HYMOD_Param_08']}          random          {params['HYMOD']['lower']['HYMOD_Param_08']}            {params['HYMOD']['upper']['HYMOD_Param_08']}    none   none     none",
+                        f"{params['HYMOD']['names']['HYMOD_Param_09']}          random          {params['HYMOD']['lower']['HYMOD_Param_09']}            {params['HYMOD']['upper']['HYMOD_Param_09']}    none   none     none",
+                        f"EndParams"
+                    ],
+                "Response Variables":
+                    response_variables,
+                "Tied Response Variables":
+                    tied_response_variables,
+                "GCOP Options":
+                    gcop_options,
+                "Constraints":
+                    [
+                        f"BeginConstraints",
+                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
+                        f"# name     type     penalty    lwr   upr   resp.var",
+                        f"EndConstraints",
+                    ],
+                "Random Seed Control":
+                    random_seed,
+                "Algorithm Settings":
+                    algorithm_settings
+            },
+        "save_best":
+            {
+                "Save Best":
+                    [
+                        f"#!/bin/bash{newline}",
+                        f"set -e{newline}",
+                        f"echo \"saving input files for the best solution found...\"{newline}"
+                        f"if [ ! -e model_best ] ; then",
+                        f"\tmkdir model_best",
+                        f"fi{newline}",
+                        f"cp model/{file_name}.rvi                    model_best/{file_name}.rvi",
+                        f"cp model/{file_name}.rvh                    model_best/{file_name}.rvh",
+                        f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
+                        f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
+                        f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
+                        f"exit 0",
+                    ]
+            },
+        "ost_raven":
+            {
+                "Ost-Raven":
+                    [
+                        f"#!/bin/bash{newline}",
+                        f"set -e{newline}",
+                        f"# Get the latest version of the diagnostics script and copy it to the model folder",
+                        f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
+                        f"# Copy the latest model files to the model folder",
+                        f"cp ./{file_name}.rvi model/{file_name}.rvi",
+                        f"cp ./{file_name}.rvh model/{file_name}.rvh",
+                        f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
+                        f"## cd into the model folder",
+                        f"cd model{newline}",
+                        f"# Run Raven.exe",
+                        f"./Raven.exe {file_name} -o output/",
+                        f"cd output",
+                        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
+                        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
+                        f"source {poetry_location}",
+                        f"# shellcheck disable=SC2086",
+                        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
+                        f"exit 0",
+                    ]
+            },
+        "ost_mpi_script":
+            ost_mpi_script
+    }
+    mohyse = {
+        "ost_in":
+            {
+                "Model Info":
+                    [
+                        f"# Model Type: {model_type}",
+                        f"# Catchment Name: {catchment_name}",
+                        f"# Catchment ID: {catchment_ch_id}",
+                        f"# Author: {author}",
+                        f"# Generation Date: {generation_date}"
+                    ],
+                "General Options":
+                    general_options,
+                "Extra Directories":
+                    [
+                        f"BeginExtraDirs",
+                        f"model",
+                        f"EndExtraDirs"
+                    ],
+                "File Pairs":
+                    [
+                        f"BeginFilePairs",
+                        f"{file_name}.rvp.tpl;	{file_name}.rvp",
+                        f"{file_name}.rvh.tpl;  {file_name}.rvh",
+                        f"#can be multiple (.rvh, .rvi)",
+                        f"EndFilePairs"
+                    ],
+                "Parameter Specification":
+                    [
+                        f"#Parameter/DV Specification",
+                        f"#name,initial value, lower bound, upper bound, input, output, internal transformations",
+                        f"#name exactly as in *.tpl",
+                        f"BeginParams",
+                        f"#parameter	   init.	 low		high	tx_in  tx_ost tx_out",
+                        f"{params['MOHYSE']['names']['MOHYSE_Param_01']}                random          {params['MOHYSE']['lower']['MOHYSE_Param_01']}          {params['MOHYSE']['upper']['MOHYSE_Param_01']}  none   none     none",
+                        f"{params['MOHYSE']['names']['MOHYSE_Param_02']}                random          {params['MOHYSE']['lower']['MOHYSE_Param_02']}          {params['MOHYSE']['upper']['MOHYSE_Param_02']}  none   none     none",
+                        f"{params['MOHYSE']['names']['MOHYSE_Param_03']}                random          {params['MOHYSE']['lower']['MOHYSE_Param_03']}          {params['MOHYSE']['upper']['MOHYSE_Param_03']}  none   none     none",
+                        f"{params['MOHYSE']['names']['MOHYSE_Param_04']}                random          {params['MOHYSE']['lower']['MOHYSE_Param_04']}          {params['MOHYSE']['upper']['MOHYSE_Param_04']}  none   none     none",
+                        f"{params['MOHYSE']['names']['MOHYSE_Param_05']}                random          {params['MOHYSE']['lower']['MOHYSE_Param_05']}          {params['MOHYSE']['upper']['MOHYSE_Param_05']}  none   none     none",
+                        f"{params['MOHYSE']['names']['MOHYSE_Param_06']}                random          {params['MOHYSE']['lower']['MOHYSE_Param_06']}          {params['MOHYSE']['upper']['MOHYSE_Param_06']}  none   none     none",
+                        f"{params['MOHYSE']['names']['MOHYSE_Param_07']}                random          {params['MOHYSE']['lower']['MOHYSE_Param_07']}          {params['MOHYSE']['upper']['MOHYSE_Param_07']}  none   none     none",
+                        f"{params['MOHYSE']['names']['MOHYSE_Param_08']}                random          {params['MOHYSE']['lower']['MOHYSE_Param_08']}          {params['MOHYSE']['upper']['MOHYSE_Param_08']}  none   none     none",
+                        f"{params['MOHYSE']['names']['MOHYSE_Param_09']}                random          {params['MOHYSE']['lower']['MOHYSE_Param_09']}          {params['MOHYSE']['upper']['MOHYSE_Param_09']}  none   none     none",
+                        f"{params['MOHYSE']['names']['MOHYSE_Param_10']}                random          {params['MOHYSE']['lower']['MOHYSE_Param_10']}          {params['MOHYSE']['upper']['MOHYSE_Param_10']}  none   none     none",
+                        f"EndParams"
+                    ],
+                "Response Variables":
+                    response_variables,
+                "Tied Response Variables":
+                    tied_response_variables,
+                "GCOP Options":
+                    gcop_options,
+                "Constraints":
+                    [
+                        f"#BeginConstraints",
+                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
+                        f"# name     type     penalty    lwr   upr   resp.var",
+                        f"#Coeff_Sum_Constraint   general   1E6   {params['MOHYSE']['lower']['MOHYSE_Param_08b']}   {params['MOHYSE']['upper']['MOHYSE_Param_08b']}   {params['MOHYSE']['names']['MOHYSE_Param_08b']}",
+                        f"#EndConstraints",
+                    ],
+                "Random Seed Control":
+                    random_seed,
+                "Algorithm Settings":
+                    algorithm_settings
+            },
+        "save_best":
+            {
+                "Save Best":
+                    [
+                        f"#!/bin/bash{newline}",
+                        f"set -e{newline}",
+                        f"echo \"saving input files for the best solution found...\"{newline}"
+                        f"if [ ! -e model_best ] ; then",
+                        f"\tmkdir model_best",
+                        f"fi{newline}",
+                        f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
+                        f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
+                        f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
+                        f"exit 0",
+                    ]
+            },
+        "ost_raven":
+            {
+                "Ost-Raven":
+                    [
+                        f"#!/bin/bash{newline}",
+                        f"set -e{newline}",
+                        f"# Get the latest version of the diagnostics script and copy it to the model folder",
+                        f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
+                        f"# Copy the latest model files to the model folder",
+                        f"cp ./{file_name}.rvh model/{file_name}.rvh",
+                        f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
+                        f"## cd into the model folder",
+                        f"cd model{newline}",
+                        f"# Run Raven.exe",
+                        f"./Raven.exe {file_name} -o output/",
+                        f"cd output",
+                        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
+                        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
+                        f"source {poetry_location}",
+                        f"# shellcheck disable=SC2086",
+                        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
+                        f"exit 0",
+                    ]
+            },
+        "ost_mpi_script":
+            ost_mpi_script
+    }
+    ost_params = {
+        "GR4J": gr4j,
+        "HBV": hbv,
+        "HMETS": hmets,
+        "HYMOD": hymod,
+        "MOHYSE": mohyse
+    }
+
     return ost_params[model_type]
 
 
@@ -1939,7 +1949,7 @@ def write_rvx(catchment_ch_id: str,
         logger.debug(f"Trying to generate .{rvx_type} template sections with function generate_template()...")
         template_sections = generate_template_rvx(model_type=model_type, hru_info=hru_info, csv_file=csv_file,
                                                   params=params,
-                                                  param_or_name="params", start_year=start_year, end_year=end_year,
+                                                  param_or_name="init", start_year=start_year, end_year=end_year,
                                                   catchment_ch_id=catchment_ch_id)
         logger.debug(f"Wrote .{rvx_type} template sections generated by generate_template() to dict template_sections")
     if template_type == "Ostrich":
@@ -1989,7 +1999,8 @@ def write_ostrich(
         ost_in: bool = True,
         save_best: bool = True,
         ost_raven: bool = True,
-        ost_mpi_script: bool = True
+        ost_mpi_script: bool = True,
+        run_number: int = 500
 ):
     """Writes Ostrich input files ostIn.txt, save_best.sh and Ost-RAVEN.sh
     Args:
@@ -2014,7 +2025,7 @@ def write_ostrich(
     ost_shell_file_name: str = f"Ostrich_MPI.sh"
     logger.debug(f"filename w/o suffix set to {ost_in_file_name}.")
     template_sections = generate_template_ostrich(model_type=model_type, params=params, catchment_ch_id=catchment_ch_id,
-                                                  catchment_name=catchment_name)
+                                                  catchment_name=catchment_name, run_number=run_number)
     logger.debug(f"Dictionary template_sections created.")
     logger.debug(f"Variable ost_in evaluated to {ost_in}")
     if ost_in:

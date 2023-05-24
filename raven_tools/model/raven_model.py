@@ -674,7 +674,8 @@ class RavenModel:
                   ost_in=True,
                   save_best=True,
                   ost_raven=True,
-                  ost_mpi_script: bool = True):
+                  ost_mpi_script: bool = True,
+                  run_number: int = 500):
         """Write Ostrich files ostIn.txt, save_best.sh and ost-raven.sh
 
         :param ost_raven:
@@ -690,7 +691,8 @@ class RavenModel:
                          params=self.default_params, ost_in=ost_in,
                          save_best=save_best,
                          ost_raven=ost_raven,
-                         ost_mpi_script=ost_mpi_script)
+                         ost_mpi_script=ost_mpi_script,
+                         run_number=run_number)
         logger.debug(f"ostIn.txt for Raven created by rr.write_rvx function")
 
     def clip_netcdf(self, forcing_prefix="TabsD_v2.0_swiss.lv95"):

@@ -6,7 +6,7 @@ __all__ = ['processing', 'raven_diag', 'model', 'config', 'log']
 import logging
 import sys
 
-import config
+# import config
 from raven_tools import model
 
 logger = logging.getLogger(__name__)
