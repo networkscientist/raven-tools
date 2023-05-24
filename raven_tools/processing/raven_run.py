@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas
 import pandas as pd
 
-import processing.raven_preprocess
+import raven_tools.processing.raven_preprocess
 import raven_tools.config.variables
 from raven_tools import config
 
@@ -1175,7 +1175,8 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"EndResponseVars"
     ]
     if model_type == "MOHYSE":
-        tied_response_variable_mohyse = f"#{params['MOHYSE']['names']['MOHYSE_Param_08b']}   3 {params['MOHYSE']['names']['MOHYSE_Param_06']} {params['MOHYSE']['names']['MOHYSE_Param_07']} {params['MOHYSE']['names']['MOHYSE_Param_08']} wsum 1.0 1.0 1.0"
+        #tied_response_variable_mohyse = f"#{params['MOHYSE']['names']['MOHYSE_Param_08b']}   3 {params['MOHYSE']['names']['MOHYSE_Param_06']} {params['MOHYSE']['names']['MOHYSE_Param_07']} {params['MOHYSE']['names']['MOHYSE_Param_08']} wsum 1.0 1.0 1.0"
+        pass
     else:
         tied_response_variable_mohyse = "#"
     tied_response_variables = [
@@ -1804,7 +1805,6 @@ def generate_template_ostrich(catchment_ch_id: str,
                         f"#BeginConstraints",
                         f"# not needed when no constraints, but PenaltyFunction statement above is required",
                         f"# name     type     penalty    lwr   upr   resp.var",
-                        f"#Coeff_Sum_Constraint   general   1E6   {params['MOHYSE']['lower']['MOHYSE_Param_08b']}   {params['MOHYSE']['upper']['MOHYSE_Param_08b']}   {params['MOHYSE']['names']['MOHYSE_Param_08b']}",
                         f"#EndConstraints",
                     ],
                 "Random Seed Control":
@@ -2031,7 +2031,7 @@ def write_ostrich(
     if ost_in:
         logger.debug(
             f"Trying to write to file: {Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name)}")
-        with open(Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name), 'w') as ff:
+        with open(Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name), 'w+') as ff:
             logger.debug("Entering template_sections for-loop...")
             logger.debug(f"template_sections dictionary: {newline} {template_sections}")
             for section in template_sections["ost_in"]:

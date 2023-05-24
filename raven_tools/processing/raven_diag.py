@@ -1,8 +1,8 @@
 import csv
-import math
 import os
 import sys
 from pathlib import Path
+import math
 
 import HydroErr as hr
 import hydroeval as he
@@ -16,7 +16,7 @@ import pandas as pd
 # @profile
 def csv_import():
     df_cali = pd.read_csv(Path(os.path.dirname(__file__), sys.argv[1]), index_col='date',
-                          usecols=['date', 'CH-0139 [m3/s]', 'CH-0139 (observed) [m3/s]'])
+                          usecols=[1,4,5])
     df_vali = df_cali
     # simulations = df.iloc[:"2000-01-01",:4]
     end_cali = df_cali.index.searchsorted("2001-01-01")

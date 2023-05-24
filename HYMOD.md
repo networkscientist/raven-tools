@@ -1,0 +1,48 @@
+# Hymod Description
+## Parameters
+- HYMOD_Param_01: RES_CONSTANT=_Kq_ (1/d)
+  - Raven: linear reservoir constant (k) that defines the Nash UH
+  - Herman2013: Kq Quick flow reservoir rate constant. 0.15-1
+  - Wenchao2010: Residence time of the quick release reservoirs. 0.5-1.2
+  - Wi2015: Unit hydrograph scale parameter. 0.01-0.99
+- HYMOD_Param_02: Thickness TOPSOIL=_Cmax_
+  - Raven
+  - Wang2019: SM=Maximum soil moisture (mm), 0-400
+  - Wi2015: Cmax=Maximum soil moisture capacity (mm). 5-1500
+  - Herman: 10-2000
+  - Wenchao2010: 1-500
+- HYMOD_Param_03: _Ts_
+  - Raven: rain/snow halfway transition temperature (°C). Midpoint of temp range, over which there will be rain/snow mix. -1-1
+  - Wi2015: _Ts_ Snow/rain temperature threshold (◦C). 0-1
+  - Herman2013: _TTH_ Temp threshold below which freezing occurs. -3-3
+- HYMOD_Param_04: BASEFLOW_COEFF=_Ks_ GWSOIL (1/d)
+  - Wagener2001: residence times of the linear reservoirs (paper)
+  - Raven: linear baseflow storage/routing coefficient
+  - Herman2013: Slow flow reservoir rate constant. 0-0.15
+  - Wenchao2010: Residence time of the slow release reservoir. 0.001-0.5
+  - Wi2015: Release coefficient of groundwater reservoir 0.00005-0.001
+- HYMOD_Param_05: MELT_FACTOR (mm/d/°C)
+  - Raven: maximum snow melt factor used in degree day models
+  - Wi: DDFs=Degree day snowmelt factor (mm ◦C day−1). 0.001-10
+  - Herman2013: _DDF_ Degree day factor (snowmelt rate) 0-20
+- HYMOD_Param_06: DD_MELT_TEMP
+  - Raven: melting temperature for degree day methods
+  - Herman2013: _TB_ Base temperature above which melt occurs. -3-3
+  - Wi2015: _Tth_ Snowmelt temperature threshold (°c). 0-5
+- HYMOD_Param_07: PDM_B=Bexp (-)
+ - Wagener2001: degree of spatial variability of soil moisture capacity within catchment
+ - Herman2013: Distribution of soil stores. 0-7
+ - Wenchao2010: Degree of spatial variability of the soil moisture capacity. 0-2
+ - Wi2015: Shape for the storage capacity distribution function 0.01-1.99
+- HYMOD_Param_08: PET_CORRECTION TOPSOIL
+  - Raven: Soil parameter PET_CORRECTION modifies PET in SoilEvaporation algorithms
+  - Shafii2017: PET correction factor (-) 0.5-1.5. Calibration parameter that was added since original HYMOD overestimated surface runoff.
+  - Herath2021: p4394, table a.1: 0.795-2
+  - Hermans2013(on GitHub): _Kv_ Vegetation adjustment to PET. 0-2
+- HYMOD_Param_09: ALPHA (-)
+ - Wagener2001:ALPHA factor distributing flow btw the 2 series of reservoirs
+ - Raven: Instantaneous movement from SURFACE_WATER to SOIL[1] with ratio ALPHA
+ - Wang2019: range 0-1
+ - Wi2015: Direct runoff and base flow split factor 0.01-0.99
+ - Shafii2014: Distributing factor on flow between the two series of reservoirs. 0-0.1
+ - Hermans2013: Division between quick/slow routing 0-1

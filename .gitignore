@@ -194,7 +194,7 @@ cython_debug/
 /docs/make.bat
 /raven_tools/broye_netcdf__from_cds_downloader.py
 /raven_tools/test.py
-/RAVEN/
+/RAVEN
 /test_files/
 /raven_tools/config/config.yaml
 /raven_tools/config/new_model_config.yaml
