@@ -1,0 +1,374 @@
+GR4J:
+  names:
+    Airsnow_Coeff: Airsnow_Coeff #AIRSNOW_COEFF = 1.0 - CEMANEIGE_X2 (Raven) = 0-1 (Valery2010)
+    #0-1 (0.25) (cponc8 github)
+    Cemaneige_X1: Cemaneige_x1 #AVG_ANNUAL_SNOW  = Avg. annual snow as SWE, 0-100mm (Raven)
+    #0-20 (3.74) (cponc8 github)
+    GR4J_Cemaneige_X2: Cemaneige_x2
+    GR4J_X1: GR4J_x1
+    #100-1200 (350)mm (Perrin et al. 2003)
+    #1-1500 (350)mm (eWater wiki)
+    #1-3000 (350)mm (Pagano et al. 2010)
+    GR4J_Soil_0: Soil_0
+    GR4J_X2: GR4J_x2
+    #-5-3 (0)mm (Perrin et al. 2003)
+    #-10.0-5.0 (0)mm (eWater wiki)
+    #-27-27 (0)mm (Pagano et al. 2010)
+    GR4J_X3: GR4J_x3
+    #20-300 (90) (Perrin et al. 2003)
+    #1-500 (40)mm (eWater wiki)
+    #1-660 (150)mm (Pagano et al. 2010)
+    GR4J_X4: GR4J_x4
+    #1.1-2.9 (1.7)mm (Perrin et al. 2003)
+    #0.5-4.0 (0.5)days (eWater wiki)
+    #1-240 (40)days (Pagano et al. 2010)
+  init:
+    Airsnow_Coeff: '0.5'
+    Cemaneige_X1: '0.5'
+    GR4J_Cemaneige_X2: '0.5'
+    GR4J_X1: '0.35'
+    GR4J_Soil_0: '350'
+    GR4J_X2: '0.0'
+    GR4J_X3: '100'
+    GR4J_X4: '0.5'
+    GR4J_X5: '0.5'
+    GR4J_X6: '0.5'
+  lower:
+    Airsnow_Coeff: '0.0'
+    Cemaneige_X1: '0.0'
+    GR4J_Cemaneige_X2: '0.0'
+    GR4J_X1: '0.1'
+    GR4J_Soil_0: '500'
+    GR4J_X2: '-5.0'
+    GR4J_X3: '1'
+    GR4J_X4: '0.5'
+    GR4J_X5: '0.01'
+    GR4J_X6: '1.0'
+  upper:
+    Airsnow_Coeff: '1.0'
+    Cemaneige_X1: '100'
+    GR4J_Cemaneige_X2: '1.0'
+    GR4J_X1: '1.2'
+    GR4J_Soil_0: '500'
+    GR4J_X2: '3'
+    GR4J_X3: '500'
+    GR4J_X4: '4.0'
+    GR4J_X5: '2.0'
+    GR4J_X6: '5.0'
+HBV:
+  names:
+    HBV_Param_01: HBV_RainSnow_Temp
+    #RAINSNOW_TEMP (C) -3-3 (-0.15) (RavenManual)
+    HBV_Param_02: HBV_Melt_Fact
+    #MELT_FACTOR (mm/dC/d) -9999-9999 (5.04) (RavenManual)
+    HBV_Param_03: HBV_Refreeze_Fact
+    HBV_Param_04: HBV_Snow_SWI
+    HBV_Param_05: HBV_Porosity
+    HBV_Param_06: HBV_Field_Cap
+    #FIELD_CAPACITY (-) 0.0-1.0 (0.0) = Saturation @ field capacity
+    # (mm) 40-400 (vt-hydroinformatics) = Max. soil moisture storage, field capacity
+    # (mm) 50-500 (uzh hbv-light ex.6) = Maximum of SM (storage in soil box)
+    HBV_Param_07: HBV_Beta
+    #HBV_BETA (-) -9999-9999 (1) (RavenManual)
+    #1-6 (vt-hydroinfo) =
+    #1-6 (uzh)
+    HBV_Param_08: HBV_Max_Perc_Rate_Fast_Res
+    HBV_Param_09: HBV_BaseFlow_Coeff_Fast_Res
+    HBV_Param_10: HBV_BaseFlow_Coeff_Slow_Res
+    HBV_Param_11: HBV_T_Conc_Max_Bas
+    HBV_Param_11b: HBV_Time_To_Peak
+    HBV_Param_12: HBV_Prec_Lapse_PCALT
+    HBV_Param_13: HBV_Adiab_Lapse_TCALT
+    HBV_Param_14: HBV_Sat_Wilt
+    #SAT_WILT (-) 0.0-0.9 (0.0) (RavenManual) = Saturation at wilting point
+    #LP 0.3-1 (vt-hydroinfo) = Threshold for reduction of evapo
+    #LP (-) 0.3-1 (uzh) = Threshold for reduction of evapo (SM/FC)
+    HBV_Param_15: HBV_Alpha
+
+    HBV_Param_16: HBV_Max_Cap_Rise_Rate
+    HBV_Param_17: HBV_Thickness_Topsoil
+    HBV_Param_17b: HBV_Initial_Thickness_Topsoil
+    HBV_Param_18: HBV_Melt_For_Corr
+    HBV_Param_19: HBV_Glac_Storage_Effect
+    HBV_Param_20: HBV_Rain_Correction_RFCF
+    HBV_Param_21: HBV_Snow_Correction_SFCF
+    #RainCorrection (-) 0.5-2 (1) (RavenManual) = A multiplier (hopefully near 1.0) applied to all reported rainfall rates at this gauge
+    #SFCF 0.4-1.2 (vt-hydro) = Snowfall correction factor
+    #SCF 0.4-1 (uzh) = Snowfall correction factor
+  init:
+    HBV_Param_01: '-0.15'
+    HBV_Param_02: '0.5'
+    HBV_Param_03: '0.5'
+    HBV_Param_04: '0.5'
+    HBV_Param_05: '0.5'
+    HBV_Param_06: '0.5'
+    HBV_Param_07: '0.5'
+    HBV_Param_08: '0.5'
+    HBV_Param_09: '0.5'
+    HBV_Param_10: '0.5'
+    HBV_Param_11: '0.5'
+    HBV_Param_11b: '0.5'
+    HBV_Param_12: '0.5'
+    HBV_Param_13: '0.5'
+    HBV_Param_14: '0.5'
+    HBV_Param_15: '0.5'
+    HBV_Param_16: '0.5'
+    HBV_Param_17: '0.5'
+    HBV_Param_17b: '0.5'
+    HBV_Param_18: '0.5'
+    HBV_Param_19: '0.5'
+    HBV_Param_20: '0.5'
+    HBV_Param_21: '1.0'
+  lower:
+    HBV_Param_01: '-3'
+    HBV_Param_02: '0.5'
+    HBV_Param_03: '0.5'
+    HBV_Param_04: '0.5'
+    HBV_Param_05: '0.5'
+    HBV_Param_06: '0.0'
+    HBV_Param_07: '1.0'
+    HBV_Param_08: '0.5'
+    HBV_Param_09: '0.5'
+    HBV_Param_10: '0.5'
+    HBV_Param_11: '0.5'
+    HBV_Param_11b: '0.5'
+    HBV_Param_12: '0.5'
+    HBV_Param_13: '0.5'
+    HBV_Param_14: '0.3'
+    HBV_Param_15: '0.5'
+    HBV_Param_16: '0.5'
+    HBV_Param_17: '0.5'
+    HBV_Param_17b: '0.5'
+    HBV_Param_18: '0.5'
+    HBV_Param_19: '0.5'
+    HBV_Param_20: '0.5'
+    HBV_Param_21: '0.5'
+  upper:
+    HBV_Param_01: '3'
+    HBV_Param_02: '0.5'
+    HBV_Param_03: '0.5'
+    HBV_Param_04: '0.5'
+    HBV_Param_05: '0.5'
+    HBV_Param_06: '1.0'
+    HBV_Param_07: '6.0'
+    HBV_Param_08: '0.5'
+    HBV_Param_09: '0.5'
+    HBV_Param_10: '0.5'
+    HBV_Param_11: '0.5'
+    HBV_Param_11b: '0.5'
+    HBV_Param_12: '0.5'
+    HBV_Param_13: '0.5'
+    HBV_Param_14: '1.0'
+    HBV_Param_15: '0.5'
+    HBV_Param_16: '0.5'
+    HBV_Param_17: '0.5'
+    HBV_Param_17b: '0.5'
+    HBV_Param_18: '0.5'
+    HBV_Param_19: '0.5'
+    HBV_Param_20: '0.5'
+    HBV_Param_21: '2.0'
+HMETS:
+  names:
+    HMETS_Param_01: HMETS_alpha1 #GAMMA_SHAPE for surface UH
+    HMETS_Param_02: HMETS_beta1 #GAMMA_SCALE for surface UH
+    HMETS_Param_03: HMETS_alpha2 #GAMMA_SHAPE2 for delayed UH
+    HMETS_Param_04: HMETS_beta2 #GAMMA_SCALE2 for delayed UH
+    HMETS_Param_05a: HMETS_ddf_min #MIN_MELT_FACTOR = min. DDF
+    HMETS_Param_05b: HMETS_ddf_max #MAX_MELT_FACTOR = max. DDF
+    HMETS_Param_06: HMETS_ddf_plus #Difference btw min. & max. DDF
+    HMETS_Param_07: HMETS_T_bm #DD_MELT_TEMP = Base melting Temp.
+    HMETS_Param_08: HMETS_K_cum #DD_AGGRADATION = Empirical param. for calc of DDF
+    HMETS_Param_09a: HMETS_fc_min #SNOW_SWI_MIN = Min. fraction for snowpack water retention capacity
+    HMETS_Param_09b: HMETS_fc_max #SNOW_SWI_MAX = Max. fraction for snowpack water retention capacity
+    HMETS_Param_10: HMETS_fc_plus #Difference btw SNOW_SWI_MIN & SNOW_SWI_MAX
+    HMETS_Param_11: HMETS_C_cum #SWI_REDUCT_COEFF = Param. for calc. of water retention capacity
+    HMETS_Param_12: HMETS_T_bf #DD_REFREEZE_TEMP = Base refreezing Temp.
+    HMETS_Param_13: HMETS_K_f #REFREEZE_FACTOR
+    HMETS_Param_14: HMETS_F_e #REFREEZE_EXP
+    HMETS_Param_15: HMETS_ET_eff #Fraction of PET
+    HMETS_Param_16: HMETS_c_r #HMETS_RUNOFF_COEFF = Fraction of water for surface & delayed runoff
+    HMETS_Param_17: HMETS_c_vp #PERC_COEFF_TOPSOIL = Fraction of water for GW recharge
+    HMETS_Param_18: HMETS_c_va #BASEFLOW_COEFF_TOPSOIL = Fraction of water for hypodermic flow
+    HMETS_Param_19: HMETS_c_p #BASEFLOW_COEFF_PHREATIC = Fraction of water for GW flow
+    HMETS_Param_20a: HMETS_half_Thick_TOP #Thickness TOPSOIL half
+    HMETS_Param_20b: HMETS_Thick_TOP #Same as HMETS_Param_20a, but divided by 1000 = in m
+    HMETS_Param_21a: HMETS_half_Thick_PHREATIC #Thickness PHREATIC half
+    HMETS_Param_21b: HMETS_Thick_PHREATIC #Same as HMETS_Param_21a, but divided by 1000 = in m
+  init:
+    HMETS_Param_01: '1.0'
+    HMETS_Param_02: '1.0'
+    HMETS_Param_03: '1.0'
+    HMETS_Param_04: '1.0'
+    HMETS_Param_05a: '1.5'
+    HMETS_Param_05b: '1.0'
+    HMETS_Param_06: '0.5'
+    HMETS_Param_07: '0.0'
+    HMETS_Param_08: '0.1'
+    HMETS_Param_09a: '0.0'
+    HMETS_Param_09b: '0.01'
+    HMETS_Param_10: '0.5'
+    HMETS_Param_11: '0.005'
+    HMETS_Param_12: '0.0'
+    HMETS_Param_13: '1.0'
+    HMETS_Param_14: '1.0'
+    HMETS_Param_15: '0.0'
+    HMETS_Param_16: '0.5'
+    HMETS_Param_17: '0.01'
+    HMETS_Param_18: '-2.0'
+    HMETS_Param_19: '-3.0'
+    HMETS_Param_20a: '100'
+    HMETS_Param_20b: '0.1'
+    HMETS_Param_21a: '100'
+    HMETS_Param_21b: '0.1'
+  lower:
+    HMETS_Param_01: '0.3'
+    HMETS_Param_02: '0.01'
+    HMETS_Param_03: '0.5'
+    HMETS_Param_04: '0.15'
+    HMETS_Param_05a: '1.5'
+    HMETS_Param_05b: '0.0'
+    HMETS_Param_06: '0.0'
+    HMETS_Param_07: '-1.0'
+    HMETS_Param_08: '0.01'
+    HMETS_Param_09a: '0.0'
+    HMETS_Param_09b: '0.01'
+    HMETS_Param_10: '0.01'
+    HMETS_Param_11: '0.005'
+    HMETS_Param_12: '-5.0'
+    HMETS_Param_13: '0.0'
+    HMETS_Param_14: '0.0'
+    HMETS_Param_15: '0.0'
+    HMETS_Param_16: '0.0'
+    HMETS_Param_17: '0.00001'
+    HMETS_Param_18: '-5.0'
+    HMETS_Param_19: '-5.0'
+    HMETS_Param_20a: '0.0'
+    HMETS_Param_20b: '0.0'
+    HMETS_Param_21a: '0.0'
+    HMETS_Param_21b: '0.0'
+  upper:
+    HMETS_Param_01: '20.0'
+    HMETS_Param_02: '5.0'
+    HMETS_Param_03: '13.0'
+    HMETS_Param_04: '1.5'
+    HMETS_Param_05a: '3.0'
+    HMETS_Param_05b: '5.0'
+    HMETS_Param_06: '20.0'
+    HMETS_Param_07: '1.0'
+    HMETS_Param_08: '0.2'
+    HMETS_Param_09a: '0.1'
+    HMETS_Param_09b: '0.3'
+    HMETS_Param_10: '0.2'
+    HMETS_Param_11: '0.1'
+    HMETS_Param_12: '2.0'
+    HMETS_Param_13: '5.0'
+    HMETS_Param_14: '1.0'
+    HMETS_Param_15: '3.0'
+    HMETS_Param_16: '1.0'
+    HMETS_Param_17: '0.02'
+    HMETS_Param_18: '-1.0'
+    HMETS_Param_19: '-2.0'
+    HMETS_Param_20a: '500'
+    HMETS_Param_20b: '0.5'
+    HMETS_Param_21a: '2000'
+    HMETS_Param_21b: '2.0'
+HYMOD:
+  names:
+    HYMOD_Param_01: HYMOD_K_q #(orig) RES_CONSTANT = Nash UH linear reservoir const./residence time of reservoir series/of quick release reservoir
+    HYMOD_Param_02: HYMOD_C_max #(orig) Thickness TOPSOIL(of Default_P SoilProfile)/Max. storage capacity
+    HYMOD_Param_03: HYMOD_T_zero #RAINSNOW_TEMP = Rain/Snow halfway transition temp (Raven)/Threshold temp. (Moore1993)
+    HYMOD_Param_04: HYMOD_K_s #(orig) BASEFLOW_COEFF(GWSOIL) = Residence time single reservoir/slow release reservoirs
+    HYMOD_Param_05: HYMOD_C_melt #max. MELT_FACTOR for DD pot. melt (Raven)
+    HYMOD_Param_06: HYMOD_T_melt #DD_MELT_TEMP for DD pot. melt (Raven)
+    HYMOD_Param_07: HYMOD_B_exp #(orig) PDM_B = Degree of spat. variability of soil moisture capacity
+    HYMOD_Param_08: HYMOD_PET_Corr #PET_CORRECTION(Topsoil) = /PET modified by soil param PET_CORRECTION
+    HYMOD_Param_09: HYMOD_Alpha #(orig) Distribution ratio slow vs. quick release reservoir
+  init:
+    HYMOD_Param_01: '1.0'
+    HYMOD_Param_02: '0.5'
+    HYMOD_Param_03: '0.5'
+    HYMOD_Param_04: '0.25'
+    HYMOD_Param_05: '0.0'
+    HYMOD_Param_06: '0.0'
+    HYMOD_Param_07: '0.5'
+    HYMOD_Param_08: '1.0'
+    HYMOD_Param_09: '0.5'
+  lower:
+    HYMOD_Param_01: '0.5'
+    HYMOD_Param_02: '0.01'
+    HYMOD_Param_03: '-1.0'
+    HYMOD_Param_04: '0.01'
+    HYMOD_Param_05: '0.5'
+    HYMOD_Param_06: '-4.0'
+    HYMOD_Param_07: '0.0'
+    HYMOD_Param_08: '0.0'
+    HYMOD_Param_09: '0.2'
+  upper:
+    HYMOD_Param_01: '1.2'
+    HYMOD_Param_02: '0.5'
+    HYMOD_Param_03: '1.0'
+    HYMOD_Param_04: '0.5'
+    HYMOD_Param_05: '4.0'
+    HYMOD_Param_06: '4.0'
+    HYMOD_Param_07: '2.0'
+    HYMOD_Param_08: '1.0'
+    HYMOD_Param_09: '0.99'
+MOHYSE:
+  names:
+    MOHYSE_Param_01: MOHYSE_Pet_Coeff #c_ETP = coeff. d'ajustement de l'evapo potentielle (Fortin & Turcotte2007) 0.5-2 (Hamaoui2019)
+    #0-9999 (-9999) RAVEN
+    MOHYSE_Param_02: MOHYSE_Aet_Coeff #c_TR = coeff. dâjustement de la transpiration (Fortin & Turcotte2007) 0.5-1 (Hamaoui2019)
+    #AET_COEFF RAVEN 0-1 (0.5 or 0.05) (- or 1/d)
+    MOHYSE_Param_03: MOHYSE_Melt_Factor #c_f = taux de fonte (Fortin & Turcotte2007) 2-4 (Hamaoui2019)
+    #MELT_FACTOR RAven -9999-9999 (5.04 or 3.5) (mm/d/dC)
+    MOHYSE_Param_04: MOHYSE_DD_Melt_Temp #T_f = temp seuil pour la fonte -4-4 (dC) (Fortin & Turcotte2007) 0-0 (Hamaoui2019)
+    #DD_MELT_TEMP RAVEN -5-5 (0) (dC)
+    MOHYSE_Param_05: MOHYSE_Thickness_Topsoil #V_max = niveau max. de la zone vadose (Fortin & Turcotte2007) 5-15 (Hamaoui2019)
+    #Raven no
+    MOHYSE_Param_06: MOHYSE_Perc_Coeff_Topsoil #c_VA = coefficient de vidange de la zone vadose vers l’aquifère min 0.01 (1/d) (Fortin & Turcotte2007) 0.48-0.96 (mm/d) (Hamaoui2019)
+    #PERC_COEFF RAVEN 0-9999 (-9999) (1/d)
+    MOHYSE_Param_07: MOHYSE_Baseflow_Coeff_Topsoil #c_V = coefficient de vidange de la zone vadose vers le cours d’eau min 0.01 (1/d) (Fortin & Turcotte2007) 0.24-1.2 (1/d)(Hamaoui2019)
+    #BASEFLOW_COEFF RAVEN -9999-9999 (0.1) (1/d)
+    MOHYSE_Param_08: MOHYSE_Baseflow_Coeff_Gwsoil #c_A = coefficient de vidange de l’aquifère vers le cours d’eau min 0.01 (1/d) (Fortin & Turcotte2007) 0.48-1.2 (1/d) (Hamaoui2019)
+    #BASEFLOW_COEFF RAVEN -9999-9999 (0.1) (1/d)
+    #    MOHYSE_Param_08b: MOHYSE_sum_06_07_08 # This sum must not exceed 1.0 (Fortin & Turcotte2007)
+    MOHYSE_Param_09: MOHYSE_Gamma_Shape_Alpha #alpha = param. de forme de l'hydrogramme unitaire (Fortin & Turcotte2007) 3-3 (Hamaoui2019)
+    #GAMMA_SHAPE RAVEN 0.5-5 (-) from manual or 0.5-5 (1) (d) from params.dat or 0.1-10 (3) (1) from params.dat
+    MOHYSE_Param_10: MOHYSE_Gamma_Scale_Beta #beta = param. d'échelle de l'hydrogramme unitaire (Fortin & Turcotte2007) 3-3 (Hamaoui2019)
+    #GAMMA_SCALE RAVEN 0.0001-100000 (1) (1) params.dat or 0.1-20 (1/d) from manual
+  init:
+    MOHYSE_Param_01: '1'
+    MOHYSE_Param_02: '0.5'
+    MOHYSE_Param_03: '3.5'
+    MOHYSE_Param_04: '0'
+    MOHYSE_Param_05: '2'
+    MOHYSE_Param_06: '0.5'
+    MOHYSE_Param_07: '0.1'
+    MOHYSE_Param_08: '0.1'
+    #    MOHYSE_Param_08b: '0.5'
+    MOHYSE_Param_09: '1.0'
+    MOHYSE_Param_10: '1'
+  lower:
+    MOHYSE_Param_01: '0.5'
+    MOHYSE_Param_02: '0.5'
+    MOHYSE_Param_03: '2'
+    MOHYSE_Param_04: '-5'
+    MOHYSE_Param_05: '0.5'
+    MOHYSE_Param_06: '0.01' #~24h*(0.0004/h) (Fortin & Turcotte2007)
+    MOHYSE_Param_07: '0.01' #~24h*(0.0004/h) (Fortin & Turcotte2007)
+    MOHYSE_Param_08: '0.01' #~24h*(0.0004/h) (Fortin & Turcotte2007)
+    #    MOHYSE_Param_08b: '0.01'
+    MOHYSE_Param_09: '0.5'
+    MOHYSE_Param_10: '0.01'
+  upper:
+    MOHYSE_Param_01: '2'
+    MOHYSE_Param_02: '1'
+    MOHYSE_Param_03: '4'
+    MOHYSE_Param_04: '5'
+    MOHYSE_Param_05: '10'
+    MOHYSE_Param_06: '0.99'
+    MOHYSE_Param_07: '0.99'
+    MOHYSE_Param_08: '0.99'
+    #    MOHYSE_Param_08b: '0.99'
+    MOHYSE_Param_09: '5'
+    MOHYSE_Param_10: '20'

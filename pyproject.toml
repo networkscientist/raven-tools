@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "raven-tools"
+version = "0.1.0"
+description = "Tools to prepare raven input files for the Broye catchment"
+license = "AGPL-3.0-or-later"
+authors = ["Peter Zweifel <71866336+networkscientist@users.noreply.github.com>"]
+readme = "README.md"
+repository = "https://github.com/networkscientist/raven-tools"
+keywords = ["raven", "hydrology"]
+
+[tool.poetry.dependencies]
+python = "^3.8.14"
+pandas = "^1.5.0"
+geopandas = "^0.12.1"
+xarray = "^2022.9.0"
+numpy = "^1.24.2"
+Shapely = "^1.8.4"
+netCDF4 = "^1.6.2"
+pyet = "^1.2.2"
+rioxarray = "^0.13.3"
+PyYAML = "^6.0"
+hydroeval = "^0.1.0"
+matplotlib = "^3.7.1"
+hydroerr = "^1.24"
+
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+sphinx-rtd-theme = "^1.2.0"
+sphinx-autodoc-typehints = "^1.22"
+pygments = "^2.14.0"
+pylint = "^2.16.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
