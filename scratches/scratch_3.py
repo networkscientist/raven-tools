@@ -60,17 +60,17 @@ data_dir = Path("/media/mainman/Work/RAVEN/data")
 
 # Do the following snippet for each catchment and model type:
 # -----------------------------------------------------------
-
+models_by_name = ["MOHYSE"]
 for c in catchments_by_id:
     for m in models_by_name:
         model_instance = rt.model.raven_model.RavenModel(model_type=m, catchment_ch_id=c, start_year=start_year,
                                                          end_year=end_year)
         # model_instance.create_dirs()
         # model_instance.camels_to_rvt()
-        # for s in suffix:
-        #     model_instance.write_rvx(rvx_type=s, ostrich_template=True, raven_template=True)
-        # model_instance.write_rvt()
-        model_instance.write_ost()
+        for s in suffix:
+            model_instance.write_rvx(rvx_type=s, ostrich_template=True, raven_template=True)
+        model_instance.write_rvt()
+        model_instance.write_ost(run_number=20)
         # model_instance.create_symlinks(rvx_files=False)
 
 # for f in rt.config.variables.forcings_dirs:
