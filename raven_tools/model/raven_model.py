@@ -18,6 +18,7 @@ from raven_tools.processing import raven_run as rr
 from raven_tools.processing import raven_preprocess as rpe
 from pyproj import Transformer
 import csv
+import subprocess
 
 
 class RavenModel:
@@ -532,7 +533,7 @@ class RavenModel:
         self._ost_exe_path = value
 
     def create_symlinks(self, forcings: bool = True, discharge: bool = True, raven_executable: bool = True,
-                        ostrich_executable: bool = True, rvx_files: bool = True, raven_diag: bool = True):
+                        ostrich_executable: bool = True, rvx_files: bool = True, raven_diag: bool = True, delete=False):
         from raven_tools.processing import raven_diag
         logger.debug("Entered function create_symlinks.")
         if forcings:
@@ -544,14 +545,15 @@ class RavenModel:
                    "TminD_v2.0_swiss.lv95"]
             logger.debug("List with source folders created.")
             for s in src:
-                dst = Path(self.model_dir, self.model_sub_dir, "data_obs", s)
-                logger.debug(f"Symlink src: MeteoSwiss_gridded_products/{s}")
-                logger.debug(f"Symlink dst: {dst}")
                 try:
-                    os.symlink(Path(self.data_dir, "MeteoSwiss_gridded_products", s), dst, target_is_directory=True)
+                    src_path = Path("/storage/homefs/pz09y074/raven_master_files/RAVEN", "data", "MeteoSwiss_gridded_products", s)
+                    dst = Path(self.model_dir, self.model_sub_dir, "data_obs", s)
+                    logger.debug(f"Symlink src: {src_path}")
+                    logger.debug(f"Symlink dst: {dst}")
+                    os.symlink(src_path, dst, target_is_directory=True)
                     logger.debug(f"Symlink created")
                     print(f"Symlink created:\n"
-                          f"Source: MeteoSwiss_gridded_products/{s}\n"
+                          f"Source: {src_path}\n"
                           f"Destination: {dst}")
                 except FileExistsError:
                     logger.exception("Error creating symlink: File already exists")
@@ -562,14 +564,22 @@ class RavenModel:
             logger.debug("Source Path created.")
             logger.debug(f"Symlink src: {src}")
             logger.debug(f"Symlink dst: {dst}")
-            try:
-                os.symlink(src, dst)
-                logger.debug(f"Symlink created")
-                print(f"Symlink created:\n"
-                      f"Source: {src}\n"
-                      f"Destination: {dst}")
-            except FileExistsError:
-                logger.exception("Error creating symlink: File already exists")
+            if delete:
+                try:
+                    Path.unlink(dst)
+                except:
+                    logger.exception("There has been an exception unlinking...")
+            else:
+                try:
+                    rcode = subprocess.call(['ln', "-sn", src, dst])
+                    logger.debug(f"extent.sh executed with return code: {rcode}")
+#                    os.symlink(src, dst)
+                    logger.debug(f"Symlink created")
+                    print(f"Symlink created:\n"
+                          f"Source: {src}\n"
+                          f"Destination: {dst}")
+                except FileExistsError:
+                    logger.exception("Error creating symlink: File already exists")
 
         if raven_executable:
             src = Path(self.raven_exe_path)
