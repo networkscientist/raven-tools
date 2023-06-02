@@ -15,7 +15,6 @@ import os
 import re
 import shutil
 import subprocess
-# import datetime
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
@@ -31,9 +30,6 @@ from numpy import exp
 from shapely.geometry import Polygon, mapping, Point
 
 from raven_tools import config
-
-# from functools import partial
-# from itertools import repeat
 
 logger = logging.getLogger(__name__)
 logger.debug("Entered raven_preprocess.py.")
@@ -85,7 +81,6 @@ def create_bbox(extent_shape_file_path: Path, bb_file_path: Path, create_bbox_sh
 
     # Create the bounding box Polygon
     bbox_poly, ext_gdf = create_bbox_geometry(extent_shape_file_path)
-
     # Create the bounding shape in a GeoDataFrame
     bbox_gdf: GeoDataFrame = gpd.GeoDataFrame(pd.DataFrame(['p1'], columns=['geom']),
                                               crs={'init': 'epsg:2056'},
@@ -194,32 +189,6 @@ def netcdf_clipper_legacy(netcdf_file_path: Path, bbox_file_path: Path, bbox_gdf
     return xds_clipped
 
 
-# def netcdf_clipper_multi(netcdf_dir_path: Path,
-#                          catchment: str, data_dir):
-#     """ Clips multiple netCDF files in a directory
-#
-#     Args:
-#         bbox_file_path : Path
-#             Full Path to the bounding box shape file
-#         netcdf_dir_path : Path
-#             Path to directory with netCDF files to clip.
-#         bbox_gdf : GeoDataFrame
-#             Bounding box GeoDataFrame created with create_bounding_shape()
-#
-#     """
-#     file_list = glob.glob(f"{netcdf_dir_path}/original_files/*.nc")
-#     extent_shape_file_path = Path(data_dir, "Catchment", "reproject_2056",
-#                                   f"{config.variables.catchments[catchment_ch_id]['catchment_id']}.shp")
-#     # bbox_gdf, ext_gdf, bbox_file_path = create_bbox(extent_shape_file_path=extent_shape_file_path, bb_file_path=Path(data_dir, "Catchment", f"{catchment}_bbox.shp"))
-#     for f in file_list:
-#         # netcdf_clipper_legacy(netcdf_file_path=Path(f), bbox_file_path=bbox_file_path, bbox_gdf=bbox_gdf,
-#         #                       catchment=catchment)
-#         netcdf_clipper(f, extent_shape_file_path)
-#
-#     #     pool.map(partial(netcdf_clipper,bbox_file_path=bbox_file_path,bbox_gdf=bbox_gdf,catchment=catchment), file_list)
-#     # with Pool() as pool:
-
-
 def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
     """
 
@@ -232,12 +201,10 @@ def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
     cdf_out_path = Path(str(netcdf_file_path).replace(list(name_pattern.keys())[0], list(name_pattern.values())[0]))
     # Copy the clipped file to a new file so as not to change the original file
     shutil.copyfile(netcdf_file_path, cdf_out_path)
-
     # Read the clipped netCDF file into a netCDF Dataset
     # cdf_dataset_in = Dataset(netcdf_file_path, format="NETCDF4")
     # Create the output file in append mode
     cdf_dataset_out: netCDF4.Dataset = Dataset(cdf_out_path, "r+", format="NETCDF4")
-
     # Create a new variable 'PET' in the output file, according to the 'TabsD' variable in the input file
     pet = cdf_dataset_out.createVariable('PET', np.float32, fill_value=-999.99, dimensions=('time', 'N', 'E'))
     pet.units = 'mm/d'
@@ -251,9 +218,7 @@ def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
     tabsd = cdf_dataset_out['TabsD'][:]
     latitude = cdf_dataset_out['lat'][:, 1]
     pet_array = cdf_dataset_out['PET'][:]
-
     day_length = np.empty((366, 60, 36))
-
     for dx, day in np.ndenumerate(tabsd):
         sol_dec = 0.409 * np.sin(2. * np.pi / 366. * (dx[0] + 1) - 1.39)
         l_rad = latitude[dx[1]] * np.pi / 180
@@ -294,7 +259,6 @@ def resample_netcdf_monthly():
     ds_resampled = ds.resample(time='m').mean()
     netcdf_file_path = "/media/mainman/Work/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/merged/resampled.nc"
     dataset_to_netcdf(ds_resampled, Path(netcdf_file_path), catchment="Dischmabach")
-
     monthly_data = ds.resample(freq='m', dim='time', how='mean')
 
 
