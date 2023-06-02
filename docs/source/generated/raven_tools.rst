@@ -1,6 +1,17 @@
 raven\_tools package
 ====================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   raven_tools.config
+   raven_tools.log
+   raven_tools.model
+   raven_tools.processing
+
 Submodules
 ----------
 
@@ -24,46 +35,6 @@ raven\_tools.preappend\_dblquotes module
 ----------------------------------------
 
 .. automodule:: raven_tools.preappend_dblquotes
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-raven\_tools.raven\_diag module
--------------------------------
-
-.. automodule:: raven_tools.raven_diag
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-raven\_tools.raven\_model module
---------------------------------
-
-.. automodule:: raven_tools.raven_model
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-raven\_tools.raven\_postprocess module
---------------------------------------
-
-.. automodule:: raven_tools.raven_postprocess
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-raven\_tools.raven\_preprocess module
--------------------------------------
-
-.. automodule:: raven_tools.raven_preprocess
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-raven\_tools.raven\_run module
-------------------------------
-
-.. automodule:: raven_tools.raven_run
    :members:
    :undoc-members:
    :show-inheritance:

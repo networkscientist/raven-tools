@@ -155,7 +155,14 @@ class RavenModel:
 
     @property
     def root_dir(self) -> Path:
-        """Get root directory that contains the 'RAVEN' folder."""
+        """Get root directory that contains the 'RAVEN' folder.
+
+        Args:
+
+        Returns:
+            self._root_dir : Path
+                Root directory that contains 'RAVEN' folder
+        """
         logger.debug("Getting root dir...")
         assert isinstance(self._root_dir, Path), f"root_dir should be Path, got type{type(self._root_dir)} instead."
         return self._root_dir
