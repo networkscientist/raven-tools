@@ -744,7 +744,7 @@ class RavenModel:
         # Create union and difference overlay GeoDataFrames
         non_gla_res_union = rpe.create_overlay(grd=basic_grid, ctm_gdf=gpd.read_file(catchment_filepath))
         # Compute the relative area a.k.a grid weight and write to shape files
-        non_gla_rel_area = rpe.calc_relative_area(gdf=non_gla_res_union, hru_short_name=hru_short_name, glacier=False)
+        non_gla_rel_area = rpe.calc_relative_area(gdf=non_gla_res_union, hru_short_name=hru_short_name)
         # grid_non_gla.set_index("cell_id", inplace=True)
         # grid_rel_area_non_gla = grid_non_gla.join(other=non_gla_rel_area, rsuffix="_ng")
         # grid_non_gla = rpe.copy_rel_area_from_union_to_grid(res_union=non_gla_rel_area, grid=grid_non_gla,
@@ -764,7 +764,7 @@ class RavenModel:
             catchment_glaciation, catchment_non_glaciation = rpe.glacier_extent_from_shp(ctm_shp=catchment_filepath,
                                                                                          glacier_shp=glacier_shape_path)
             gla_res_union = rpe.create_overlay(grd=non_gla_res_union, ctm_gdf=catchment_glaciation)
-            gla_rel_area = rpe.calc_relative_area(gla_res_union, hru_short_name=hru_short_name, glacier=True)
+            gla_rel_area = rpe.calc_relative_area(gla_res_union, hru_short_name=hru_short_name)
             grid_rel_area_gla = basic_grid.join(other=non_gla_rel_area, rsuffix="_ng")
             gla_grid = non_gla_rel_area.set_index('cell_id').join(other=gla_rel_area.set_index('cell_id'),
                                                                   rsuffix='_ng')
