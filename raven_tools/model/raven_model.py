@@ -8,8 +8,7 @@ import shutil
 from pathlib import Path
 
 import pandas as pd
-
-# import raven_tools as rt
+import geopandas as gpd
 
 logger = logging.getLogger(__name__)
 logger.debug("Logging from raven_model to console started")
@@ -48,7 +47,6 @@ class RavenModel:
         assert model_type in self.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
         logger.debug(f"CWD: {os.getcwd()}")
         logger.debug("Trying to open project_config.yaml...")
-
         try:
             self.conf = config.variables.project_config
         except:
@@ -60,44 +58,29 @@ class RavenModel:
                                                              config.variables.catchments[self.catchment_ch_id]["lon"])
         except:
             logger.exception("Error getting catchments info from __init__.py")
-        logger.debug("Setting self.catchment...")
         self.stream_name = config.variables.catchments[self.catchment_ch_id]['stream_name']
         logger.debug("project_config.yaml loaded.")
-        logger.debug("Trying to set self.X variables...")
-        logger.debug("Setting self.model_type...")
         self.model_type = model_type
         self.start_year = start_year
         self.end_year = end_year
-        logger.debug("Setting self.root_dir...")
         self.root_dir = Path(os.path.join(os.getcwd(), Path("RAVEN")))
-        logger.debug("Setting self.catchment_id...")
         self.gauge_id = config.variables.catchments[self.catchment_ch_id]['ID']
         self.gauge_short_code = config.variables.catchments[self.catchment_ch_id]['short_code']
         logger.info(f"Self.gauge_id set to {self.gauge_id}.")
         logger.info(f"Self.gauge_short_code set to {self.gauge_short_code}.")
         self.station_elevation = config.variables.catchments[self.catchment_ch_id]['station_elevation']
         logger.debug(f"Self.station_elevation set to {self.station_elevation}.")
-        logger.debug("Setting self.attribute_csv_name (file name with catchment attributes...")
         self.attribute_csv = f"{self.catchment_ch_id}_attributes.csv"
-        logger.debug("Setting self.model_dir...")
         self.model_dir = Path(self.root_dir, "models", self.catchment_ch_id, self.model_type)
-        logger.debug("Setting self.model_sub_dir...")
         self.model_sub_dir = self.conf['ModelSubDir']
-        logger.debug("Setting self.dirs...")
-        logger.debug("Setting self.model_type...")
         self.dirs: list[Path] = [
             Path(self.model_dir, ""),
-            # Path(self.model_dir, "", self.model_sub_dir),
             Path(self.model_dir, self.model_sub_dir, "", "output"),
             Path(self.model_dir, self.model_sub_dir, "", "data_obs")
         ]
-        logger.debug("Setting self.data_dir...")
         self.data_dir: Path = Path(self.root_dir, self.conf['DataDir'])
-        logger.debug("Setting meteo folder...")
         self.meteo_dir = self.conf['MeteoSubDir']
-        logger.debug("Setting start year...")
         self.start_year = self.conf['StartYear']
-        logger.debug("Setting end year...")
         self.end_year = self.conf['EndYear']
         logger.debug("Self.X variables set.")
         logger.debug(f"__init__ of {__name__} finished...")
@@ -110,7 +93,6 @@ class RavenModel:
                 for row in csv_reader:
                     self.glaciation_ratio = float(row['Gla_Ratio'])
                     self.glacier_alti = float(row['Gla_Alti'])
-                    # print(f"Attribute: {row[0]} - Value: {row[1]}")
         except:
             logger.exception("Error reading glacier data")
         try:
@@ -138,11 +120,6 @@ class RavenModel:
 
     @property
     def data_dir(self) -> Path:
-        """
-
-        Returns:
-
-        """
         logger.debug("Getting data dir...")
         return self._data_dir
 
@@ -155,7 +132,6 @@ class RavenModel:
     @property
     def model_type(self) -> str:
         """Returns model type. Supported models are GR4J, HYMOD, HMETS, MOHYSE and HBV-EC."""
-
         logger.debug("Getting model type...")
         assert isinstance(self._model_type, str), f"model type should be str, is type{type(self._model_type)} instead."
         return self._model_type
@@ -180,7 +156,6 @@ class RavenModel:
     @property
     def root_dir(self) -> Path:
         """Get root directory that contains the 'RAVEN' folder."""
-
         logger.debug("Getting root dir...")
         assert isinstance(self._root_dir, Path), f"root_dir should be Path, got type{type(self._root_dir)} instead."
         return self._root_dir
@@ -194,7 +169,6 @@ class RavenModel:
     @property
     def model_dir(self) -> Path:
         """Get model directory"""
-
         logger.debug("Getting model dir...")
         assert isinstance(self._model_dir, Path), f"model_dir should be Path, is {type(self._model_dir)} instead."
         return self._model_dir
@@ -319,7 +293,6 @@ class RavenModel:
 
         Returns:
 
-
         """
         return self._meteo_dir
 
@@ -344,7 +317,6 @@ class RavenModel:
     @property
     def end_year(self) -> int:
         """Returns end year."""
-
         logger.debug("Getting end year...")
         assert isinstance(self._end_year, int), f"end_year should be int, is type{type(self._end_year)} instead."
         return self._end_year
@@ -472,7 +444,6 @@ class RavenModel:
         subdirs
 
         """
-
         logger.debug("Trying to create model directories...")
         for f in self.dirs:
             try:
@@ -535,9 +506,7 @@ class RavenModel:
     def create_symlinks(self, forcings: bool = True, discharge: bool = True, raven_executable: bool = True,
                         ostrich_executable: bool = True, rvx_files: bool = True, raven_diag: bool = True, delete=False):
         from raven_tools.processing import raven_diag
-        logger.debug("Entered function create_symlinks.")
         if forcings:
-            logger.debug("Trying to create data symlinks...")
             src = ["RhiresD_v2.0_swiss.lv95",
                    "SrelD_v2.0_swiss.lv95",
                    "TabsD_v2.0_swiss.lv95",
@@ -552,16 +521,12 @@ class RavenModel:
                     logger.debug(f"Symlink dst: {dst}")
                     os.symlink(src_path, dst, target_is_directory=True)
                     logger.debug(f"Symlink created")
-                    print(f"Symlink created:\n"
-                          f"Source: {src_path}\n"
-                          f"Destination: {dst}")
                 except FileExistsError:
                     logger.exception("Error creating symlink: File already exists")
         if discharge:
             discharge_filename = f"{self.gauge_short_code}_Q_{self.gauge_id}_daily.rvt"
             src = Path(self.data_dir, "Discharge", discharge_filename)
             dst = Path(self.model_dir, self.model_sub_dir, "data_obs", discharge_filename)
-            logger.debug("Source Path created.")
             logger.debug(f"Symlink src: {src}")
             logger.debug(f"Symlink dst: {dst}")
             if delete:
@@ -573,26 +538,20 @@ class RavenModel:
                 try:
                     rcode = subprocess.call(['ln', "-sn", src, dst])
                     logger.debug(f"extent.sh executed with return code: {rcode}")
-#                    os.symlink(src, dst)
-                    logger.debug(f"Symlink created")
-                    print(f"Symlink created:\n"
-                          f"Source: {src}\n"
-                          f"Destination: {dst}")
+                    os.symlink(src, dst)
+                    logger.debug(f"Symlink src: {src}")
+                    logger.debug(f"Symlink dst: {dst}")
                 except FileExistsError:
                     logger.exception("Error creating symlink: File already exists")
 
         if raven_executable:
             src = Path(self.raven_exe_path)
             dst = Path(self.model_dir, self.model_sub_dir, "Raven.exe")
-            logger.debug("Source path created.")
             logger.debug(f"Symlink src: {src}")
             logger.debug(f"Symlink dst: {dst}")
             try:
                 os.symlink(src, dst)
                 logger.debug(f"Symlink created")
-                print(f"Symlink created:\n"
-                      f"Source: {src}\n"
-                      f"Destination: {dst}")
             except FileExistsError:
                 logger.exception("Error creating symlink: File already exists")
                 pass
@@ -600,15 +559,11 @@ class RavenModel:
         if ostrich_executable:
             src = Path(self.ost_exe_path)
             dst = Path(self.model_dir, "OstrichMPI")
-            logger.debug("Source path created.")
             logger.debug(f"Symlink src: {src}")
             logger.debug(f"Symlink dst: {dst}")
             try:
                 os.symlink(src, dst)
                 logger.debug(f"Symlink created")
-                print(f"Symlink created:\n"
-                      f"Source: {src}\n"
-                      f"Destination: {dst}")
             except FileExistsError:
                 logger.exception("Error creating symlink: File already exists")
                 pass
@@ -617,7 +572,6 @@ class RavenModel:
             for s in config.variables.raven_filetypes:
                 src = Path(self.model_dir, f"{self.catchment_ch_id}_{self.model_type}.{s}")
                 dst = Path(self.model_dir, self.model_sub_dir, f"{self.catchment_ch_id}_{self.model_type}.{s}")
-                logger.info("Source path created.")
                 logger.debug(f"Symlink src: {src}")
                 logger.debug(f"Symlink dst: {dst}")
                 try:
@@ -642,21 +596,12 @@ class RavenModel:
         """
         hru_info_dict = {}
         assert rvx_type in config.variables.raven_filetypes, f"Raven suffix .{rvx_type} is not in list of accepted suffixes."
-        # TODO: Implement discharge and forcings time series.
-
-        # try:
-        #     glacier_props_df = pd.read_csv(
-        #         f"/home/mainman/PycharmProjects/raven-tools/RAVEN/data/glaciers/glaciation_ratio_{self.catchment_ch_id}.txt",
-        #         sep=';')
-        #     glacier_props = glacier_props_df.to_dict('records')[0]
         try:
             hru_info_df = pd.read_csv(Path(self.data_dir, "Catchment", "hru_info.csv"), na_values='-')
             hru_info_df = hru_info_df[hru_info_df['Ctm'] == self.catchment_ch_id]
             hru_info_dict = hru_info_df.to_dict('records')[0]
-
         except FileNotFoundError:
             logger.exception("Glacier properties file could not be found. Maybe you need to create it first.")
-        logger.debug("Starting if-tree for template type...")
         if raven_template is True:
             logger.debug("Variable raven_template is True...")
             logger.debug(f"Trying to call rr.write_rvx function to create .{rvx_type} for Raven...")
@@ -672,7 +617,6 @@ class RavenModel:
                          model_type=self.model_type,
                          project_dir=self.root_dir, params=self.default_params, template_type="Ostrich",
                          rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year)
-
             logger.debug(f".{rvx_type}.tpl for Ostrich created by rr.write_rvx function")
         if ostrich_template is False and raven_template is False:
             logger.debug("Variables ostrich_template and raven_template set to False.")
@@ -709,16 +653,12 @@ class RavenModel:
         """Create the netCDF files for the chosen catchment
 
         """
-
         extent_file_path = Path(self.data_dir, "Catchment", f"{self.catchment_ch_id}.shp")
         netcdf_file_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_prefix, "out",
                                 f"{forcing_prefix}_{self.start_year}01010000_{self.end_year}12310000.nc")
-
         try:
             rpe.netcdf_clipper(netcdf_file_path=netcdf_file_path, extent_file_path=extent_file_path)
             logger.info(f"netcdf_file_path = {netcdf_file_path}")
-            # rpe.netcdf_clipper_multi(netcdf_dir_path=netcdf_dir_path,
-            #                          catchment=self.catchment, data_dir=self.data_dir)
         except:
             logger.exception(f"Error creating netCDF file {netcdf_file_path}")
 
@@ -734,7 +674,6 @@ class RavenModel:
                         create_bbox_shp=True)
 
     def write_rvt(self, ostrich_template: bool = True, raven_template: bool = True):
-
         hru_info_dict = {}
         try:
             hru_info_df = pd.read_csv(Path(self.data_dir, "Catchment", "hru_info.csv"), na_values='-')
@@ -781,7 +720,6 @@ class RavenModel:
                           end_date=f"{self.end_year + 1}-01-01")
 
     def create_grid_weights(self, forcing_name, glacier: bool = False):
-        import geopandas as gpd
         if forcing_name == "RhiresD_v2.0_swiss.lv95":
             forcing_suffix = "ch01h.swiss.lv95"
         else:
@@ -804,7 +742,6 @@ class RavenModel:
                                      forcing_name=forcing_name, start_year=self.start_year)
 
         # Create union and difference overlay GeoDataFrames
-
         non_gla_res_union = rpe.create_overlay(grd=basic_grid, ctm_gdf=gpd.read_file(catchment_filepath))
         # Compute the relative area a.k.a grid weight and write to shape files
         non_gla_rel_area = rpe.calc_relative_area(gdf=non_gla_res_union, hru_short_name=hru_short_name, glacier=False)
@@ -826,10 +763,8 @@ class RavenModel:
                                 f"grid_weights_{self.catchment_ch_id}_glacier")
             catchment_glaciation, catchment_non_glaciation = rpe.glacier_extent_from_shp(ctm_shp=catchment_filepath,
                                                                                          glacier_shp=glacier_shape_path)
-
             gla_res_union = rpe.create_overlay(grd=non_gla_res_union, ctm_gdf=catchment_glaciation)
             gla_rel_area = rpe.calc_relative_area(gla_res_union, hru_short_name=hru_short_name, glacier=True)
-
             grid_rel_area_gla = basic_grid.join(other=non_gla_rel_area, rsuffix="_ng")
             gla_grid = non_gla_rel_area.set_index('cell_id').join(other=gla_rel_area.set_index('cell_id'),
                                                                   rsuffix='_ng')
@@ -837,7 +772,6 @@ class RavenModel:
         else:
             grid['2'] = gpd.GeoDataFrame
         rpe.write_weights_to_file(grd=grid, grid_dir_path=non_gla_out_path, glacier=True)
-
         logger.debug(f"grid weight written to file {non_gla_out_path}")
 
     def glacier_ratio(self, dem_tif_filenames):
@@ -850,7 +784,6 @@ class RavenModel:
         #     "glaciation_height":
         #         []
         # }
-
         dem_filepaths = [Path(self.data_dir, "DEM", f) for f in dem_tif_filenames]
         try:
             glaciation_ratio, glacier_height, non_glaciation_ratio, non_gla_height, glaciated_centroid, non_glaciated_centroid = rpe.glaciation_ratio_height(
@@ -867,7 +800,6 @@ class RavenModel:
             pass
 
     def hru_dem_props(self, glacier: bool = False):
-
         columns = [
             "NonGlaArea",
             "GlaArea",
