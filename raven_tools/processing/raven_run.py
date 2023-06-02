@@ -125,44 +125,6 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str, glacier:
         f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
         ":EndGriddedForcing"
     ]
-    # if glacier:
-    #     forcing_rainfall = [
-    #         ":GriddedForcing           Rainfall",
-    #         "    :ForcingType          RAINFALL",
-    #         f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/out/RhiresD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
-    #         "    :VarNameNC            RhiresD",
-    #         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-    #         f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
-    #         f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_glacier.txt",
-    #         ":EndGriddedForcing"]
-    #     forcing_temp_ave = [
-    #         ":GriddedForcing           Average Temperature",
-    #         "    :ForcingType          TEMP_AVE",
-    #         f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/out/TabsD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
-    #         "    :VarNameNC            TabsD",
-    #         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-    #         f"    :RedirectToFile       data_obs/TabsD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
-    #         f"    :RedirectToFile       data_obs/TabsD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_glacier.txt",
-    #         ":EndGriddedForcing"]
-    #     forcing_temp_max = [
-    #         ":GriddedForcing           Maximum Temperature",
-    #         "    :ForcingType          TEMP_MAX",
-    #         f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/out/TmaxD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
-    #         "    :VarNameNC            TmaxD",
-    #         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-    #         f"    :RedirectToFile       data_obs/TmaxD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
-    #         f"    :RedirectToFile       data_obs/TmaxD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_glacier.txt",
-    #         ":EndGriddedForcing"]
-    #     forcing_temp_min = [
-    #         ":GriddedForcing           Minimum Temperature",
-    #         "    :ForcingType          TEMP_MIN",
-    #         f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/out/TminD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
-    #         "    :VarNameNC            TminD",
-    #         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-    #         f"    :RedirectToFile       data_obs/TminD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
-    #         f"    :RedirectToFile       data_obs/TminD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_glacier.txt",
-    #         ":EndGriddedForcing"
-    #     ]
 
     forcing_data = {
         'Rainfall':
@@ -304,7 +266,6 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                 Dictionary containing the parameters for the .rvX file
     """
 
-    logger.debug("Entered generate_template() function.")
     assert model_type in config.variables.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
     logger.debug("model_type is in the list of supported models.")
     end_date = f"{end_year + 1}-01-01 00:00:00"
@@ -1075,19 +1036,6 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                         f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
                         f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
                     ],
-                # "Alias Definitions":
-                #     [
-                #         "# :Alias MOHYSE_PARA_1      1.5589    # :GlobalParameter         MOHYSE_PET_COEFF",
-                #         "# :Alias MOHYSE_PARA_2	    0.9991    # LandUseParameterList --> AET_COEFF",
-                #         "# :Alias MOHYSE_PARA_3	    2.1511    # LandUseParameterList --> MELT_FACTOR",
-                #         "# :Alias MOHYSE_PARA_4	   -1.6101    # LandUseParameterList --> DD_MELT_TEMP",
-                #         "# :Alias MOHYSE_PARA_5	    0.5000    # SoilProfiles         --> thickness of TOPSOIL (in mm????? must be m!!!)",
-                #         "# :Alias MOHYSE_PARA_6	    0.1050    # SoilParameterList    --> PERC_COEFF (TOPSOIL)",
-                #         "# :Alias MOHYSE_PARA_7	    0.0533    # SoilParameterList    --> BASEFLOW_COEFF (TOPSOIL)",
-                #         "# :Alias MOHYSE_PARA_8	    0.0132    # SoilParameterList    --> BASEFLOW_COEFF (GWSOIL)",
-                #         "# :Alias MOHYSE_PARA_9	    1.0474    # :SubBasinProperties  --> GAMMA_SHAPE",
-                #         "# :Alias MOHYSE_PARA_10	    7.9628    # :SubBasinProperties  --> TIME_CONC = MOHYSE_PARA_10 / 0.3 = 26.542666666"
-                #     ],
                 "Hydrologic Process Order":
                     [
                         ":HydrologicProcesses",
@@ -1124,11 +1072,6 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
     return rvx_params[model_type]
 
 
-# TODO: Check the parameter list for those with suffixes 'b'!
-
-# TODO: Which param is HBV_PARA_???
-
-
 def generate_template_ostrich(catchment_ch_id: str,
                               model_type: str = model_type,
                               params: dict = default_params,
@@ -1153,7 +1096,6 @@ def generate_template_ostrich(catchment_ch_id: str,
     """
 
     file_name = f"{catchment_ch_id}_{model_type}"
-    logger.debug("Entered generate_template() function.")
     assert model_type in config.variables.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
     logger.debug("model_type is in the list of supported models.")
     module_root_dir: Path = Path().resolve()
@@ -1260,24 +1202,30 @@ def generate_template_ostrich(catchment_ch_id: str,
                 f"cp ./{file_name}.rvp model/{file_name}.rvp",
                 f"cp ./{file_name}.rvc model/{file_name}.rvc",
                 f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
-                f"mpirun $OSTRICH_MPI{newline}",
-                f"if (( $SECONDS > 3600 )) ; then",
-                f"    let \"hours=SECONDS/3600\"",
-                f"    let \"minutes=(SECONDS%3600)/60\"",
-                f"    let \"seconds=(SECONDS%3600)%60\"",
-                f"    echo \"Completed in $hours hour(s), $minutes minute(s) and $seconds second(s)\"",
-                f"    echo \"Completed in $hours hour(s), $minutes minute(s) and $seconds second(s)\" >> time_comp.txt",
-                f"elif (( $SECONDS > 60 )) ; then",
-                f"    let \"minutes=(SECONDS%3600)/60\"",
-                f"    let \"seconds=(SECONDS%3600)%60\"",
-                f"    echo \"Completed in $minutes minute(s) and $seconds second(s)\"",
-                f"    echo \"Completed in $minutes minute(s) and $seconds second(s)\" >> time_comp.txt",
-                f"else",
-                f"    echo \"Completed in $SECONDS seconds\"",
-                f"    echo \"Completed in $SECONDS seconds\" >> time_comp.txt",
-                f"fi",
+                f"mpirun $OSTRICH_MPI{newline}"
             ]
     }
+
+    model_info = [
+                f"# Model Type: {model_type}",
+                f"# Catchment Name: {catchment_name}",
+                f"# Catchment ID: {catchment_ch_id}",
+                f"# Author: {author}",
+                f"# Generation Date: {generation_date}"
+    ]
+
+    extra_dirs = [
+        f"BeginExtraDirs",
+        f"model",
+        f"EndExtraDirs"
+    ]
+
+    constraints = [
+        f"BeginConstraints",
+        f"# not needed when no constraints, but PenaltyFunction statement above is required",
+        f"# name     type     penalty    lwr   upr   resp.var",
+        f"EndConstraints",
+    ]
     # ost_save_output:
     #     "Save Ostrich Run Output":
     #         [
@@ -1295,21 +1243,11 @@ def generate_template_ostrich(catchment_ch_id: str,
         "ost_in":
             {
                 "Model Info":
-                    [
-                        f"# Model Type: {model_type}",
-                        f"# Catchment Name: {catchment_name}",
-                        f"# Catchment ID: {catchment_ch_id}",
-                        f"# Author: {author}",
-                        f"# Generation Date: {generation_date}"
-                    ],
+                    model_info,
                 "General Options":
                     general_options,
                 "Extra Directories":
-                    [
-                        f"BeginExtraDirs",
-                        f"model",
-                        f"EndExtraDirs"
-                    ],
+                    extra_dirs,
                 "File Pairs":
                     [
                         f"BeginFilePairs",
@@ -1365,12 +1303,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                 "GCOP Options":
                     gcop_options,
                 "Constraints":
-                    [
-                        f"BeginConstraints",
-                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                        f"# name     type     penalty    lwr   upr   resp.var",
-                        f"EndConstraints",
-                    ],
+                    constraints,
                 "Random Seed Control":
                     random_seed,
                 "Algorithm Settings":
@@ -1406,21 +1339,11 @@ def generate_template_ostrich(catchment_ch_id: str,
         "ost_in":
             {
                 "Model Info":
-                    [
-                        f"# Model Type: {model_type}",
-                        f"# Catchment Name: {catchment_name}",
-                        f"# Catchment ID: {catchment_ch_id}",
-                        f"# Author: {author}",
-                        f"# Generation Date: {generation_date}"
-                    ],
+                    model_info,
                 "General Options":
                     general_options,
                 "Extra Directories":
-                    [
-                        f"BeginExtraDirs",
-                        f"model",
-                        f"EndExtraDirs"
-                    ],
+                    extra_dirs,
                 "File Pairs":
                     [
                         f"BeginFilePairs",
@@ -1459,12 +1382,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                 "GCOP Options":
                     gcop_options,
                 "Constraints":
-                    [
-                        f"BeginConstraints",
-                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                        f"# name     type     penalty    lwr   upr   resp.var",
-                        f"EndConstraints",
-                    ],
+                    constraints,
                 "Random Seed Control":
                     random_seed,
                 "Algorithm Settings":
@@ -1500,21 +1418,11 @@ def generate_template_ostrich(catchment_ch_id: str,
         "ost_in":
             {
                 "Model Info":
-                    [
-                        f"# Model Type: {model_type}",
-                        f"# Catchment Name: {catchment_name}",
-                        f"# Catchment ID: {catchment_ch_id}",
-                        f"# Author: {author}",
-                        f"# Generation Date: {generation_date}"
-                    ],
+                    model_info,
                 "General Options":
                     general_options,
                 "Extra Directories":
-                    [
-                        f"BeginExtraDirs",
-                        f"model",
-                        f"EndExtraDirs"
-                    ],
+                    extra_dirs,
                 "File Pairs":
                     [
                         f"BeginFilePairs",
@@ -1570,12 +1478,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                 "GCOP Options":
                     gcop_options,
                 "Constraints":
-                    [
-                        f"BeginConstraints",
-                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                        f"# name     type     penalty    lwr   upr   resp.var",
-                        f"EndConstraints",
-                    ],
+                    constraints,
                 "Random Seed Control":
                     random_seed,
                 "Algorithm Settings":
@@ -1609,21 +1512,11 @@ def generate_template_ostrich(catchment_ch_id: str,
         "ost_in":
             {
                 "Model Info":
-                    [
-                        f"# Model Type: {model_type}",
-                        f"# Catchment Name: {catchment_name}",
-                        f"# Catchment ID: {catchment_ch_id}",
-                        f"# Author: {author}",
-                        f"# Generation Date: {generation_date}"
-                    ],
+                    model_info,
                 "General Options":
                     general_options,
                 "Extra Directories":
-                    [
-                        f"BeginExtraDirs",
-                        f"model",
-                        f"EndExtraDirs"
-                    ],
+                    extra_dirs,
                 "File Pairs":
                     [
                         f"BeginFilePairs",
@@ -1658,12 +1551,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                 "GCOP Options":
                     gcop_options,
                 "Constraints":
-                    [
-                        f"BeginConstraints",
-                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                        f"# name     type     penalty    lwr   upr   resp.var",
-                        f"EndConstraints",
-                    ],
+                    constraints,
                 "Random Seed Control":
                     random_seed,
                 "Algorithm Settings":
@@ -1699,21 +1587,11 @@ def generate_template_ostrich(catchment_ch_id: str,
         "ost_in":
             {
                 "Model Info":
-                    [
-                        f"# Model Type: {model_type}",
-                        f"# Catchment Name: {catchment_name}",
-                        f"# Catchment ID: {catchment_ch_id}",
-                        f"# Author: {author}",
-                        f"# Generation Date: {generation_date}"
-                    ],
+                    model_info,
                 "General Options":
                     general_options,
                 "Extra Directories":
-                    [
-                        f"BeginExtraDirs",
-                        f"model",
-                        f"EndExtraDirs"
-                    ],
+                    extra_dirs,
                 "File Pairs":
                     [
                         f"BeginFilePairs",
@@ -1748,12 +1626,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                 "GCOP Options":
                     gcop_options,
                 "Constraints":
-                    [
-                        f"#BeginConstraints",
-                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                        f"# name     type     penalty    lwr   upr   resp.var",
-                        f"#EndConstraints",
-                    ],
+                    constraints,
                 "Random Seed Control":
                     random_seed,
                 "Algorithm Settings":
@@ -1794,9 +1667,6 @@ def generate_template_ostrich(catchment_ch_id: str,
     return ost_params[model_type]
 
 
-# TODO: is 'melt_factor' actually a parameter of GR4J? In the tutorial file, 'annual snow' is called 'CEMANEIGE_X1'...
-
-
 def subsection_header(title: str) -> list[str]:
     """Generates subsection header for a .rvX file from given title.
     Args:
@@ -1807,15 +1677,12 @@ def subsection_header(title: str) -> list[str]:
             List of header line as strings.
     """
 
-    logger.debug("Arrived in function subsection_header().")
     subsection_head: list[str] = [
         subsection_header_line,
         f"# ----{title}--------------------------------------------",
         subsection_header_line
     ]
-    logger.debug("Subsection header written.")
-    logger.debug("Returning subsection header...")
-    logger.debug("Leaving function subsection_header() afterwards...")
+    logger.debug("Subsection header written, returning and leaving function subsection_header() afterwards.")
     return subsection_head
 
 
@@ -1851,7 +1718,6 @@ def write_rvx(catchment_ch_id: str,
         This function writes the RVX file for the given catchment, model type, and parameters.
     """
 
-    logger.debug("Arrived in function write_rvx().")
     assert model_type in config.variables.supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
                                                             f"supported_models."
     attribute_csv_name = f"{raven_tools.config.variables.catchments[catchment_ch_id]['catchment_id']}_attributes.csv"
@@ -1883,7 +1749,6 @@ def write_rvx(catchment_ch_id: str,
     if template_type == "Ostrich":
         file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, file_name)
         logger.debug(f"template_type is {template_type}.")
-        logger.debug(f"Adding .tpl suffix to file_path for Ostrich template file...")
         file_path = Path((str(file_path) + ".tpl"))
         logger.debug(f"New file_path: {file_path}")
         logger.debug(f"Trying to generate .{rvx_type}.tpl template sections with function generate_template()...")
@@ -1901,7 +1766,6 @@ def write_rvx(catchment_ch_id: str,
                                     rvx_type=rvx_type))
         logger.debug("Header lines written.")
         ff.write(newline)
-        logger.debug("Entering template_sections for-loop...")
         logger.debug(f"template_sections dictionary:\n {template_sections}")
         for section in template_sections[rvx_type]:
             logger.debug(f"Current section: {section}")
@@ -1914,7 +1778,6 @@ def write_rvx(catchment_ch_id: str,
         dst_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, model_sub_dir, file_name)
         shutil.copy(file_path, dst_path)
         logger.debug("template_sections for-loop finished.")
-        logger.debug("Function write_rvx() finished.")
 
 
 def write_ostrich(
@@ -1943,10 +1806,8 @@ def write_ostrich(
 
     This function writes Ostrich input files ostIn.txt, save_best.sh and Ost-RAVEN.sh
     """
-    logger.debug("Arrived in function write_ostrich().")
     assert model_type in config.variables.supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
                                                             f"supported_models."
-
     ost_in_file_name: str = f"ostIn.txt"
     save_best_file_name: str = f"save_best.sh"
     ost_raven_file_name: str = f"Ost-RAVEN.sh"
@@ -1960,7 +1821,6 @@ def write_ostrich(
         logger.debug(
             f"Trying to write to file: {Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name)}")
         with open(Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name), 'w+') as ff:
-            logger.debug("Entering template_sections for-loop...")
             logger.debug(f"template_sections dictionary: {newline} {template_sections}")
             for section in template_sections["ost_in"]:
                 logger.debug(f"Current section: {section}")
@@ -1969,20 +1829,17 @@ def write_ostrich(
                 ff.writelines(f"{lin}\n" for lin in template_sections["ost_in"][section])
                 logger.debug("Template section written.")
                 ff.write(newline)
-            logger.debug("template_sections for-loop finished.")
         logger.debug(f"Variable save_best evaluated to {save_best}")
     if save_best:
         file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, save_best_file_name)
         logger.debug(
             f"Trying to write to file: {file_path}")
         with open(file_path, 'w') as ff:
-            logger.debug("Entering template_sections for-loop...")
             logger.debug(f"template_sections dictionary: {newline} {template_sections}")
             for section in template_sections["save_best"]:
                 ff.writelines(f"{lin}\n" for lin in template_sections["save_best"][section])
                 logger.debug("Template section written.")
                 ff.write(newline)
-            logger.debug("template_sections for-loop finished.")
         logger.debug(f"Variable ost_raven evaluated to {ost_raven}")
         os.chmod(file_path, 0o775)
     if ost_raven:
@@ -1990,13 +1847,11 @@ def write_ostrich(
         logger.debug(
             f"Trying to write to file: {file_path}")
         with open(file_path, 'w') as ff:
-            logger.debug("Entering template_sections for-loop...")
             logger.debug(f"template_sections dictionary: {newline} {template_sections}")
             for section in template_sections["ost_raven"]:
                 ff.writelines(f"{lin}\n" for lin in template_sections["ost_raven"][section])
                 logger.debug("Template section written.")
                 ff.write(newline)
-            logger.debug("template_sections for-loop finished.")
         os.chmod(file_path, 0o775)
 
     if ost_mpi_script:
