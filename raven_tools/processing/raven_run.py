@@ -15,8 +15,6 @@ from raven_tools import config
 
 try:
     logger = logging.getLogger(__name__)
-    logger.debug("TEEEST")
-
     logger.debug(f"CWD: {os.getcwd()}")
     logger.debug('Trying to read project_config.yaml file')
 except:
@@ -171,7 +169,6 @@ def write_rvt(start_year: int,
         model_type: Name of the .rvt file to be written
 
     """
-    logger.debug("Entered write_rvt function.")
     if template_type == "Raven":
         param_or_name = "init"
         file_name: str = f"{catchment_ch_id}_{model_type}.rvt"
@@ -267,9 +264,7 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
     """
 
     assert model_type in config.variables.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
-    logger.debug("model_type is in the list of supported models.")
     end_date = f"{end_year + 1}-01-01 00:00:00"
-    logger.debug("Trying to create rvx_params dictionary...")
     non_glaciated_area: float = float(hru_info['NonGlaArea'])
     non_glacier_altitude: float = float(hru_info['NonGlaAlti'])
     non_glacier_lat: float = float(hru_info['NonGlaLat'])
@@ -1078,7 +1073,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                               catchment_name: str = catchment_name,
                               author: str = author,
                               generation_date: str = generation_date,
-                              run_number: int = 500) -> dict:
+                              run_number: int = 20) -> dict:
     """
     Generates template text which can be written to .rvp file
 
@@ -1097,7 +1092,6 @@ def generate_template_ostrich(catchment_ch_id: str,
 
     file_name = f"{catchment_ch_id}_{model_type}"
     assert model_type in config.variables.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
-    logger.debug("model_type is in the list of supported models.")
     module_root_dir: Path = Path().resolve()
     max_iterations = run_number
     response_variables = [
@@ -1137,16 +1131,11 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"EndGCOP",
     ]
     algorithm_settings = [
-        f"#Algorithm should be last in this file (see p51 for APDDS):",
-        f"",
         f"BeginParallelDDSAlg",
         f"PerturbationValue 0.20",
         f"MaxIterations {max_iterations}",
         f"#	UseRandomParamValues",
         f"# UseInitialParamValues",
-        f"# Note: above intializes DDS to parameter values IN the initial",
-        f"#       model input files IF 'extract' option used in BeginParams",
-        f"#       block (column 'init')",
         f"EndParallelDDSAlg"
     ]
     random_seed = [
@@ -1162,7 +1151,6 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"ModelSubdir processor_",
         f"",
         f"# OstrichWarmStart yes",
-        f"# CheckSensitivities yes"
     ]
 
     ost_raven = [
@@ -1184,7 +1172,6 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
         f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
         f"source {poetry_location}",
-        f"# shellcheck disable=SC2086",
         f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
         f"exit 0",
     ]
@@ -1193,8 +1180,6 @@ def generate_template_ostrich(catchment_ch_id: str,
         "Ostrich MPI run":
             [
                 f"#!/bin/bash{newline}{newline}",
-                f"SECONDS=0",
-                f"touch \"time_comp.txt\"",
                 f"# match assignment to location of OSTRICH installation{newline}",
                 f"cp ./{file_name}.rvi model/{file_name}.rvi",
                 f"cp ./{file_name}.rvh model/{file_name}.rvh",
@@ -1255,7 +1240,6 @@ def generate_template_ostrich(catchment_ch_id: str,
                         f"{file_name}.rvc.tpl;  {file_name}.rvc",
                         f"{file_name}.rvh.tpl;  {file_name}.rvh",
                         f"{file_name}.rvt.tpl;  {file_name}.rvt",
-                        f"#can be multiple (.rvh, .rvi)",
                         f"EndFilePairs"
                     ],
                 "Parameter Specification":
@@ -1349,7 +1333,6 @@ def generate_template_ostrich(catchment_ch_id: str,
                         f"BeginFilePairs",
                         f"{file_name}.rvp.tpl;	{file_name}.rvp",
                         f"{file_name}.rvc.tpl;  {file_name}.rvc",
-                        f"#can be multiple (.rvh, .rvi)",
                         f"EndFilePairs"
                     ],
                 "Parameter Specification":
@@ -1428,7 +1411,6 @@ def generate_template_ostrich(catchment_ch_id: str,
                         f"BeginFilePairs",
                         f"{file_name}.rvp.tpl;	{file_name}.rvp",
                         f"{file_name}.rvc.tpl;  {file_name}.rvc",
-                        f"#can be multiple (.rvh, .rvi)",
                         f"EndFilePairs"
                     ],
                 "Parameter Specification":
@@ -1523,7 +1505,6 @@ def generate_template_ostrich(catchment_ch_id: str,
                         f"{file_name}.rvh.tpl;	{file_name}.rvh",
                         f"{file_name}.rvp.tpl;	{file_name}.rvp",
                         f"{file_name}.rvi.tpl;	{file_name}.rvi",
-                        f"#can be multiple (.rvh, .rvi)",
                         f"EndFilePairs"
                     ],
                 "Parameter Specification":
@@ -1597,7 +1578,6 @@ def generate_template_ostrich(catchment_ch_id: str,
                         f"BeginFilePairs",
                         f"{file_name}.rvp.tpl;	{file_name}.rvp",
                         f"{file_name}.rvh.tpl;  {file_name}.rvh",
-                        f"#can be multiple (.rvh, .rvi)",
                         f"EndFilePairs"
                     ],
                 "Parameter Specification":
@@ -1730,14 +1710,11 @@ def write_rvx(catchment_ch_id: str,
                                    index_col='attribute_names', usecols=[0, 1])
     except:
         logger.exception("Error reading csv file into pandas...")
-    logger.debug("Attribute catchment attribute CSV file read.")
     file_name: str = f"{catchment_ch_id}_{model_type}.{rvx_type}"
     logger.debug(f".{rvx_type} filename set to {file_name}.")
     file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, file_name)
     logger.debug(f".{rvx_type} file path set to {file_path}.")
     template_sections = {}
-    logger.debug("Empty dict template_sections created.")
-    logger.debug("Entering if-tree for template type...")
     if template_type == "Raven":
         logger.debug(f"template_type is {template_type}.")
         logger.debug(f"Trying to generate .{rvx_type} template sections with function generate_template()...")
