@@ -1073,7 +1073,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                               catchment_name: str = catchment_name,
                               author: str = author,
                               generation_date: str = generation_date,
-                              run_number: int = 20) -> dict:
+                              max_iterations : int = 20) -> dict:
     """
     Generates template text which can be written to .rvp file
 
@@ -1093,7 +1093,6 @@ def generate_template_ostrich(catchment_ch_id: str,
     file_name = f"{catchment_ch_id}_{model_type}"
     assert model_type in config.variables.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
     module_root_dir: Path = Path().resolve()
-    max_iterations = run_number
     response_variables = [
         f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
         f"BeginResponseVars",
@@ -1768,7 +1767,7 @@ def write_ostrich(
         save_best: bool = True,
         ost_raven: bool = True,
         ost_mpi_script: bool = True,
-        run_number: int = 500
+        max_iterations: int = 500
 ):
     """Writes Ostrich input files ostIn.txt, save_best.sh and Ost-RAVEN.sh
     Args:
@@ -1791,28 +1790,31 @@ def write_ostrich(
     ost_shell_file_name: str = f"Ostrich_MPI.sh"
     logger.debug(f"filename w/o suffix set to {ost_in_file_name}.")
     template_sections = generate_template_ostrich(model_type=model_type, params=params, catchment_ch_id=catchment_ch_id,
-                                                  catchment_name=catchment_name, run_number=run_number)
+                                                  catchment_name=catchment_name, max_iterations=max_iterations)
     logger.debug(f"Dictionary template_sections created.")
     logger.debug(f"Variable ost_in evaluated to {ost_in}")
     if ost_in:
         logger.debug(
             f"Trying to write to file: {Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name)}")
-        with open(Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name), 'w+') as ff:
-            logger.debug(f"template_sections dictionary: {newline} {template_sections}")
-            for section in template_sections["ost_in"]:
-                logger.debug(f"Current section: {section}")
-                ff.writelines(f"{line}\n" for line in subsection_header(section))
-                logger.debug("Subsection header written.")
-                ff.writelines(f"{lin}\n" for lin in template_sections["ost_in"][section])
-                logger.debug("Template section written.")
-                ff.write(newline)
-        logger.debug(f"Variable save_best evaluated to {save_best}")
+        try:
+            with open(Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name), 'w+') as ff:
+                logger.info(f"template_sections dictionary: {newline} {template_sections}")
+                for section in template_sections["ost_in"]:
+                    logger.info(f"Current section: {section}")
+                    ff.writelines(f"{line}\n" for line in subsection_header(section))
+                    logger.info("Subsection header written.")
+                    ff.writelines(f"{lin}\n" for lin in template_sections["ost_in"][section])
+                    logger.info("Template section written.")
+                    ff.write(newline)
+        except:
+            logger.exception("There has been an error writing ostIn.txt")
+    logger.debug(f"Variable save_best evaluated to {save_best}")
     if save_best:
         file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, save_best_file_name)
         logger.debug(
             f"Trying to write to file: {file_path}")
         with open(file_path, 'w') as ff:
-            logger.debug(f"template_sections dictionary: {newline} {template_sections}")
+            logger.info(f"template_sections dictionary: {newline} {template_sections}")
             for section in template_sections["save_best"]:
                 ff.writelines(f"{lin}\n" for lin in template_sections["save_best"][section])
                 logger.debug("Template section written.")
@@ -1824,7 +1826,7 @@ def write_ostrich(
         logger.debug(
             f"Trying to write to file: {file_path}")
         with open(file_path, 'w') as ff:
-            logger.debug(f"template_sections dictionary: {newline} {template_sections}")
+            logger.info(f"template_sections dictionary: {newline} {template_sections}")
             for section in template_sections["ost_raven"]:
                 ff.writelines(f"{lin}\n" for lin in template_sections["ost_raven"][section])
                 logger.debug("Template section written.")
