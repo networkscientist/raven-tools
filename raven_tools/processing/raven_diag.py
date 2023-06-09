@@ -11,7 +11,8 @@ import pandas as pd
 def csv_import():
     df_cali = pd.read_csv(Path(os.path.dirname(__file__), sys.argv[1]), index_col='date',
                           usecols=[1,4,5])
-    df_vali = df_cali
+    df_vali = pd.read_csv(Path(os.path.dirname(__file__), sys.argv[1]), index_col='date',
+                          usecols=[1,4,5])
     # simulations = df.iloc[:"2000-01-01",:4]
     end_cali = df_cali.index.searchsorted("2001-01-01")
     start_vali = df_vali.index.searchsorted("2001-01-01")
@@ -50,9 +51,9 @@ def total_diag():
         simulations_cali, observations_cali, simulations_vali, observations_vali)
 
     fields = ['Run', 'KGE_NP', 'PBIAS', 'RMSE', 'VE', 'KGE_NP_Cost', 'PBIAS_Cost', 'rs', 'alpha', 'beta']
-    row_cali = ["HYDROGRAPH_CALIBRATION", kge_np_cali[0], pbias_cali, rmse_cali, ve_cali, math.fabs((kge_np_cali - 1)),
+    row_cali = ["HYDROGRAPH_CALIBRATION", kge_np_cali[0], pbias_cali, rmse_cali, ve_cali, math.fabs((kge_np_cali[0] - 1)),
                 (math.fabs(pbias_cali)), rs_cali[0], alpha_cali[0], beta_cali[0]]
-    row_vali = ["HYDROGRAPH_VALIDATION", kge_np_vali[0], pbias_vali, rmse_vali, ve_vali, math.fabs((kge_np_vali - 1)),
+    row_vali = ["HYDROGRAPH_VALIDATION", kge_np_vali[0], pbias_vali, rmse_vali, ve_vali, math.fabs((kge_np_vali[0] - 1)),
                 (math.fabs(pbias_vali)), rs_vali[0], alpha_vali[0], beta_vali[0]]
     write_to_file([fields, row_cali, row_vali])
 
