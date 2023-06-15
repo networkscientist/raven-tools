@@ -204,8 +204,8 @@ def write_rvt(start_year: int,
             f"  :SnowCorrection    {params['HBV'][param_or_name]['HBV_Param_21']}{newline}{newline}"
         ]
         pet_monthly_ave, temp_monthly_ave = raven_tools.processing.raven_preprocess.pet_temp_monthly_ave(
-            pet_filepath=Path("~/Applications/Hydrology/RAVEN/data/forcings/order_103168_PAY_ets150m0_1_data.txt"),
-            temp_filepath=Path("~/Applications/Hydrology/RAVEN/data/forcings/order_103168_PAY_tre200h0_1_data.txt"))
+            pet_filepath=Path(project_dir, data_dir, "forcings", "order_103168_PAY_ets150m0_1_data.txt"),
+            temp_filepath=Path(project_dir, data_dir, "forcings", "order_103168_PAY_tre200h0_1_data.txt"))
         monthly_averages = [
             # The following line expands the list into a string with spaces between the values, omitting any brackets
             f"  :MonthlyAveEvaporation {' '.join(str(x) for x in pet_monthly_ave.to_list())}{newline}",
@@ -1152,17 +1152,47 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"# OstrichWarmStart yes",
     ]
 
-    ost_raven = [
+#    ost_raven = [
+#        f"cp ./{file_name}.rvc model/{file_name}.rvc",
+#        f"cp ./{file_name}.rvh model/{file_name}.rvh",
+#        f"cp ./{file_name}.rvi model/{file_name}.rvi",
+#        f"cp ./{file_name}.rvp model/{file_name}.rvp",
+#        f"cp ./{file_name}.rvt model/{file_name}.rvt{newline}",
+#        f"## cd into the model folder",
+#        f"cd model{newline}",
+#        f"# Run Raven.exe",
+#        f"./Raven.exe {file_name} -o output/",
+#        f"cd output",
+#        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
+#        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
+#        f"source {poetry_location}",
+#        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
+#        f"exit 0",
+#    ]
+    
+    ost_raven_script_cp_lines = []
+    if model_type in ["GR4J", "HMETS"]:
+        ost_raven_script_cp_lines = [
+            f"cp ./{file_name}.rvc model/{file_name}.rvc",
+            f"cp ./{file_name}.rvp model/{file_name}.rvp",
+        ]
+    elif model_type == "HBV":
+        pass
+    elif model_type == "MOHYSE":
+        ost_raven_script_cp_lines = [
+            f"cp ./{file_name}.rvh model/{file_name}.rvh",
+            f"cp ./{file_name}.rvp model/{file_name}.rvp",
+        ]
+
+    ost_raven_header = [
         f"#!/bin/bash{newline}",
         f"set -e{newline}",
         f"# Get the latest version of the diagnostics script and copy it to the model folder",
         f"cp /storage/homefs/pz09y074/raven_master_files/raven_tools/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
         f"# Copy the latest model files to the model folder",
-        f"cp ./{file_name}.rvh model/{file_name}.rvc",
-        f"cp ./{file_name}.rvh model/{file_name}.rvh",
-        f"cp ./{file_name}.rvh model/{file_name}.rvi",
-        f"cp ./{file_name}.rvc model/{file_name}.rvp",
-        f"cp ./{file_name}.rvp model/{file_name}.rvt{newline}",
+    ]
+
+    ost_raven_footer = [
         f"## cd into the model folder",
         f"cd model{newline}",
         f"# Run Raven.exe",
@@ -1175,20 +1205,47 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"exit 0",
     ]
 
+    ost_raven =  ost_raven_header + ost_raven_script_cp_lines + ost_raven_footer
+
+
+    ost_mpi_script_cp_lines = []
+    if model_type in ["GR4J", "HMETS"]:
+        ost_mpi_script_cp_lines = [
+            f"cp ./{file_name}.rvp model/{file_name}.rvp",
+            f"cp ./{file_name}.rvc model/{file_name}.rvc"
+        ]
+    elif model_type == "MOHYSE":
+        ost_mpi_script_cp_lines = [
+            f"cp ./{file_name}.rvh model/{file_name}.rvh",
+            f"cp ./{file_name}.rvp model/{file_name}.rvp"
+        ]
+    ost_mpi_header = [
+        f"#!/bin/bash{newline}{newline}",
+        f"# match assignment to location of OSTRICH installation{newline}",
+    ]
+    ost_mpi_footer = [
+        f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
+        f"mpirun $OSTRICH_MPI{newline}"
+    ]
     ost_mpi_script = {
         "Ostrich MPI run":
-            [
-                f"#!/bin/bash{newline}{newline}",
-                f"# match assignment to location of OSTRICH installation{newline}",
-                f"cp ./{file_name}.rvi model/{file_name}.rvi",
-                f"cp ./{file_name}.rvh model/{file_name}.rvh",
-                f"cp ./{file_name}.rvt model/{file_name}.rvt",
-                f"cp ./{file_name}.rvp model/{file_name}.rvp",
-                f"cp ./{file_name}.rvc model/{file_name}.rvc",
-                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
-                f"mpirun $OSTRICH_MPI{newline}"
-            ]
+            ost_mpi_header + ost_mpi_script_cp_lines + ost_mpi_footer
     }
+    
+#    ost_mpi_script = {
+#        "Ostrich MPI run":
+#            [
+#                f"#!/bin/bash{newline}{newline}",
+#                f"# match assignment to location of OSTRICH installation{newline}",
+#                f"cp ./{file_name}.rvi model/{file_name}.rvi",
+#                f"cp ./{file_name}.rvh model/{file_name}.rvh",
+#                f"cp ./{file_name}.rvt model/{file_name}.rvt",
+#                f"cp ./{file_name}.rvp model/{file_name}.rvp",
+#                f"cp ./{file_name}.rvc model/{file_name}.rvc",
+#                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
+#                f"mpirun $OSTRICH_MPI{newline}"
+#            ]
+#    }
 
     model_info = [
                 f"# Model Type: {model_type}",
