@@ -530,13 +530,14 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                     ],
                 "Soil Parameters":
                     [
+                        f"#For Ostrich:HBV_Alpha= {params['HBV'][param_or_name]['HBV_Param_15']}",
                         ":SoilParameterList",
                         "  :Parameters,                POROSITY,FIELD_CAPACITY,     SAT_WILT,     HBV_BETA, MAX_CAP_RISE_RATE,  MAX_PERC_RATE,  BASEFLOW_COEFF,            BASEFLOW_N",
                         "  :Units     ,                    none,          none,         none,         none,              mm/d,           mm/d,             1/d,                  none",
                         "  #                        HBV_PARA_05,   HBV_PARA_06,  HBV_PARA_14,  HBV_PARA_07,       HBV_PARA_16,       CONSTANT,        CONSTANT,              CONSTANT,",
                         f"    [DEFAULT],            {params['HBV'][param_or_name]['HBV_Param_05']},  {params['HBV'][param_or_name]['HBV_Param_06']}, {params['HBV'][param_or_name]['HBV_Param_14']}, {params['HBV'][param_or_name]['HBV_Param_07']},      {params['HBV'][param_or_name]['HBV_Param_16']},            0.0,             0.0,                   0.0",
                         "  #                                                        CONSTANT,                                     HBV_PARA_08,     HBV_PARA_09, 1+HBV_PARA_15=1+ALPHA,",
-                        f"     FAST_RES,                _DEFAULT,      _DEFAULT,          0.0,     _DEFAULT,          _DEFAULT,   {params['HBV'][param_or_name]['HBV_Param_08']},    {params['HBV'][param_or_name]['HBV_Param_09']},              1.877607",
+                        f"     FAST_RES,                _DEFAULT,      _DEFAULT,          0.0,     _DEFAULT,          _DEFAULT,   {params['HBV'][param_or_name]['HBV_Param_08']},    {params['HBV'][param_or_name]['HBV_Param_09']},              {params['HBV'][param_or_name]['HBV_Param_15b']}",
                         "  #                                                        CONSTANT,                                                      HBV_PARA_10,              CONSTANT,",
                         f"     SLOW_RES,                _DEFAULT,      _DEFAULT,          0.0,     _DEFAULT,          _DEFAULT,       _DEFAULT,    {params['HBV'][param_or_name]['HBV_Param_10']},                   1.0",
                         ":EndSoilParameterList"
@@ -1133,13 +1134,13 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"BeginParallelDDSAlg",
         f"PerturbationValue 0.20",
         f"MaxIterations {max_iterations}",
-        f"#	UseRandomParamValues",
+        f"UseRandomParamValues",
         f"# UseInitialParamValues",
         f"EndParallelDDSAlg"
     ]
     random_seed = [
         f"# Randomsed control added",
-        f"RandomSeed 3333",
+        f"#RandomSeed 3333",
     ]
     general_options = [
         f"ProgramType  	    ParallelDDS",
@@ -1177,7 +1178,12 @@ def generate_template_ostrich(catchment_ch_id: str,
             f"cp ./{file_name}.rvp model/{file_name}.rvp",
         ]
     elif model_type == "HBV":
-        pass
+        ost_raven_script_cp_lines = [
+            f"cp ./{file_name}.rvc model/{file_name}.rvc",
+            f"cp ./{file_name}.rvh model/{file_name}.rvh",
+            f"cp ./{file_name}.rvp model/{file_name}.rvp",
+            f"cp ./{file_name}.rvt model/{file_name}.rvt",
+        ]
     elif model_type == "MOHYSE":
         ost_raven_script_cp_lines = [
             f"cp ./{file_name}.rvh model/{file_name}.rvh",
@@ -1214,6 +1220,13 @@ def generate_template_ostrich(catchment_ch_id: str,
             f"cp ./{file_name}.rvp model/{file_name}.rvp",
             f"cp ./{file_name}.rvc model/{file_name}.rvc"
         ]
+    elif model_type == "HBV":
+        ost_mpi_script_cp_lines = [
+            f"cp ./{file_name}.rvc model/{file_name}.rvc",
+            f"cp ./{file_name}.rvh model/{file_name}.rvh",
+            f"cp ./{file_name}.rvp model/{file_name}.rvp",
+            f"cp ./{file_name}.rvt model/{file_name}.rvt"
+        ]
     elif model_type == "MOHYSE":
         ost_mpi_script_cp_lines = [
             f"cp ./{file_name}.rvh model/{file_name}.rvh",
@@ -1222,6 +1235,7 @@ def generate_template_ostrich(catchment_ch_id: str,
     ost_mpi_header = [
         f"#!/bin/bash{newline}{newline}",
         f"# match assignment to location of OSTRICH installation{newline}",
+        f"set -e{newline}"
     ]
     ost_mpi_footer = [
         f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
@@ -1334,6 +1348,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                         f"# 1-parameter linear (TLIN = 2*XVAL) ",
                         f"{params['HBV']['names']['HBV_Param_11b']} 1 {params['HBV']['names']['HBV_Param_11']} linear 0.5 0.00 free",
                         f"{params['HBV']['names']['HBV_Param_17b']} 1 {params['HBV']['names']['HBV_Param_17']} linear 500 0.00 free",
+                        f"{params['HBV']['names']['HBV_Param_15b']} 1 {params['HBV']['names']['HBV_Param_15']} linear 1.0 1.0 free",
                         f"EndTiedParams"
                     ],
                 "Response Variables":
@@ -1359,9 +1374,10 @@ def generate_template_ostrich(catchment_ch_id: str,
                         f"if [ ! -e model_best ] ; then",
                         f"\tmkdir model_best",
                         f"fi{newline}",
+                        f"cp model/{file_name}.rvc                    model_best/{file_name}.rvc",
                         f"cp model/{file_name}.rvh                    model_best/{file_name}.rvh",
                         f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
-                        f"cp model/{file_name}.rvc                    model_best/{file_name}.rvc",
+                        f"cp model/{file_name}.rvt                    model_best/{file_name}.rvt",
                         f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
                         f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
                         f"exit 0",

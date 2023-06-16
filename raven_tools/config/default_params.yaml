@@ -59,114 +59,130 @@ HBV:
   names:
     HBV_Param_01: HBV_RainSnow_Temp
     #RAINSNOW_TEMP (C) -3-3 (-0.15) (RavenManual)
+    #TT -1.5-1.2 (vt-hydroinfo)
     HBV_Param_02: HBV_Melt_Fact
     #MELT_FACTOR (mm/dC/d) -9999-9999 (5.04) (RavenManual)
+    #or 3.5 (RavenManual)
     HBV_Param_03: HBV_Refreeze_Fact
+    #REFREEZE_FACTOR: (mm/d/dC) 3 (RavenManual)
     HBV_Param_04: HBV_Snow_SWI
+    #SNOW_SWI (-) 0.04-0.07 (RavenManual)
     HBV_Param_05: HBV_Porosity
+    #POROSITY (-) 0.1-0.6 (RavenManual)
     HBV_Param_06: HBV_Field_Cap
     #FIELD_CAPACITY (-) 0.0-1.0 (0.0) = Saturation @ field capacity
     # (mm) 40-400 (vt-hydroinformatics) = Max. soil moisture storage, field capacity
     # (mm) 50-500 (uzh hbv-light ex.6) = Maximum of SM (storage in soil box)
     HBV_Param_07: HBV_Beta
-    #HBV_BETA (-) -9999-9999 (1) (RavenManual)
+    #HBV_BETA (-) 0.0-7.0 (1) (RavenManual)
     #1-6 (vt-hydroinfo) =
     #1-6 (uzh)
     HBV_Param_08: HBV_Max_Perc_Rate_Fast_Res
+    #MAX_PERC_RATE(FAST_RES) (mm/d) 0.01-1000 (RavenManual)
     HBV_Param_09: HBV_BaseFlow_Coeff_Fast_Res
     HBV_Param_10: HBV_BaseFlow_Coeff_Slow_Res
     HBV_Param_11: HBV_T_Conc_Max_Bas
+    #MAXBAS (d) 1-3 (vt-hydroinfo)
     HBV_Param_11b: HBV_Time_To_Peak
     HBV_Param_12: HBV_Prec_Lapse_PCALT
+    #PRECIP_LAPSE (mm/d/km) 0-100 (RavenManual)
     HBV_Param_13: HBV_Adiab_Lapse_TCALT
+    #ADIABATIC_LAPSE (dC/km) 0-7 (RavenManual)
     HBV_Param_14: HBV_Sat_Wilt
     #SAT_WILT (-) 0.0-0.9 (0.0) (RavenManual) = Saturation at wilting point
     #LP 0.3-1 (vt-hydroinfo) = Threshold for reduction of evapo
     #LP (-) 0.3-1 (uzh) = Threshold for reduction of evapo (SM/FC)
     HBV_Param_15: HBV_Alpha
-
+    #BASEFLOW_N-1
+    HBV_Param_15b: HBV_Baseflow_N
+    #Alpha+1=BASEFLOW_N(Raven) (-) 1.0-10.0
     HBV_Param_16: HBV_Max_Cap_Rise_Rate
     HBV_Param_17: HBV_Thickness_Topsoil
     HBV_Param_17b: HBV_Initial_Thickness_Topsoil
     HBV_Param_18: HBV_Melt_For_Corr
+    #HBV_MELT_FOR_CORR=HBV snowmelt forest correction (-) <1
     HBV_Param_19: HBV_Glac_Storage_Effect
+    #GLAC_STORAGE_EFFECT=max linear storage coefficient for glacial melt (-)
     HBV_Param_20: HBV_Rain_Correction_RFCF
-    HBV_Param_21: HBV_Snow_Correction_SFCF
     #RainCorrection (-) 0.5-2 (1) (RavenManual) = A multiplier (hopefully near 1.0) applied to all reported rainfall rates at this gauge
+    HBV_Param_21: HBV_Snow_Correction_SFCF
     #SFCF 0.4-1.2 (vt-hydro) = Snowfall correction factor
     #SCF 0.4-1 (uzh) = Snowfall correction factor
   init:
     HBV_Param_01: '-0.15'
-    HBV_Param_02: '0.5'
-    HBV_Param_03: '0.5'
-    HBV_Param_04: '0.5'
+    HBV_Param_02: '3.5'
+    HBV_Param_03: '3'
+    HBV_Param_04: '0.05'
     HBV_Param_05: '0.5'
     HBV_Param_06: '0.5'
-    HBV_Param_07: '0.5'
-    HBV_Param_08: '0.5'
+    HBV_Param_07: '3.0'
+    HBV_Param_08: '100'
     HBV_Param_09: '0.5'
     HBV_Param_10: '0.5'
-    HBV_Param_11: '0.5'
+    HBV_Param_11: '1.1'
     HBV_Param_11b: '0.5'
-    HBV_Param_12: '0.5'
-    HBV_Param_13: '0.5'
+    HBV_Param_12: '10'
+    HBV_Param_13: '5'
     HBV_Param_14: '0.5'
     HBV_Param_15: '0.5'
+    HBV_Param_15b: '3.0'
     HBV_Param_16: '0.5'
     HBV_Param_17: '0.5'
     HBV_Param_17b: '0.5'
     HBV_Param_18: '0.5'
     HBV_Param_19: '0.5'
-    HBV_Param_20: '0.5'
+    HBV_Param_20: '1.0'
     HBV_Param_21: '1.0'
   lower:
     HBV_Param_01: '-3'
-    HBV_Param_02: '0.5'
-    HBV_Param_03: '0.5'
-    HBV_Param_04: '0.5'
-    HBV_Param_05: '0.5'
+    HBV_Param_02: '3.5'
+    HBV_Param_03: '3'
+    HBV_Param_04: '0.04'
+    HBV_Param_05: '0.1'
     HBV_Param_06: '0.0'
-    HBV_Param_07: '1.0'
-    HBV_Param_08: '0.5'
+    HBV_Param_07: '0.0'
+    HBV_Param_08: '0.01'
     HBV_Param_09: '0.5'
     HBV_Param_10: '0.5'
-    HBV_Param_11: '0.5'
+    HBV_Param_11: '1.0'
     HBV_Param_11b: '0.5'
-    HBV_Param_12: '0.5'
-    HBV_Param_13: '0.5'
-    HBV_Param_14: '0.3'
+    HBV_Param_12: '0.0'
+    HBV_Param_13: '0.0'
+    HBV_Param_14: '0.0'
     HBV_Param_15: '0.5'
+    HBV_Param_15b: '1.0'
     HBV_Param_16: '0.5'
     HBV_Param_17: '0.5'
     HBV_Param_17b: '0.5'
-    HBV_Param_18: '0.5'
+    HBV_Param_18: '0.1'
     HBV_Param_19: '0.5'
     HBV_Param_20: '0.5'
-    HBV_Param_21: '0.5'
+    HBV_Param_21: '0.4'
   upper:
     HBV_Param_01: '3'
-    HBV_Param_02: '0.5'
-    HBV_Param_03: '0.5'
-    HBV_Param_04: '0.5'
-    HBV_Param_05: '0.5'
+    HBV_Param_02: '3.5'
+    HBV_Param_03: '3'
+    HBV_Param_04: '0.07'
+    HBV_Param_05: '0.6'
     HBV_Param_06: '1.0'
-    HBV_Param_07: '6.0'
-    HBV_Param_08: '0.5'
+    HBV_Param_07: '7.0'
+    HBV_Param_08: '1000'
     HBV_Param_09: '0.5'
     HBV_Param_10: '0.5'
-    HBV_Param_11: '0.5'
+    HBV_Param_11: '3.0'
     HBV_Param_11b: '0.5'
-    HBV_Param_12: '0.5'
-    HBV_Param_13: '0.5'
-    HBV_Param_14: '1.0'
+    HBV_Param_12: '100'
+    HBV_Param_13: '7.0'
+    HBV_Param_14: '0.9'
     HBV_Param_15: '0.5'
+    HBV_Param_15b: '10.0'
     HBV_Param_16: '0.5'
     HBV_Param_17: '0.5'
     HBV_Param_17b: '0.5'
-    HBV_Param_18: '0.5'
+    HBV_Param_18: '0.99'
     HBV_Param_19: '0.5'
-    HBV_Param_20: '0.5'
-    HBV_Param_21: '2.0'
+    HBV_Param_20: '2.0'
+    HBV_Param_21: '1.2'
 HMETS:
   names:
     HMETS_Param_01: HMETS_alpha1 #GAMMA_SHAPE for surface UH
