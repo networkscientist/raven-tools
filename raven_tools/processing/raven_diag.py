@@ -8,16 +8,11 @@ import HydroErr as hr
 import hydroeval as he
 import pandas as pd
 
-
-# import cProfile
-# from line_profiler_pycharm import profile
-
-
-# @profile
 def csv_import():
     df_cali = pd.read_csv(Path(os.path.dirname(__file__), sys.argv[1]), index_col='date',
                           usecols=[1,4,5])
-    df_vali = df_cali
+    df_vali = pd.read_csv(Path(os.path.dirname(__file__), sys.argv[1]), index_col='date',
+                          usecols=[1,4,5])
     # simulations = df.iloc[:"2000-01-01",:4]
     end_cali = df_cali.index.searchsorted("2001-01-01")
     start_vali = df_vali.index.searchsorted("2001-01-01")
@@ -29,7 +24,6 @@ def csv_import():
     return simulations_cali, observations_cali, simulations_vali, observations_vali
 
 
-# @profile
 def calc_metrics(simulations_cali, observations_cali, simulations_vali, observations_vali):
     kge_np_cali, rs_cali, alpha_cali, beta_cali = \
         he.evaluator(obj_fn=he.kgenp, simulations=simulations_cali, evaluation=observations_cali)
@@ -44,7 +38,6 @@ def calc_metrics(simulations_cali, observations_cali, simulations_vali, observat
     return kge_np_cali, rs_cali, alpha_cali, beta_cali, kge_np_vali, rs_vali, alpha_vali, beta_vali, pbias_cali, pbias_vali, rmse_cali, rmse_vali, ve_cali, ve_vali
 
 
-# @profile
 def write_to_file(rows):
     with open(Path(os.path.dirname(__file__), sys.argv[2]),
               'w') as csvfile:
@@ -52,31 +45,18 @@ def write_to_file(rows):
         csvwriter.writerows(rows)
 
 
-# @profile
 def total_diag():
     simulations_cali, observations_cali, simulations_vali, observations_vali = csv_import()
     kge_np_cali, rs_cali, alpha_cali, beta_cali, kge_np_vali, rs_vali, alpha_vali, beta_vali, pbias_cali, pbias_vali, rmse_cali, rmse_vali, ve_cali, ve_vali = calc_metrics(
         simulations_cali, observations_cali, simulations_vali, observations_vali)
 
     fields = ['Run', 'KGE_NP', 'PBIAS', 'RMSE', 'VE', 'KGE_NP_Cost', 'PBIAS_Cost', 'rs', 'alpha', 'beta']
-    row_cali = ["HYDROGRAPH_CALIBRATION", kge_np_cali[0], pbias_cali, rmse_cali, ve_cali, math.fabs((kge_np_cali - 1)),
+    row_cali = ["HYDROGRAPH_CALIBRATION", kge_np_cali[0], pbias_cali, rmse_cali, ve_cali, math.fabs((kge_np_cali[0] - 1)),
                 (math.fabs(pbias_cali)), rs_cali[0], alpha_cali[0], beta_cali[0]]
-    row_vali = ["HYDROGRAPH_VALIDATION", kge_np_vali[0], pbias_vali, rmse_vali, ve_vali, math.fabs((kge_np_vali - 1)),
+    row_vali = ["HYDROGRAPH_VALIDATION", kge_np_vali[0], pbias_vali, rmse_vali, ve_vali, math.fabs((kge_np_vali[0] - 1)),
                 (math.fabs(pbias_vali)), rs_vali[0], alpha_vali[0], beta_vali[0]]
     write_to_file([fields, row_cali, row_vali])
 
 
 if __name__ == '__main__':
-    # pr = cProfile.Profile()
-    # pr.enable()
-
-    # nse_cali = he.evaluator(he.nse, simulations_cali, observations_cali)
-    # nse_vali = he.evaluator(he.nse, simulations_vali, observations_vali)
-    # kge_np_cali, rs_cali, alpha_cali, beta_cali = he.kgenp(simulations=simulations_cali.to_numpy(),
-    #                                                        evaluation=observations_cali.to_numpy())
-
     total_diag()
-
-    # pr.disable()
-    # after your program ends
-    # pr.print_stats(sort="calls")

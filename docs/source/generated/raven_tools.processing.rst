@@ -4,6 +4,14 @@ raven\_tools.processing package
 Submodules
 ----------
 
+raven\_tools.processing.raven\_diag module
+------------------------------------------
+
+.. automodule:: raven_tools.processing.raven_diag
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 raven\_tools.processing.raven\_postprocess module
 -------------------------------------------------
 

@@ -15,8 +15,6 @@ from raven_tools import config
 
 try:
     logger = logging.getLogger(__name__)
-    logger.debug("TEEEST")
-
     logger.debug(f"CWD: {os.getcwd()}")
     logger.debug('Trying to read project_config.yaml file')
 except:
@@ -125,44 +123,6 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str, glacier:
         f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
         ":EndGriddedForcing"
     ]
-    # if glacier:
-    #     forcing_rainfall = [
-    #         ":GriddedForcing           Rainfall",
-    #         "    :ForcingType          RAINFALL",
-    #         f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/out/RhiresD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
-    #         "    :VarNameNC            RhiresD",
-    #         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-    #         f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
-    #         f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_glacier.txt",
-    #         ":EndGriddedForcing"]
-    #     forcing_temp_ave = [
-    #         ":GriddedForcing           Average Temperature",
-    #         "    :ForcingType          TEMP_AVE",
-    #         f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/out/TabsD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
-    #         "    :VarNameNC            TabsD",
-    #         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-    #         f"    :RedirectToFile       data_obs/TabsD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
-    #         f"    :RedirectToFile       data_obs/TabsD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_glacier.txt",
-    #         ":EndGriddedForcing"]
-    #     forcing_temp_max = [
-    #         ":GriddedForcing           Maximum Temperature",
-    #         "    :ForcingType          TEMP_MAX",
-    #         f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/out/TmaxD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
-    #         "    :VarNameNC            TmaxD",
-    #         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-    #         f"    :RedirectToFile       data_obs/TmaxD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
-    #         f"    :RedirectToFile       data_obs/TmaxD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_glacier.txt",
-    #         ":EndGriddedForcing"]
-    #     forcing_temp_min = [
-    #         ":GriddedForcing           Minimum Temperature",
-    #         "    :ForcingType          TEMP_MIN",
-    #         f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/out/TminD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
-    #         "    :VarNameNC            TminD",
-    #         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-    #         f"    :RedirectToFile       data_obs/TminD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
-    #         f"    :RedirectToFile       data_obs/TminD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_glacier.txt",
-    #         ":EndGriddedForcing"
-    #     ]
 
     forcing_data = {
         'Rainfall':
@@ -209,7 +169,6 @@ def write_rvt(start_year: int,
         model_type: Name of the .rvt file to be written
 
     """
-    logger.debug("Entered write_rvt function.")
     if template_type == "Raven":
         param_or_name = "init"
         file_name: str = f"{catchment_ch_id}_{model_type}.rvt"
@@ -244,9 +203,9 @@ def write_rvt(start_year: int,
             f"  :RainCorrection    {params['HBV'][param_or_name]['HBV_Param_20']}{newline}",
             f"  :SnowCorrection    {params['HBV'][param_or_name]['HBV_Param_21']}{newline}{newline}"
         ]
-        pet_monthly_ave, temp_monthly_ave = processing.raven_preprocess.pet_temp_monthly_ave(
-            pet_filepath=Path("/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_ets150m0_1_data.txt"),
-            temp_filepath=Path("/media/mainman/Work/RAVEN/data/forcings/order_103168_PAY_tre200h0_1_data.txt"))
+        pet_monthly_ave, temp_monthly_ave = raven_tools.processing.raven_preprocess.pet_temp_monthly_ave(
+            pet_filepath=Path(project_dir, data_dir, "forcings", "order_103168_PAY_ets150m0_1_data.txt"),
+            temp_filepath=Path(project_dir, data_dir, "forcings", "order_103168_PAY_tre200h0_1_data.txt"))
         monthly_averages = [
             # The following line expands the list into a string with spaces between the values, omitting any brackets
             f"  :MonthlyAveEvaporation {' '.join(str(x) for x in pet_monthly_ave.to_list())}{newline}",
@@ -286,7 +245,8 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                           params=default_params,
                           param_or_name="names",
                           start_year: int = start_year, end_year: int = end_year,
-                          cali_end_year: str = cali_end_year) -> dict:
+                          cali_end_year: str = cali_end_year,
+                          glacier_module: bool = False) -> dict:
     """Generates template text which can be written to .rvX file.
 
         Args:
@@ -304,11 +264,8 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                 Dictionary containing the parameters for the .rvX file
     """
 
-    logger.debug("Entered generate_template() function.")
     assert model_type in config.variables.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
-    logger.debug("model_type is in the list of supported models.")
     end_date = f"{end_year + 1}-01-01 00:00:00"
-    logger.debug("Trying to create rvx_params dictionary...")
     non_glaciated_area: float = float(hru_info['NonGlaArea'])
     non_glacier_altitude: float = float(hru_info['NonGlaAlti'])
     non_glacier_lat: float = float(hru_info['NonGlaLat'])
@@ -373,6 +330,54 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                 "   :Units, m, none, mm_per_s",
                 "   VEG_ALL, 0.0, 0.0, 0.0",
                 ":EndVegetationClasses"
+            ]
+        
+    if not glacier_module:
+        gr4j_hydro_proc = \
+            [
+                ":HydrologicProcesses",
+                "   :Precipitation            PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
+                "   :SnowTempEvolve           SNOTEMP_NEWTONS    SNOW_TEMP",
+                "   :SnowBalance              SNOBAL_CEMA_NIEGE  SNOW            PONDED_WATER",
+                "   :OpenWaterEvaporation     OPEN_WATER_EVAP    PONDED_WATER    ATMOSPHERE     	 # Pn",
+                "   :Infiltration             INF_GR4J           PONDED_WATER    MULTIPLE       	 # Ps-",
+                "   :SoilEvaporation          SOILEVAP_GR4J      PRODUCT_STORE   ATMOSPHERE     	 # Es",
+                "   :Percolation              PERC_GR4J          PRODUCT_STORE   TEMP_STORE     	 # Perc",
+                "   :Flush                    RAVEN_DEFAULT      SURFACE_WATER   TEMP_STORE     	 # Pn-Ps",
+                "   :Split                    RAVEN_DEFAULT      TEMP_STORE      CONVOLUTION[0] CONVOLUTION[1] 0.9  # Split Pr",
+                "   :Convolve                 CONVOL_GR4J_1      CONVOLUTION[0]  ROUTING_STORE  	 # Q9",
+                "   :Convolve                 CONVOL_GR4J_2      CONVOLUTION[1]  TEMP_STORE     	 # Q1",
+                "   :Percolation              PERC_GR4JEXCH      ROUTING_STORE   GW_STORE       	 # F(x1)",
+                "   :Percolation              PERC_GR4JEXCH2     TEMP_STORE      GW_STORE       	 # F(x1)",
+                "   :Flush                    RAVEN_DEFAULT      TEMP_STORE      SURFACE_WATER  	 # Qd",
+                "   :Baseflow                 BASE_GR4J          ROUTING_STORE   SURFACE_WATER  	 # Qr",
+                ":EndHydrologicProcesses"
+            ]
+    else:
+        gr4j_hydro_proc = \
+            [
+                ":HydrologicProcesses",
+                "   :Precipitation            PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
+                "   :SnowTempEvolve           SNOTEMP_NEWTONS    SNOW_TEMP",
+                "   :SnowBalance              SNOBAL_CEMA_NIEGE  SNOW            PONDED_WATER",
+                "   :OpenWaterEvaporation     OPEN_WATER_EVAP    PONDED_WATER    ATMOSPHERE     	 # Pn",
+                "   :Infiltration             INF_GR4J           PONDED_WATER    MULTIPLE       	 # Ps-",
+                "   :Flush                    RAVEN_DEFAULT      PONDED_WATER    GLACIER",
+                "     :-->Conditional HRU_TYPE IS GLACIER",
+                "   :GlacierMelt              GMELT_SIMPLE_MELT  GLACIER_ICE     GLACIER",
+                "   :GlacierRelease           GRELEASE_LINEAR_STORAGE  GLACIER   SURFACE_WATER",
+                "   :SoilEvaporation          SOILEVAP_GR4J      PRODUCT_STORE   ATMOSPHERE     	 # Es",
+                "   :Percolation              PERC_GR4J          PRODUCT_STORE   TEMP_STORE     	 # Perc",
+                "   :Flush                    RAVEN_DEFAULT      SURFACE_WATER   TEMP_STORE     	 # Pn-Ps",
+                "     :-->Conditional HRU_TYPE IS_NOT GLACIER",
+                "   :Split                    RAVEN_DEFAULT      TEMP_STORE      CONVOLUTION[0] CONVOLUTION[1] 0.9  # Split Pr",
+                "   :Convolve                 CONVOL_GR4J_1      CONVOLUTION[0]  ROUTING_STORE  	 # Q9",
+                "   :Convolve                 CONVOL_GR4J_2      CONVOLUTION[1]  TEMP_STORE     	 # Q1",
+                "   :Percolation              PERC_GR4JEXCH      ROUTING_STORE   GW_STORE       	 # F(x1)",
+                "   :Percolation              PERC_GR4JEXCH2     TEMP_STORE      GW_STORE       	 # F(x1)",
+                "   :Flush                    RAVEN_DEFAULT      TEMP_STORE      SURFACE_WATER  	 # Qd",
+                "   :Baseflow                 BASE_GR4J          ROUTING_STORE   SURFACE_WATER  	 # Qr",
+                ":EndHydrologicProcesses"
             ]
 
     gr4j = {
@@ -471,25 +476,7 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                         ":Alias GW_STORE           SOIL[3]"
                     ],
                 "Hydrologic Process Order":
-                    [
-                        ":HydrologicProcesses",
-                        "   :Precipitation            PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
-                        "   :SnowTempEvolve           SNOTEMP_NEWTONS    SNOW_TEMP",
-                        "   :SnowBalance              SNOBAL_CEMA_NIEGE  SNOW            PONDED_WATER",
-                        "   :OpenWaterEvaporation     OPEN_WATER_EVAP    PONDED_WATER    ATMOSPHERE     	 # Pn",
-                        "   :Infiltration             INF_GR4J           PONDED_WATER    MULTIPLE       	 # Ps-",
-                        "   :SoilEvaporation          SOILEVAP_GR4J      PRODUCT_STORE   ATMOSPHERE     	 # Es",
-                        "   :Percolation              PERC_GR4J          PRODUCT_STORE   TEMP_STORE     	 # Perc",
-                        "       :Flush                    RAVEN_DEFAULT      SURFACE_WATER   TEMP_STORE     	 # Pn-Ps",
-                        "   :Split                    RAVEN_DEFAULT      TEMP_STORE      CONVOLUTION[0] CONVOLUTION[1] 0.9  # Split Pr",
-                        "   :Convolve                 CONVOL_GR4J_1      CONVOLUTION[0]  ROUTING_STORE  	 # Q9",
-                        "   :Convolve                 CONVOL_GR4J_2      CONVOLUTION[1]  TEMP_STORE     	 # Q1",
-                        "   :Percolation              PERC_GR4JEXCH      ROUTING_STORE   GW_STORE       	 # F(x1)",
-                        "   :Percolation              PERC_GR4JEXCH2     TEMP_STORE      GW_STORE       	 # F(x1)",
-                        "       :Flush                    RAVEN_DEFAULT      TEMP_STORE      SURFACE_WATER  	 # Qd",
-                        "   :Baseflow                 BASE_GR4J          ROUTING_STORE   SURFACE_WATER  	 # Qr",
-                        ":EndHydrologicProcesses"
-                    ],
+                    gr4j_hydro_proc,
                 "Output Options":
                     [
                     ]
@@ -574,13 +561,14 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                     ],
                 "Soil Parameters":
                     [
+                        f"#For Ostrich:HBV_Alpha= {params['HBV'][param_or_name]['HBV_Param_15']}",
                         ":SoilParameterList",
                         "  :Parameters,                POROSITY,FIELD_CAPACITY,     SAT_WILT,     HBV_BETA, MAX_CAP_RISE_RATE,  MAX_PERC_RATE,  BASEFLOW_COEFF,            BASEFLOW_N",
                         "  :Units     ,                    none,          none,         none,         none,              mm/d,           mm/d,             1/d,                  none",
                         "  #                        HBV_PARA_05,   HBV_PARA_06,  HBV_PARA_14,  HBV_PARA_07,       HBV_PARA_16,       CONSTANT,        CONSTANT,              CONSTANT,",
                         f"    [DEFAULT],            {params['HBV'][param_or_name]['HBV_Param_05']},  {params['HBV'][param_or_name]['HBV_Param_06']}, {params['HBV'][param_or_name]['HBV_Param_14']}, {params['HBV'][param_or_name]['HBV_Param_07']},      {params['HBV'][param_or_name]['HBV_Param_16']},            0.0,             0.0,                   0.0",
                         "  #                                                        CONSTANT,                                     HBV_PARA_08,     HBV_PARA_09, 1+HBV_PARA_15=1+ALPHA,",
-                        f"     FAST_RES,                _DEFAULT,      _DEFAULT,          0.0,     _DEFAULT,          _DEFAULT,   {params['HBV'][param_or_name]['HBV_Param_08']},    {params['HBV'][param_or_name]['HBV_Param_09']},              1.877607",
+                        f"     FAST_RES,                _DEFAULT,      _DEFAULT,          0.0,     _DEFAULT,          _DEFAULT,   {params['HBV'][param_or_name]['HBV_Param_08']},    {params['HBV'][param_or_name]['HBV_Param_09']},              {params['HBV'][param_or_name]['HBV_Param_15b']}",
                         "  #                                                        CONSTANT,                                                      HBV_PARA_10,              CONSTANT,",
                         f"     SLOW_RES,                _DEFAULT,      _DEFAULT,          0.0,     _DEFAULT,          _DEFAULT,       _DEFAULT,    {params['HBV'][param_or_name]['HBV_Param_10']},                   1.0",
                         ":EndSoilParameterList"
@@ -1075,19 +1063,6 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                         f":EvaluationPeriod   CALIBRATION   {start_year}-01-01   {cali_end_year}-12-31",
                         f":EvaluationPeriod   VALIDATION    {int(cali_end_year) + 1}-01-01   {end_year}-12-31"
                     ],
-                # "Alias Definitions":
-                #     [
-                #         "# :Alias MOHYSE_PARA_1      1.5589    # :GlobalParameter         MOHYSE_PET_COEFF",
-                #         "# :Alias MOHYSE_PARA_2	    0.9991    # LandUseParameterList --> AET_COEFF",
-                #         "# :Alias MOHYSE_PARA_3	    2.1511    # LandUseParameterList --> MELT_FACTOR",
-                #         "# :Alias MOHYSE_PARA_4	   -1.6101    # LandUseParameterList --> DD_MELT_TEMP",
-                #         "# :Alias MOHYSE_PARA_5	    0.5000    # SoilProfiles         --> thickness of TOPSOIL (in mm????? must be m!!!)",
-                #         "# :Alias MOHYSE_PARA_6	    0.1050    # SoilParameterList    --> PERC_COEFF (TOPSOIL)",
-                #         "# :Alias MOHYSE_PARA_7	    0.0533    # SoilParameterList    --> BASEFLOW_COEFF (TOPSOIL)",
-                #         "# :Alias MOHYSE_PARA_8	    0.0132    # SoilParameterList    --> BASEFLOW_COEFF (GWSOIL)",
-                #         "# :Alias MOHYSE_PARA_9	    1.0474    # :SubBasinProperties  --> GAMMA_SHAPE",
-                #         "# :Alias MOHYSE_PARA_10	    7.9628    # :SubBasinProperties  --> TIME_CONC = MOHYSE_PARA_10 / 0.3 = 26.542666666"
-                #     ],
                 "Hydrologic Process Order":
                     [
                         ":HydrologicProcesses",
@@ -1124,18 +1099,13 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
     return rvx_params[model_type]
 
 
-# TODO: Check the parameter list for those with suffixes 'b'!
-
-# TODO: Which param is HBV_PARA_???
-
-
 def generate_template_ostrich(catchment_ch_id: str,
                               model_type: str = model_type,
                               params: dict = default_params,
                               catchment_name: str = catchment_name,
                               author: str = author,
                               generation_date: str = generation_date,
-                              run_number: int = 500) -> dict:
+                              max_iterations : int = 20) -> dict:
     """
     Generates template text which can be written to .rvp file
 
@@ -1153,11 +1123,8 @@ def generate_template_ostrich(catchment_ch_id: str,
     """
 
     file_name = f"{catchment_ch_id}_{model_type}"
-    logger.debug("Entered generate_template() function.")
     assert model_type in config.variables.supported_models, f"model_type expected GR4J, HYMOD, HMETS, HBV or MOHYSE, got {model_type} instead "
-    logger.debug("model_type is in the list of supported models.")
     module_root_dir: Path = Path().resolve()
-    max_iterations = run_number
     response_variables = [
         f"# Reads the Nash-Sutcliffe value from a csv file. Semicolon is a filename separator",
         f"BeginResponseVars",
@@ -1174,6 +1141,7 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"VE_VALI           ./model/output/{file_name}_Diagnostics.csv;	HYDROGRAPH_VALIDATION	0	5	',' yes",
         f"EndResponseVars"
     ]
+    tied_response_variable_mohyse = "#"
     if model_type == "MOHYSE":
         #tied_response_variable_mohyse = f"#{params['MOHYSE']['names']['MOHYSE_Param_08b']}   3 {params['MOHYSE']['names']['MOHYSE_Param_06']} {params['MOHYSE']['names']['MOHYSE_Param_07']} {params['MOHYSE']['names']['MOHYSE_Param_08']} wsum 1.0 1.0 1.0"
         pass
@@ -1194,21 +1162,16 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"EndGCOP",
     ]
     algorithm_settings = [
-        f"#Algorithm should be last in this file (see p51 for APDDS):",
-        f"",
         f"BeginParallelDDSAlg",
         f"PerturbationValue 0.20",
         f"MaxIterations {max_iterations}",
-        f"#	UseRandomParamValues",
+        f"UseRandomParamValues",
         f"# UseInitialParamValues",
-        f"# Note: above intializes DDS to parameter values IN the initial",
-        f"#       model input files IF 'extract' option used in BeginParams",
-        f"#       block (column 'init')",
         f"EndParallelDDSAlg"
     ]
     random_seed = [
         f"# Randomsed control added",
-        f"RandomSeed 3333",
+        f"#RandomSeed 3333",
     ]
     general_options = [
         f"ProgramType  	    ParallelDDS",
@@ -1219,39 +1182,136 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"ModelSubdir processor_",
         f"",
         f"# OstrichWarmStart yes",
-        f"# CheckSensitivities yes"
+    ]
+
+#    ost_raven = [
+#        f"cp ./{file_name}.rvc model/{file_name}.rvc",
+#        f"cp ./{file_name}.rvh model/{file_name}.rvh",
+#        f"cp ./{file_name}.rvi model/{file_name}.rvi",
+#        f"cp ./{file_name}.rvp model/{file_name}.rvp",
+#        f"cp ./{file_name}.rvt model/{file_name}.rvt{newline}",
+#        f"## cd into the model folder",
+#        f"cd model{newline}",
+#        f"# Run Raven.exe",
+#        f"./Raven.exe {file_name} -o output/",
+#        f"cd output",
+#        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
+#        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
+#        f"source {poetry_location}",
+#        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
+#        f"exit 0",
+#    ]
+    
+    ost_raven_script_cp_lines = []
+    if model_type in ["GR4J", "HMETS"]:
+        ost_raven_script_cp_lines = [
+            f"cp ./{file_name}.rvc model/{file_name}.rvc",
+            f"cp ./{file_name}.rvp model/{file_name}.rvp",
+        ]
+    elif model_type == "HBV":
+        ost_raven_script_cp_lines = [
+            f"cp ./{file_name}.rvc model/{file_name}.rvc",
+            f"cp ./{file_name}.rvh model/{file_name}.rvh",
+            f"cp ./{file_name}.rvp model/{file_name}.rvp",
+            f"cp ./{file_name}.rvt model/{file_name}.rvt",
+        ]
+    elif model_type == "MOHYSE":
+        ost_raven_script_cp_lines = [
+            f"cp ./{file_name}.rvh model/{file_name}.rvh",
+            f"cp ./{file_name}.rvp model/{file_name}.rvp",
+        ]
+
+    ost_raven_header = [
+        f"#!/bin/bash{newline}",
+        f"set -e{newline}",
+        f"# Get the latest version of the diagnostics script and copy it to the model folder",
+        f"cp /storage/homefs/pz09y074/raven_master_files/raven_tools/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
+        f"# Copy the latest model files to the model folder",
+    ]
+
+    ost_raven_footer = [
+        f"## cd into the model folder",
+        f"cd model{newline}",
+        f"# Run Raven.exe",
+        f"./Raven.exe {file_name} -o output/",
+        f"cd output",
+        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
+        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
+        f"source {poetry_location}",
+        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
+        f"exit 0",
+    ]
+
+    ost_raven =  ost_raven_header + ost_raven_script_cp_lines + ost_raven_footer
+
+
+    ost_mpi_script_cp_lines = []
+    if model_type in ["GR4J", "HMETS"]:
+        ost_mpi_script_cp_lines = [
+            f"cp ./{file_name}.rvp model/{file_name}.rvp",
+            f"cp ./{file_name}.rvc model/{file_name}.rvc"
+        ]
+    elif model_type == "HBV":
+        ost_mpi_script_cp_lines = [
+            f"cp ./{file_name}.rvc model/{file_name}.rvc",
+            f"cp ./{file_name}.rvh model/{file_name}.rvh",
+            f"cp ./{file_name}.rvp model/{file_name}.rvp",
+            f"cp ./{file_name}.rvt model/{file_name}.rvt"
+        ]
+    elif model_type == "MOHYSE":
+        ost_mpi_script_cp_lines = [
+            f"cp ./{file_name}.rvh model/{file_name}.rvh",
+            f"cp ./{file_name}.rvp model/{file_name}.rvp"
+        ]
+    ost_mpi_header = [
+        f"#!/bin/bash{newline}{newline}",
+        f"# match assignment to location of OSTRICH installation{newline}",
+        f"set -e{newline}"
+    ]
+    ost_mpi_footer = [
+        f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
+        f"mpirun $OSTRICH_MPI{newline}"
     ]
     ost_mpi_script = {
         "Ostrich MPI run":
-            [
-                f"#!/bin/bash{newline}{newline}",
-                f"SECONDS=0",
-                f"touch \"time_comp.txt\"",
-                f"# match assignment to location of OSTRICH installation{newline}",
-                f"cp ./{file_name}.rvi model/{file_name}.rvi",
-                f"cp ./{file_name}.rvh model/{file_name}.rvh",
-                f"cp ./{file_name}.rvt model/{file_name}.rvt",
-                f"cp ./{file_name}.rvp model/{file_name}.rvp",
-                f"cp ./{file_name}.rvc model/{file_name}.rvc",
-                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
-                f"mpirun $OSTRICH_MPI{newline}",
-                f"if (( $SECONDS > 3600 )) ; then",
-                f"    let \"hours=SECONDS/3600\"",
-                f"    let \"minutes=(SECONDS%3600)/60\"",
-                f"    let \"seconds=(SECONDS%3600)%60\"",
-                f"    echo \"Completed in $hours hour(s), $minutes minute(s) and $seconds second(s)\"",
-                f"    echo \"Completed in $hours hour(s), $minutes minute(s) and $seconds second(s)\" >> time_comp.txt",
-                f"elif (( $SECONDS > 60 )) ; then",
-                f"    let \"minutes=(SECONDS%3600)/60\"",
-                f"    let \"seconds=(SECONDS%3600)%60\"",
-                f"    echo \"Completed in $minutes minute(s) and $seconds second(s)\"",
-                f"    echo \"Completed in $minutes minute(s) and $seconds second(s)\" >> time_comp.txt",
-                f"else",
-                f"    echo \"Completed in $SECONDS seconds\"",
-                f"    echo \"Completed in $SECONDS seconds\" >> time_comp.txt",
-                f"fi",
-            ]
+            ost_mpi_header + ost_mpi_script_cp_lines + ost_mpi_footer
     }
+    
+#    ost_mpi_script = {
+#        "Ostrich MPI run":
+#            [
+#                f"#!/bin/bash{newline}{newline}",
+#                f"# match assignment to location of OSTRICH installation{newline}",
+#                f"cp ./{file_name}.rvi model/{file_name}.rvi",
+#                f"cp ./{file_name}.rvh model/{file_name}.rvh",
+#                f"cp ./{file_name}.rvt model/{file_name}.rvt",
+#                f"cp ./{file_name}.rvp model/{file_name}.rvp",
+#                f"cp ./{file_name}.rvc model/{file_name}.rvc",
+#                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
+#                f"mpirun $OSTRICH_MPI{newline}"
+#            ]
+#    }
+
+    model_info = [
+                f"# Model Type: {model_type}",
+                f"# Catchment Name: {catchment_name}",
+                f"# Catchment ID: {catchment_ch_id}",
+                f"# Author: {author}",
+                f"# Generation Date: {generation_date}"
+    ]
+
+    extra_dirs = [
+        f"BeginExtraDirs",
+        f"model",
+        f"EndExtraDirs"
+    ]
+
+    constraints = [
+        f"BeginConstraints",
+        f"# not needed when no constraints, but PenaltyFunction statement above is required",
+        f"# name     type     penalty    lwr   upr   resp.var",
+        f"EndConstraints",
+    ]
     # ost_save_output:
     #     "Save Ostrich Run Output":
     #         [
@@ -1265,138 +1325,15 @@ def generate_template_ostrich(catchment_ch_id: str,
     # "echo - e "Obj. Function Category: $4" >>../ preserve_out.txt",
     # "exit 0"
     #         ]
-    gr4j = {
-        "ost_in":
-            {
-                "Model Info":
-                    [
-                        f"# Model Type: {model_type}",
-                        f"# Catchment Name: {catchment_name}",
-                        f"# Catchment ID: {catchment_ch_id}",
-                        f"# Author: {author}",
-                        f"# Generation Date: {generation_date}"
-                    ],
-                "General Options":
-                    general_options,
-                "Extra Directories":
-                    [
-                        f"BeginExtraDirs",
-                        f"model",
-                        f"EndExtraDirs"
-                    ],
-                "File Pairs":
-                    [
-                        f"BeginFilePairs",
-                        f"{file_name}.rvp.tpl;	{file_name}.rvp",
-                        f"{file_name}.rvc.tpl;  {file_name}.rvc",
-                        f"#can be multiple (.rvh, .rvi)",
-                        f"EndFilePairs"
-                    ],
-                "Parameter Specification":
-                    [
-                        f"#Parameter/DV Specification",
-                        f"#name,initial value, lower bound, upper bound, input, output, internal transformations",
-                        f"#name exactly as in *.tpl",
-                        f"BeginParams",
-                        f"#parameter	   init.	 low		high	tx_in  tx_ost tx_out",
-                        f"{params['GR4J']['names']['GR4J_X1']}		random		{params['GR4J']['lower']['GR4J_X1']}		{params['GR4J']['upper']['GR4J_X1']}	none   none 	none",
-                        f"{params['GR4J']['names']['GR4J_X2']}  	random	 	{params['GR4J']['lower']['GR4J_X2']}		{params['GR4J']['upper']['GR4J_X2']}	none   none 	none",
-                        f"{params['GR4J']['names']['GR4J_X3']}  	random		{params['GR4J']['lower']['GR4J_X3']}		{params['GR4J']['upper']['GR4J_X3']}	none   none 	none",
-                        f"{params['GR4J']['names']['GR4J_X4']}  	random		{params['GR4J']['lower']['GR4J_X4']}		{params['GR4J']['upper']['GR4J_X4']} 	none   none	none",
-                        f"{params['GR4J']['names']['Cemaneige_X1']}  	random		{params['GR4J']['lower']['Cemaneige_X1']}		{params['GR4J']['upper']['Cemaneige_X1']}	none   none	none",
-                        f"{params['GR4J']['names']['GR4J_Cemaneige_X2']}  	random		{params['GR4J']['lower']['GR4J_Cemaneige_X2']}		{params['GR4J']['upper']['GR4J_Cemaneige_X2']}	none   none 	none",
-                        f"EndParams"
-                    ],
-                "Tied Parameters":
-                    [
-                        f"BeginTiedParams",
-                        f"# 1-parameter linear (TLIN = 2*XVAL) ",
-                        f"{params['GR4J']['names']['GR4J_Soil_0']}   1 {params['GR4J']['names']['GR4J_X1']} linear 500 0.00 free # SOIL[0] ",
-                        f"{params['GR4J']['names']['Airsnow_Coeff']}   1 {params['GR4J']['names']['GR4J_Cemaneige_X2']} linear -1.00 0.00 free #Airsnow_Coeff"
-                        f"EndTiedParams"
-                    ],
-                "Response Variables":
-                    response_variables,
-                "Tied Response Variables":
-                    tied_response_variables,
-                "GCOP Options":
-                    gcop_options,
-                "Constraints":
-                    [
-                        f"BeginConstraints",
-                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                        f"# name     type     penalty    lwr   upr   resp.var",
-                        f"EndConstraints",
-                    ],
-                "Random Seed Control":
-                    random_seed,
-                "Algorithm Settings":
-                    algorithm_settings
-            },
-        "save_best":
-            {
-                "Save Best":
-                    [
-                        f"#!/bin/bash{newline}",
-                        f"set -e{newline}",
-                        f"echo \"saving input files for the best solution found...\"{newline}"
-                        f"if [ ! -e model_best ] ; then",
-                        f"\tmkdir model_best",
-                        f"fi{newline}",
-                        f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
-                        f"cp model/{file_name}.rvc                    model_best/{file_name}.rvc",
-                        f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
-                        f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
-                        f"exit 0",
-                    ]
-            },
-        "ost_raven":
-            {
-                "Ost-Raven":
-                    [
-                        f"#!/bin/bash{newline}",
-                        f"set -e{newline}",
-                        f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                        f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
-                        f"# Copy the latest model files to the model folder",
-                        f"cp ./{file_name}.rvp model/{file_name}.rvp",
-                        f"cp ./{file_name}.rvc model/{file_name}.rvc{newline}",
-                        f"## cd into the model folder",
-                        f"cd model{newline}",
-                        f"# Run Raven.exe",
-                        f"./Raven.exe {file_name} -o output/",
-                        f"cd output",
-                        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
-                        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                        f"source {poetry_location}",
-                        f"# shellcheck disable=SC2086",
-                        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
-                        f"exit 0",
-                    ]
-            },
-        "ost_mpi_script":
-            ost_mpi_script,
-        # "ost_save_output":
-    }
     hbv = {
         "ost_in":
             {
                 "Model Info":
-                    [
-                        f"# Model Type: {model_type}",
-                        f"# Catchment Name: {catchment_name}",
-                        f"# Catchment ID: {catchment_ch_id}",
-                        f"# Author: {author}",
-                        f"# Generation Date: {generation_date}"
-                    ],
+                    model_info,
                 "General Options":
                     general_options,
                 "Extra Directories":
-                    [
-                        f"BeginExtraDirs",
-                        f"model",
-                        f"EndExtraDirs"
-                    ],
+                    extra_dirs,
                 "File Pairs":
                     [
                         f"BeginFilePairs",
@@ -1404,7 +1341,6 @@ def generate_template_ostrich(catchment_ch_id: str,
                         f"{file_name}.rvc.tpl;  {file_name}.rvc",
                         f"{file_name}.rvh.tpl;  {file_name}.rvh",
                         f"{file_name}.rvt.tpl;  {file_name}.rvt",
-                        f"#can be multiple (.rvh, .rvi)",
                         f"EndFilePairs"
                     ],
                 "Parameter Specification":
@@ -1443,6 +1379,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                         f"# 1-parameter linear (TLIN = 2*XVAL) ",
                         f"{params['HBV']['names']['HBV_Param_11b']} 1 {params['HBV']['names']['HBV_Param_11']} linear 0.5 0.00 free",
                         f"{params['HBV']['names']['HBV_Param_17b']} 1 {params['HBV']['names']['HBV_Param_17']} linear 500 0.00 free",
+                        f"{params['HBV']['names']['HBV_Param_15b']} 1 {params['HBV']['names']['HBV_Param_15']} linear 1.0 1.0 free",
                         f"EndTiedParams"
                     ],
                 "Response Variables":
@@ -1452,12 +1389,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                 "GCOP Options":
                     gcop_options,
                 "Constraints":
-                    [
-                        f"BeginConstraints",
-                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                        f"# name     type     penalty    lwr   upr   resp.var",
-                        f"EndConstraints",
-                    ],
+                    constraints,
                 "Random Seed Control":
                     random_seed,
                 "Algorithm Settings":
@@ -1473,7 +1405,85 @@ def generate_template_ostrich(catchment_ch_id: str,
                         f"if [ ! -e model_best ] ; then",
                         f"\tmkdir model_best",
                         f"fi{newline}",
+                        f"cp model/{file_name}.rvc                    model_best/{file_name}.rvc",
                         f"cp model/{file_name}.rvh                    model_best/{file_name}.rvh",
+                        f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
+                        f"cp model/{file_name}.rvt                    model_best/{file_name}.rvt",
+                        f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
+                        f"cp model/output/{file_name}_Hydrographs.csv model_best/{file_name}_Hydrographs.csv{newline}",
+                        f"exit 0",
+                    ]
+            },
+        "ost_raven":
+            {
+                "Ost-Raven":
+                    ost_raven
+            },
+        "ost_mpi_script":
+            ost_mpi_script
+    }
+    gr4j = {
+        "ost_in":
+            {
+                "Model Info":
+                    model_info,
+                "General Options":
+                    general_options,
+                "Extra Directories":
+                    extra_dirs,
+                "File Pairs":
+                    [
+                        f"BeginFilePairs",
+                        f"{file_name}.rvp.tpl;	{file_name}.rvp",
+                        f"{file_name}.rvc.tpl;  {file_name}.rvc",
+                        f"EndFilePairs"
+                    ],
+                "Parameter Specification":
+                    [
+                        f"#Parameter/DV Specification",
+                        f"#name,initial value, lower bound, upper bound, input, output, internal transformations",
+                        f"#name exactly as in *.tpl",
+                        f"BeginParams",
+                        f"#parameter	   init.	 low		high	tx_in  tx_ost tx_out",
+                        f"{params['GR4J']['names']['GR4J_X1']}		random		{params['GR4J']['lower']['GR4J_X1']}		{params['GR4J']['upper']['GR4J_X1']}	none   none 	none",
+                        f"{params['GR4J']['names']['GR4J_X2']}  	random	 	{params['GR4J']['lower']['GR4J_X2']}		{params['GR4J']['upper']['GR4J_X2']}	none   none 	none",
+                        f"{params['GR4J']['names']['GR4J_X3']}  	random		{params['GR4J']['lower']['GR4J_X3']}		{params['GR4J']['upper']['GR4J_X3']}	none   none 	none",
+                        f"{params['GR4J']['names']['GR4J_X4']}  	random		{params['GR4J']['lower']['GR4J_X4']}		{params['GR4J']['upper']['GR4J_X4']} 	none   none	none",
+                        f"{params['GR4J']['names']['Cemaneige_X1']}  	random		{params['GR4J']['lower']['Cemaneige_X1']}		{params['GR4J']['upper']['Cemaneige_X1']}	none   none	none",
+                        f"{params['GR4J']['names']['GR4J_Cemaneige_X2']}  	random		{params['GR4J']['lower']['GR4J_Cemaneige_X2']}		{params['GR4J']['upper']['GR4J_Cemaneige_X2']}	none   none 	none",
+                        f"EndParams"
+                    ],
+                "Tied Parameters":
+                    [
+                        f"BeginTiedParams",
+                        f"# 1-parameter linear (TLIN = 2*XVAL) ",
+                        f"{params['GR4J']['names']['GR4J_Soil_0']}   1 {params['GR4J']['names']['GR4J_X1']} linear 500 0.00 free # SOIL[0] ",
+                        f"{params['GR4J']['names']['Airsnow_Coeff']}   1 {params['GR4J']['names']['GR4J_Cemaneige_X2']} linear -1.00 0.00 free #Airsnow_Coeff"
+                        f"EndTiedParams"
+                    ],
+                "Response Variables":
+                    response_variables,
+                "Tied Response Variables":
+                    tied_response_variables,
+                "GCOP Options":
+                    gcop_options,
+                "Constraints":
+                    constraints,
+                "Random Seed Control":
+                    random_seed,
+                "Algorithm Settings":
+                    algorithm_settings
+            },
+        "save_best":
+            {
+                "Save Best":
+                    [
+                        f"#!/bin/bash{newline}",
+                        f"set -e{newline}",
+                        f"echo \"saving input files for the best solution found...\"{newline}"
+                        f"if [ ! -e model_best ] ; then",
+                        f"\tmkdir model_best",
+                        f"fi{newline}",
                         f"cp model/{file_name}.rvp                    model_best/{file_name}.rvp",
                         f"cp model/{file_name}.rvc                    model_best/{file_name}.rvc",
                         f"cp model/output/{file_name}_Diagnostics.csv model_best/{file_name}_Diagnostics.csv",
@@ -1484,56 +1494,26 @@ def generate_template_ostrich(catchment_ch_id: str,
         "ost_raven":
             {
                 "Ost-Raven":
-                    [
-                        f"#!/bin/bash{newline}",
-                        f"set -e{newline}",
-                        f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                        f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
-                        f"# Copy the latest model files to the model folder",
-                        f"cp ./{file_name}.rvh model/{file_name}.rvh",
-                        f"cp ./{file_name}.rvc model/{file_name}.rvc",
-                        f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
-                        f"## cd into the model folder",
-                        f"cd model{newline}",
-                        f"# Run Raven.exe",
-                        f"./Raven.exe {file_name} -o output/",
-                        f"cd output",
-                        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
-                        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                        f"source {poetry_location}",
-                        f"# shellcheck disable=SC2086",
-                        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
-                        f"exit 0",
-                    ]
+                    ost_raven
             },
         "ost_mpi_script":
-            ost_mpi_script
+            ost_mpi_script,
+        # "ost_save_output":
     }
     hmets = {
         "ost_in":
             {
                 "Model Info":
-                    [
-                        f"# Model Type: {model_type}",
-                        f"# Catchment Name: {catchment_name}",
-                        f"# Catchment ID: {catchment_ch_id}",
-                        f"# Author: {author}",
-                        f"# Generation Date: {generation_date}"
-                    ],
+                    model_info,
                 "General Options":
                     general_options,
                 "Extra Directories":
-                    [
-                        f"BeginExtraDirs",
-                        f"model",
-                        f"EndExtraDirs"
-                    ],
+                    extra_dirs,
                 "File Pairs":
                     [
                         f"BeginFilePairs",
                         f"{file_name}.rvp.tpl;	{file_name}.rvp",
                         f"{file_name}.rvc.tpl;  {file_name}.rvc",
-                        f"#can be multiple (.rvh, .rvi)",
                         f"EndFilePairs"
                     ],
                 "Parameter Specification":
@@ -1583,12 +1563,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                 "GCOP Options":
                     gcop_options,
                 "Constraints":
-                    [
-                        f"BeginConstraints",
-                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                        f"# name     type     penalty    lwr   upr   resp.var",
-                        f"EndConstraints",
-                    ],
+                    constraints,
                 "Random Seed Control":
                     random_seed,
                 "Algorithm Settings":
@@ -1613,27 +1588,7 @@ def generate_template_ostrich(catchment_ch_id: str,
         "ost_raven":
             {
                 "Ost-Raven":
-
-                    [
-                        f"#!/bin/bash{newline}",
-                        f"set -e{newline}",
-                        f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                        f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
-                        f"# Copy the latest model files to the model folder",
-                        f"cp ./{file_name}.rvc model/{file_name}.rvc",
-                        f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
-                        f"## cd into the model folder",
-                        f"cd model{newline}",
-                        f"# Run Raven.exe",
-                        f"./Raven.exe {file_name} -o output/",
-                        f"cd output",
-                        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
-                        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                        f"source {poetry_location}",
-                        f"# shellcheck disable=SC2086",
-                        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
-                        f"exit 0",
-                    ]
+                    ost_raven
             },
         "ost_mpi_script":
             ost_mpi_script
@@ -1642,28 +1597,17 @@ def generate_template_ostrich(catchment_ch_id: str,
         "ost_in":
             {
                 "Model Info":
-                    [
-                        f"# Model Type: {model_type}",
-                        f"# Catchment Name: {catchment_name}",
-                        f"# Catchment ID: {catchment_ch_id}",
-                        f"# Author: {author}",
-                        f"# Generation Date: {generation_date}"
-                    ],
+                    model_info,
                 "General Options":
                     general_options,
                 "Extra Directories":
-                    [
-                        f"BeginExtraDirs",
-                        f"model",
-                        f"EndExtraDirs"
-                    ],
+                    extra_dirs,
                 "File Pairs":
                     [
                         f"BeginFilePairs",
                         f"{file_name}.rvh.tpl;	{file_name}.rvh",
                         f"{file_name}.rvp.tpl;	{file_name}.rvp",
                         f"{file_name}.rvi.tpl;	{file_name}.rvi",
-                        f"#can be multiple (.rvh, .rvi)",
                         f"EndFilePairs"
                     ],
                 "Parameter Specification":
@@ -1691,12 +1635,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                 "GCOP Options":
                     gcop_options,
                 "Constraints":
-                    [
-                        f"BeginConstraints",
-                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                        f"# name     type     penalty    lwr   upr   resp.var",
-                        f"EndConstraints",
-                    ],
+                    constraints,
                 "Random Seed Control":
                     random_seed,
                 "Algorithm Settings":
@@ -1723,27 +1662,7 @@ def generate_template_ostrich(catchment_ch_id: str,
         "ost_raven":
             {
                 "Ost-Raven":
-                    [
-                        f"#!/bin/bash{newline}",
-                        f"set -e{newline}",
-                        f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                        f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
-                        f"# Copy the latest model files to the model folder",
-                        f"cp ./{file_name}.rvi model/{file_name}.rvi",
-                        f"cp ./{file_name}.rvh model/{file_name}.rvh",
-                        f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
-                        f"## cd into the model folder",
-                        f"cd model{newline}",
-                        f"# Run Raven.exe",
-                        f"./Raven.exe {file_name} -o output/",
-                        f"cd output",
-                        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
-                        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                        f"source {poetry_location}",
-                        f"# shellcheck disable=SC2086",
-                        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
-                        f"exit 0",
-                    ]
+                    ost_raven
             },
         "ost_mpi_script":
             ost_mpi_script
@@ -1752,27 +1671,16 @@ def generate_template_ostrich(catchment_ch_id: str,
         "ost_in":
             {
                 "Model Info":
-                    [
-                        f"# Model Type: {model_type}",
-                        f"# Catchment Name: {catchment_name}",
-                        f"# Catchment ID: {catchment_ch_id}",
-                        f"# Author: {author}",
-                        f"# Generation Date: {generation_date}"
-                    ],
+                    model_info,
                 "General Options":
                     general_options,
                 "Extra Directories":
-                    [
-                        f"BeginExtraDirs",
-                        f"model",
-                        f"EndExtraDirs"
-                    ],
+                    extra_dirs,
                 "File Pairs":
                     [
                         f"BeginFilePairs",
                         f"{file_name}.rvp.tpl;	{file_name}.rvp",
                         f"{file_name}.rvh.tpl;  {file_name}.rvh",
-                        f"#can be multiple (.rvh, .rvi)",
                         f"EndFilePairs"
                     ],
                 "Parameter Specification":
@@ -1801,12 +1709,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                 "GCOP Options":
                     gcop_options,
                 "Constraints":
-                    [
-                        f"#BeginConstraints",
-                        f"# not needed when no constraints, but PenaltyFunction statement above is required",
-                        f"# name     type     penalty    lwr   upr   resp.var",
-                        f"#EndConstraints",
-                    ],
+                    constraints,
                 "Random Seed Control":
                     random_seed,
                 "Algorithm Settings":
@@ -1831,26 +1734,7 @@ def generate_template_ostrich(catchment_ch_id: str,
         "ost_raven":
             {
                 "Ost-Raven":
-                    [
-                        f"#!/bin/bash{newline}",
-                        f"set -e{newline}",
-                        f"# Get the latest version of the diagnostics script and copy it to the model folder",
-                        f"cp {str(module_root_dir)}/raven_tools/processing/raven_diag.py model/output/raven_diag.py{newline}",
-                        f"# Copy the latest model files to the model folder",
-                        f"cp ./{file_name}.rvh model/{file_name}.rvh",
-                        f"cp ./{file_name}.rvp model/{file_name}.rvp{newline}",
-                        f"## cd into the model folder",
-                        f"cd model{newline}",
-                        f"# Run Raven.exe",
-                        f"./Raven.exe {file_name} -o output/",
-                        f"cd output",
-                        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
-                        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-                        f"source {poetry_location}",
-                        f"# shellcheck disable=SC2086",
-                        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
-                        f"exit 0",
-                    ]
+                    ost_raven
             },
         "ost_mpi_script":
             ost_mpi_script
@@ -1866,9 +1750,6 @@ def generate_template_ostrich(catchment_ch_id: str,
     return ost_params[model_type]
 
 
-# TODO: is 'melt_factor' actually a parameter of GR4J? In the tutorial file, 'annual snow' is called 'CEMANEIGE_X1'...
-
-
 def subsection_header(title: str) -> list[str]:
     """Generates subsection header for a .rvX file from given title.
     Args:
@@ -1879,15 +1760,12 @@ def subsection_header(title: str) -> list[str]:
             List of header line as strings.
     """
 
-    logger.debug("Arrived in function subsection_header().")
     subsection_head: list[str] = [
         subsection_header_line,
         f"# ----{title}--------------------------------------------",
         subsection_header_line
     ]
-    logger.debug("Subsection header written.")
-    logger.debug("Returning subsection header...")
-    logger.debug("Leaving function subsection_header() afterwards...")
+    logger.debug("Subsection header written, returning and leaving function subsection_header() afterwards.")
     return subsection_head
 
 
@@ -1905,6 +1783,7 @@ def write_rvx(catchment_ch_id: str,
               author=conf['Author'],
               start_year: int = start_year,
               end_year: int = end_year,
+              glacier_module: bool = False
               ):
     import shutil
     """Writes .rvX file(s), either as an Ostrich or Raven template.
@@ -1923,7 +1802,6 @@ def write_rvx(catchment_ch_id: str,
         This function writes the RVX file for the given catchment, model type, and parameters.
     """
 
-    logger.debug("Arrived in function write_rvx().")
     assert model_type in config.variables.supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
                                                             f"supported_models."
     attribute_csv_name = f"{raven_tools.config.variables.catchments[catchment_ch_id]['catchment_id']}_attributes.csv"
@@ -1936,33 +1814,29 @@ def write_rvx(catchment_ch_id: str,
                                    index_col='attribute_names', usecols=[0, 1])
     except:
         logger.exception("Error reading csv file into pandas...")
-    logger.debug("Attribute catchment attribute CSV file read.")
     file_name: str = f"{catchment_ch_id}_{model_type}.{rvx_type}"
     logger.debug(f".{rvx_type} filename set to {file_name}.")
     file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, file_name)
     logger.debug(f".{rvx_type} file path set to {file_path}.")
     template_sections = {}
-    logger.debug("Empty dict template_sections created.")
-    logger.debug("Entering if-tree for template type...")
     if template_type == "Raven":
         logger.debug(f"template_type is {template_type}.")
         logger.debug(f"Trying to generate .{rvx_type} template sections with function generate_template()...")
         template_sections = generate_template_rvx(model_type=model_type, hru_info=hru_info, csv_file=csv_file,
                                                   params=params,
                                                   param_or_name="init", start_year=start_year, end_year=end_year,
-                                                  catchment_ch_id=catchment_ch_id)
+                                                  catchment_ch_id=catchment_ch_id, glacier_module=glacier_module)
         logger.debug(f"Wrote .{rvx_type} template sections generated by generate_template() to dict template_sections")
     if template_type == "Ostrich":
         file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, file_name)
         logger.debug(f"template_type is {template_type}.")
-        logger.debug(f"Adding .tpl suffix to file_path for Ostrich template file...")
         file_path = Path((str(file_path) + ".tpl"))
         logger.debug(f"New file_path: {file_path}")
         logger.debug(f"Trying to generate .{rvx_type}.tpl template sections with function generate_template()...")
         template_sections = generate_template_rvx(model_type=model_type, hru_info=hru_info, csv_file=csv_file,
                                                   params=params,
                                                   param_or_name="names", start_year=start_year, end_year=end_year,
-                                                  catchment_ch_id=catchment_ch_id)
+                                                  catchment_ch_id=catchment_ch_id, glacier_module=glacier_module)
         logger.debug(
             f"Wrote .{rvx_type}.tpl template sections generated by generate_template() to dict template_sections")
 
@@ -1973,7 +1847,6 @@ def write_rvx(catchment_ch_id: str,
                                     rvx_type=rvx_type))
         logger.debug("Header lines written.")
         ff.write(newline)
-        logger.debug("Entering template_sections for-loop...")
         logger.debug(f"template_sections dictionary:\n {template_sections}")
         for section in template_sections[rvx_type]:
             logger.debug(f"Current section: {section}")
@@ -1986,7 +1859,6 @@ def write_rvx(catchment_ch_id: str,
         dst_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, model_sub_dir, file_name)
         shutil.copy(file_path, dst_path)
         logger.debug("template_sections for-loop finished.")
-        logger.debug("Function write_rvx() finished.")
 
 
 def write_ostrich(
@@ -2000,7 +1872,7 @@ def write_ostrich(
         save_best: bool = True,
         ost_raven: bool = True,
         ost_mpi_script: bool = True,
-        run_number: int = 500
+        max_iterations: int = 500
 ):
     """Writes Ostrich input files ostIn.txt, save_best.sh and Ost-RAVEN.sh
     Args:
@@ -2015,46 +1887,43 @@ def write_ostrich(
 
     This function writes Ostrich input files ostIn.txt, save_best.sh and Ost-RAVEN.sh
     """
-    logger.debug("Arrived in function write_ostrich().")
     assert model_type in config.variables.supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
                                                             f"supported_models."
-
     ost_in_file_name: str = f"ostIn.txt"
     save_best_file_name: str = f"save_best.sh"
     ost_raven_file_name: str = f"Ost-RAVEN.sh"
     ost_shell_file_name: str = f"Ostrich_MPI.sh"
     logger.debug(f"filename w/o suffix set to {ost_in_file_name}.")
     template_sections = generate_template_ostrich(model_type=model_type, params=params, catchment_ch_id=catchment_ch_id,
-                                                  catchment_name=catchment_name, run_number=run_number)
+                                                  catchment_name=catchment_name, max_iterations=max_iterations)
     logger.debug(f"Dictionary template_sections created.")
     logger.debug(f"Variable ost_in evaluated to {ost_in}")
     if ost_in:
         logger.debug(
             f"Trying to write to file: {Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name)}")
-        with open(Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name), 'w+') as ff:
-            logger.debug("Entering template_sections for-loop...")
-            logger.debug(f"template_sections dictionary: {newline} {template_sections}")
-            for section in template_sections["ost_in"]:
-                logger.debug(f"Current section: {section}")
-                ff.writelines(f"{line}\n" for line in subsection_header(section))
-                logger.debug("Subsection header written.")
-                ff.writelines(f"{lin}\n" for lin in template_sections["ost_in"][section])
-                logger.debug("Template section written.")
-                ff.write(newline)
-            logger.debug("template_sections for-loop finished.")
-        logger.debug(f"Variable save_best evaluated to {save_best}")
+        try:
+            with open(Path(project_dir, model_dir, catchment_ch_id, model_type, ost_in_file_name), 'w+') as ff:
+                logger.info(f"template_sections dictionary: {newline} {template_sections}")
+                for section in template_sections["ost_in"]:
+                    logger.info(f"Current section: {section}")
+                    ff.writelines(f"{line}\n" for line in subsection_header(section))
+                    logger.info("Subsection header written.")
+                    ff.writelines(f"{lin}\n" for lin in template_sections["ost_in"][section])
+                    logger.info("Template section written.")
+                    ff.write(newline)
+        except:
+            logger.exception("There has been an error writing ostIn.txt")
+    logger.debug(f"Variable save_best evaluated to {save_best}")
     if save_best:
         file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, save_best_file_name)
         logger.debug(
             f"Trying to write to file: {file_path}")
         with open(file_path, 'w') as ff:
-            logger.debug("Entering template_sections for-loop...")
-            logger.debug(f"template_sections dictionary: {newline} {template_sections}")
+            logger.info(f"template_sections dictionary: {newline} {template_sections}")
             for section in template_sections["save_best"]:
                 ff.writelines(f"{lin}\n" for lin in template_sections["save_best"][section])
                 logger.debug("Template section written.")
                 ff.write(newline)
-            logger.debug("template_sections for-loop finished.")
         logger.debug(f"Variable ost_raven evaluated to {ost_raven}")
         os.chmod(file_path, 0o775)
     if ost_raven:
@@ -2062,13 +1931,11 @@ def write_ostrich(
         logger.debug(
             f"Trying to write to file: {file_path}")
         with open(file_path, 'w') as ff:
-            logger.debug("Entering template_sections for-loop...")
-            logger.debug(f"template_sections dictionary: {newline} {template_sections}")
+            logger.info(f"template_sections dictionary: {newline} {template_sections}")
             for section in template_sections["ost_raven"]:
                 ff.writelines(f"{lin}\n" for lin in template_sections["ost_raven"][section])
                 logger.debug("Template section written.")
                 ff.write(newline)
-            logger.debug("template_sections for-loop finished.")
         os.chmod(file_path, 0o775)
 
     if ost_mpi_script:
