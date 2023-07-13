@@ -349,15 +349,47 @@ HMETS:
     HMETS_Param_21a: '2000'
 HYMOD:
   names:
-    HYMOD_Param_01: HYMOD_K_q #(orig) RES_CONSTANT = Nash UH linear reservoir const./residence time of reservoir series/of quick release reservoir
-    HYMOD_Param_02: HYMOD_C_max #(orig) Thickness TOPSOIL(of Default_P SoilProfile)/Max. storage capacity
-    HYMOD_Param_03: HYMOD_T_zero #RAINSNOW_TEMP = Rain/Snow halfway transition temp (Raven)/Threshold temp. (Moore1993)
-    HYMOD_Param_04: HYMOD_K_s #(orig) BASEFLOW_COEFF(GWSOIL) = Residence time single reservoir/slow release reservoirs
-    HYMOD_Param_05: HYMOD_C_melt #max. MELT_FACTOR for DD pot. melt (Raven)
-    HYMOD_Param_06: HYMOD_T_melt #DD_MELT_TEMP for DD pot. melt (Raven)
-    HYMOD_Param_07: HYMOD_B_exp #(orig) PDM_B = Degree of spat. variability of soil moisture capacity
-    HYMOD_Param_08: HYMOD_PET_Corr #PET_CORRECTION(Topsoil) = /PET modified by soil param PET_CORRECTION
-    HYMOD_Param_09: HYMOD_Alpha #(orig) Distribution ratio slow vs. quick release reservoir
+    HYMOD_Param_01: HYMOD_K_q
+    #(orig) RES_CONSTANT = Nash UH linear reservoir const./residence time of reservoir series/of quick release reservoir
+    #R_q (d) 0.1-0.99 (Vrugt) = Residence time of linear quick reservoir
+    #K_q (d-1) 0-0.9 (BastolaMurphy) = Residence time of quick release reservoir
+    #Rq (1/d) 0-1 (Bastola) = Residence time of quick release reservoir
+    #K_f (1/d) 0-1 (KnobenSupplement) = Runoff coeff/Fast reservoir time scale
+    HYMOD_Param_02: HYMOD_C_max
+    #(orig) Thickness TOPSOIL(of Default_P SoilProfile)/Max. storage capacity
+    #C_max (mm or L) 1-500 (Vrugt) = Max storage capacity in ctm
+    #C_max (mm or L) 200-500 (bastolaMurphy) = Max storage capacity in basin
+    #Cmax (L) 1-500 (Bastola) = Max. storage capacity in basin
+    #S_max (mm) 1-2000 (KnobenSupplement) = Max. SM storage
+    HYMOD_Param_03: HYMOD_T_zero
+    #RAINSNOW_TEMP (dC) -3-3 (-0.15)= Rain/Snow halfway transition temp (Raven)/Threshold temp. (Moore1993)
+    #TT (dC) -3-5 (KnobenSupplement) = Thresh. temp. for snowfall (and melt, if not specified otherwise)
+    HYMOD_Param_04: HYMOD_K_s
+    #(orig) BASEFLOW_COEFF(GWSOIL) = Residence time single reservoir/slow release reservoirs
+    #R_s (d or T) 0-0.1 (Vrugt) = Residence time of linear slow reservoir
+    #K_s (d-1) 0-0.1 (BastolaMurphy) = Residence time of slow release reservoir
+    #Rs (1/d) 0.0001-0.1 (Bastola) = Residence time of slow release reservoir
+    #k_s (1/d) 0-1 (KnobenSupplement) = Runoff coeff/Slow reservoir time scale
+    HYMOD_Param_05: HYMOD_C_melt
+    #max. MELT_FACTOR for DD pot. melt (Raven)
+    #CFMAX (mm(dC/d) 0-20 (KnobenSupplement) = Degree-day factor for snowmelt
+    HYMOD_Param_06: HYMOD_T_melt
+    #DD_MELT_TEMP for DD pot. melt (Raven) = melt temp.
+    #TTM (dC) -3-3 (KnobenSupplement) = Thresh. temp. for snowmelt
+    HYMOD_Param_07: HYMOD_B_exp
+    #(orig) PDM_B = Degree of spat. variability of soil moisture capacity
+    #b_exp (-) 0.1-2 (Vrugt) = degree of spat. variability of SMC within ctm.
+    #B_exp (-) 0.1-2 (BastolaMurphy) = Spatial variability of SM distribution within basin
+    #Bexp (-) 0-2 (Bastola) = Spat. variability of SM distribution within basin
+    #b (-) 0-10 (KnobenSupplement) = Contributing area curve shape parameter/ Soil Depth distribution
+    HYMOD_Param_08: HYMOD_PET_Corr
+    #PET_CORRECTION(Topsoil) 0-1 (1) (Raven) = /PET modified by soil param PET_CORRECTION
+    HYMOD_Param_09: HYMOD_Alpha
+    #(orig) Distribution ratio slow vs. quick release reservoir
+    #Alpha (-) 0.1-0.99 (Vrugt) = Factor distributing flow bt. two series of reservoirs
+    #A (-) 0.2-1 (BastolaMurphy) = Flow distribution btw quick & slow linear reservoirs
+    #Alpha (-) 0-1 (Bastola) = Flow distribution btw. quick & slow linear reservoirs
+    #a (-) 0-1 (KnobenSupplement) = Fraction of effective precipitation that is fast flow /fast and slow flow distribution
   init:
     HYMOD_Param_01: '1.0'
     HYMOD_Param_02: '0.5'
@@ -369,25 +401,25 @@ HYMOD:
     HYMOD_Param_08: '1.0'
     HYMOD_Param_09: '0.5'
   lower:
-    HYMOD_Param_01: '0.5'
-    HYMOD_Param_02: '0.01'
-    HYMOD_Param_03: '-1.0'
-    HYMOD_Param_04: '0.01'
-    HYMOD_Param_05: '0.5'
-    HYMOD_Param_06: '-4.0'
-    HYMOD_Param_07: '0.0'
+    HYMOD_Param_01: '0'
+    HYMOD_Param_02: '1'
+    HYMOD_Param_03: '-3'
+    HYMOD_Param_04: '0'
+    HYMOD_Param_05: '0'
+    HYMOD_Param_06: '-3'
+    HYMOD_Param_07: '0'
     HYMOD_Param_08: '0.0'
-    HYMOD_Param_09: '0.2'
+    HYMOD_Param_09: '0'
   upper:
-    HYMOD_Param_01: '1.2'
-    HYMOD_Param_02: '0.5'
-    HYMOD_Param_03: '1.0'
-    HYMOD_Param_04: '0.5'
-    HYMOD_Param_05: '4.0'
-    HYMOD_Param_06: '4.0'
-    HYMOD_Param_07: '2.0'
+    HYMOD_Param_01: '1'
+    HYMOD_Param_02: '2000'
+    HYMOD_Param_03: '3'
+    HYMOD_Param_04: '1'
+    HYMOD_Param_05: '20'
+    HYMOD_Param_06: '3'
+    HYMOD_Param_07: '10'
     HYMOD_Param_08: '1.0'
-    HYMOD_Param_09: '0.99'
+    HYMOD_Param_09: '1'
 MOHYSE:
   names:
     MOHYSE_Param_01: MOHYSE_Pet_Coeff #c_ETP = coeff. d'ajustement de l'evapo potentielle (Fortin & Turcotte2007) 0.5-2 (Hamaoui2019)
