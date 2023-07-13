@@ -7,15 +7,12 @@ from pathlib import Path
 import pandas as pd
 from matplotlib import pyplot as plt
 import matplotlib.animation as animation
-import time
 import raven_tools.config.variables as var
 import numpy as np
 import re
-import yaml
-from matplotlib.ticker import LinearLocator
-import seaborn as sns
+import os
 
-model_path = Path("/media/mainman/Work/RAVEN/models")
+model_path = Path("/home/sirian/Downloads/Raven Computations/test")
 model_types = ["GR4J", "MOHYSE", "HYMOD"]
 
 csv_dict = {}
@@ -132,7 +129,7 @@ def perf_diag_across_ctms(model_type: str):
     fig.supxlabel('Ostrich Iteration Steps')
     fig.suptitle(f"Model: {model_type}\nCalibration with 5000 Runs")
     plt.savefig(
-        f"/home/mainman/Documents/Studium/UniBe/Master's Thesis/data/figures/perf_comp_{model_type}_cali.png")
+        f"/home/sirian/Downloads/Raven Computations/test/figures/perf_comp_{model_type}_cali.png")
     # fig.supxlabel('Ostrich Iteration Steps')
     # fig.suptitle(f"{m} - {c}")
     # plt.show()
@@ -175,9 +172,9 @@ def df_diag_generator(df_name, model_name, type):
 
 def df_sol_generator(ctm, model_type):
     cols = ["Run", "KGE_NP_CALI", "PBIAS_CALI", "RMSE_CALI", "VE_CALI"]
-    cols = ["Run", "KGE_NP", "PBIAS", "RMSE", "VE"]
+#    cols = ["Run", "KGE_NP", "PBIAS", "RMSE", "VE"]
     df = pd.DataFrame(columns=cols)
-    for sol in range(0, 8):
+    for sol in range(0, 100):
         ot = pd.read_csv(Path(model_path, ctm, model_type, f"OstModel{sol}.txt"), sep="\s+", skiprows=0)
         df = pd.concat([df, ot])
     df = df[cols].sort_values(by=cols[1])
@@ -250,7 +247,7 @@ def perf_metrics_chart(model_type: str):
             fig.supxlabel('Ostrich Iteration Steps')
             fig.suptitle(f"Model: {model_type}\nCatchment: {c}\nCalibration with {xlim_right - 1} Runs")
             plt.savefig(
-                f"/home/mainman/Documents/Studium/UniBe/Master's Thesis/data/figures/perf_{model_type}_{c}_{xlim_right}_cali.png")
+                f"/home/sirian/Downloads/Raven Computations/test/figures/perf_{model_type}_{c}_{xlim_right}_cali.png")
 
 
 def bounds_reader(model_type):
@@ -262,7 +259,7 @@ def bounds_reader(model_type):
 def model_factors_chart(model_type):
     # with plt.ioff():
     xlim_left = 0
-    xlim_right = 201
+    xlim_right = 400
     bounds = [
         [],
         [0.01, 2.5],
@@ -273,49 +270,59 @@ def model_factors_chart(model_type):
         [0, 1]
     ]
     # for m in model_types:
-    # for c in catchments_by_id:
-    c = "CH-0139"
-    file_path = Path(model_path, c, model_type, "dds_status.out")
-    factors = pd.read_csv(file_path, sep='\t')
-    factors.set_index("STEP", inplace=True)
-    df_names = {'cali_df': 'cali', 'vali_df': 'vali'}
-    xlabels = ["KGE_NP (-)", "PBIAS (%)", "RMSE (?)", "VE (?)"]
-    axtitles = ["Non-Parametric KGE", "Percent Bias", "Root Mean Squared Error", "Volumetric Efficiency"]
-    df_list = []
+    for c in catchments_by_id:
+#    c = "CH-0139"
+        file_path = Path(model_path, c, model_type, "dds_status.out")
+        factors = pd.read_csv(file_path, sep='\t')
+        factors.set_index("STEP", inplace=True)
+        df_names = {'cali_df': 'cali', 'vali_df': 'vali'}
+        xlabels = ["KGE_NP (-)", "PBIAS (%)", "RMSE (?)", "VE (?)"]
+        axtitles = ["Non-Parametric KGE", "Percent Bias", "Root Mean Squared Error", "Volumetric Efficiency"]
+        df_list = []
 
     # for df, df_str in df_names.items():
     #     df_out = pd.DataFrame()
     #     df_gen = df_diag_generator(df, model_type, type=df_str)
     #     df_out = pd.concat([df_out, df_gen])
     #     df_list.append(df_out)
-    df_sol = df_factors_generator(c, model_type)
-    bnd_upper, bnd_lower = bounds_reader(model_type=model_type)
-    fig, axes = plt.subplots(nrows=3, ncols=4, figsize=(13, 13), sharex=True, dpi=150, layout='constrained')
-    for nn, ax in enumerate(axes.flat):
-        if nn <= 9:
-            # else:
+        df_sol = df_factors_generator(c, model_type)
+        bnd_upper, bnd_lower = bounds_reader(model_type=model_type)
+        fig, axes = plt.subplots(nrows=7, ncols=3, figsize=(13, 13), sharex=True, dpi=150, layout='constrained')
+        for nn, ax in enumerate(axes.flat):
+            if nn <= 9:
+                # else:
 
-            #     pass
-            # factors[f"{factors.columns[nn]}"].plot(ax=ax)
-            # ax.set_title(factors.columns[nn])
-            df_sol[f"{df_sol.columns[nn]}"].plot(ax=ax)
-            ax.set_xlim(left=xlim_left, right=xlim_right)
-            ax.set_ylim(
-                [float(bnd_lower[nn]) - 0.2 * float(ax.get_ylim()[1] - ax.get_ylim()[0]),
-                 float(bnd_upper[nn]) + 0.2 * float(ax.get_ylim()[1] - ax.get_ylim()[0])])
-            ax.hlines(y=[float(bnd_lower[nn]), float(bnd_upper[nn])], xmin=0, xmax=xlim_right, colors='red',
-                      linestyles='dotted')
-            # ax.hlines(y=bnd_upper[nn], xmin=0, xmax=xlim_right, colors='red', linestyles='dotted')
-            ax.set_title(df_sol.columns[nn])
-        else:
-            pass
-    fig.supxlabel('Ostrich Iteration Steps')
-    fig.suptitle(f"Model: {model_type}\nCatchment: {c}\nCalibration with {xlim_right - 1} Runs")
-    plt.savefig(
-        f"/home/mainman/Documents/Studium/UniBe/Master's Thesis/data/figures/factors_{model_type}_{c}_{xlim_right}.png")
+                #     pass
+                # factors[f"{factors.columns[nn]}"].plot(ax=ax)
+                # ax.set_title(factors.columns[nn])
+                try:
+                    df_sol[f"{df_sol.columns[nn]}"].plot(ax=ax)
+                except IndexError:
+                    pass
+                ax.set_xlim(left=xlim_left, right=xlim_right)
+                ax.set_ylim(
+                    [float(bnd_lower[nn]) - 0.2 * float(ax.get_ylim()[1] - ax.get_ylim()[0]),
+                     float(bnd_upper[nn]) + 0.2 * float(ax.get_ylim()[1] - ax.get_ylim()[0])])
+                ax.hlines(y=[float(bnd_lower[nn]), float(bnd_upper[nn])], xmin=0, xmax=xlim_right, colors='red',
+                          linestyles='dotted')
+                # ax.hlines(y=bnd_upper[nn], xmin=0, xmax=xlim_right, colors='red', linestyles='dotted')
+                try:
+                    ax.set_title(df_sol.columns[nn])
+                except IndexError:
+                    pass
+            else:
+                pass
+        fig.supxlabel('Ostrich Iteration Steps')
+        fig.suptitle(f"Model: {model_type}\nCatchment: {c}\nCalibration with {xlim_right - 1} Runs")
+ #   plt.show()
+        plt.savefig(
+            f"/home/sirian/Downloads/Raven Computations/test/figures/factors_{model_type}_{c}_{xlim_right}.png")
 
 
 # model_factors_chart("MOHYSE")
-perf_diag_across_ctms("GR4J")
+model_type="MOHYSE"
+perf_diag_across_ctms(model_type=model_type)
+model_factors_chart(model_type=model_type)
+perf_metrics_chart(model_type=model_type)
 if __name__ == '__main__':
     pass

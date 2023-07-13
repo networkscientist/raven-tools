@@ -23,36 +23,36 @@ GR4J:
     #0.5-4.0 (0.5)days (eWater wiki)
     #1-240 (40)days (Pagano et al. 2010)
   init:
-    Airsnow_Coeff: '0.5'
-    Cemaneige_X1: '0.5'
-    GR4J_Cemaneige_X2: '0.5'
     GR4J_X1: '0.35'
-    GR4J_Soil_0: '350'
     GR4J_X2: '0.0'
     GR4J_X3: '100'
     GR4J_X4: '0.5'
+    Cemaneige_X1: '0.5'
+    GR4J_Cemaneige_X2: '0.5'
+    Airsnow_Coeff: '0.5'
+    GR4J_Soil_0: '350'
     GR4J_X5: '0.5'
     GR4J_X6: '0.5'
   lower:
-    Airsnow_Coeff: '0.0'
-    Cemaneige_X1: '0.0'
-    GR4J_Cemaneige_X2: '0.0'
     GR4J_X1: '0.1'
-    GR4J_Soil_0: '500'
     GR4J_X2: '-5.0'
     GR4J_X3: '1'
     GR4J_X4: '0.5'
+    Cemaneige_X1: '0.0'
+    GR4J_Cemaneige_X2: '0.0'
+    Airsnow_Coeff: '0.0'
+    GR4J_Soil_0: '500'
     GR4J_X5: '0.01'
     GR4J_X6: '1.0'
   upper:
-    Airsnow_Coeff: '1.0'
-    Cemaneige_X1: '100'
-    GR4J_Cemaneige_X2: '1.0'
     GR4J_X1: '1.2'
-    GR4J_Soil_0: '500'
     GR4J_X2: '3'
     GR4J_X3: '500'
     GR4J_X4: '4.0'
+    Cemaneige_X1: '100'
+    GR4J_Cemaneige_X2: '1.0'
+    Airsnow_Coeff: '1.0'
+    GR4J_Soil_0: '500'
     GR4J_X5: '2.0'
     GR4J_X6: '5.0'
 HBV:
@@ -249,12 +249,10 @@ HMETS:
     HMETS_Param_03: HMETS_alpha2 #GAMMA_SHAPE2 for delayed UH
     HMETS_Param_04: HMETS_beta2 #GAMMA_SCALE2 for delayed UH
     HMETS_Param_05a: HMETS_ddf_min #MIN_MELT_FACTOR = min. DDF
-    HMETS_Param_05b: HMETS_ddf_max #MAX_MELT_FACTOR = max. DDF
     HMETS_Param_06: HMETS_ddf_plus #Difference btw min. & max. DDF
     HMETS_Param_07: HMETS_T_bm #DD_MELT_TEMP = Base melting Temp.
     HMETS_Param_08: HMETS_K_cum #DD_AGGRADATION = Empirical param. for calc of DDF
     HMETS_Param_09a: HMETS_fc_min #SNOW_SWI_MIN = Min. fraction for snowpack water retention capacity
-    HMETS_Param_09b: HMETS_fc_max #SNOW_SWI_MAX = Max. fraction for snowpack water retention capacity
     HMETS_Param_10: HMETS_fc_plus #Difference btw SNOW_SWI_MIN & SNOW_SWI_MAX
     HMETS_Param_11: HMETS_C_cum #SWI_REDUCT_COEFF = Param. for calc. of water retention capacity
     HMETS_Param_12: HMETS_T_bf #DD_REFREEZE_TEMP = Base refreezing Temp.
@@ -265,22 +263,22 @@ HMETS:
     HMETS_Param_17: HMETS_c_vp #PERC_COEFF_TOPSOIL = Fraction of water for GW recharge
     HMETS_Param_18: HMETS_c_va #BASEFLOW_COEFF_TOPSOIL = Fraction of water for hypodermic flow
     HMETS_Param_19: HMETS_c_p #BASEFLOW_COEFF_PHREATIC = Fraction of water for GW flow
-    HMETS_Param_20a: HMETS_half_Thick_TOP #Thickness TOPSOIL half
     HMETS_Param_20b: HMETS_Thick_TOP #Same as HMETS_Param_20a, but divided by 1000 = in m
-    HMETS_Param_21a: HMETS_half_Thick_PHREATIC #Thickness PHREATIC half
     HMETS_Param_21b: HMETS_Thick_PHREATIC #Same as HMETS_Param_21a, but divided by 1000 = in m
+    HMETS_Param_05b: HMETS_ddf_max #MAX_MELT_FACTOR = max. DDF
+    HMETS_Param_09b: HMETS_fc_max #SNOW_SWI_MAX = Max. fraction for snowpack water retention capacity
+    HMETS_Param_20a: HMETS_half_Thick_TOP #Thickness TOPSOIL half
+    HMETS_Param_21a: HMETS_half_Thick_PHREATIC #Thickness PHREATIC half
   init:
     HMETS_Param_01: '1.0'
     HMETS_Param_02: '1.0'
     HMETS_Param_03: '1.0'
     HMETS_Param_04: '1.0'
     HMETS_Param_05a: '1.5'
-    HMETS_Param_05b: '1.0'
     HMETS_Param_06: '0.5'
     HMETS_Param_07: '0.0'
     HMETS_Param_08: '0.1'
     HMETS_Param_09a: '0.0'
-    HMETS_Param_09b: '0.01'
     HMETS_Param_10: '0.5'
     HMETS_Param_11: '0.005'
     HMETS_Param_12: '0.0'
@@ -291,22 +289,22 @@ HMETS:
     HMETS_Param_17: '0.01'
     HMETS_Param_18: '-2.0'
     HMETS_Param_19: '-3.0'
-    HMETS_Param_20a: '100'
     HMETS_Param_20b: '0.1'
-    HMETS_Param_21a: '100'
     HMETS_Param_21b: '0.1'
+    HMETS_Param_05b: '1.0'
+    HMETS_Param_09b: '0.01'
+    HMETS_Param_20a: '100'
+    HMETS_Param_21a: '100'
   lower:
     HMETS_Param_01: '0.3'
     HMETS_Param_02: '0.01'
     HMETS_Param_03: '0.5'
     HMETS_Param_04: '0.15'
     HMETS_Param_05a: '1.5'
-    HMETS_Param_05b: '0.0'
     HMETS_Param_06: '0.0'
     HMETS_Param_07: '-1.0'
     HMETS_Param_08: '0.01'
     HMETS_Param_09a: '0.0'
-    HMETS_Param_09b: '0.01'
     HMETS_Param_10: '0.01'
     HMETS_Param_11: '0.005'
     HMETS_Param_12: '-5.0'
@@ -317,22 +315,22 @@ HMETS:
     HMETS_Param_17: '0.00001'
     HMETS_Param_18: '-5.0'
     HMETS_Param_19: '-5.0'
-    HMETS_Param_20a: '0.0'
     HMETS_Param_20b: '0.0'
-    HMETS_Param_21a: '0.0'
     HMETS_Param_21b: '0.0'
+    HMETS_Param_05b: '0.0'
+    HMETS_Param_09b: '0.01'
+    HMETS_Param_20a: '0.0'
+    HMETS_Param_21a: '0.0'
   upper:
     HMETS_Param_01: '20.0'
     HMETS_Param_02: '5.0'
     HMETS_Param_03: '13.0'
     HMETS_Param_04: '1.5'
     HMETS_Param_05a: '3.0'
-    HMETS_Param_05b: '5.0'
     HMETS_Param_06: '20.0'
     HMETS_Param_07: '1.0'
     HMETS_Param_08: '0.2'
     HMETS_Param_09a: '0.1'
-    HMETS_Param_09b: '0.3'
     HMETS_Param_10: '0.2'
     HMETS_Param_11: '0.1'
     HMETS_Param_12: '2.0'
@@ -343,10 +341,12 @@ HMETS:
     HMETS_Param_17: '0.02'
     HMETS_Param_18: '-1.0'
     HMETS_Param_19: '-2.0'
-    HMETS_Param_20a: '500'
     HMETS_Param_20b: '0.5'
-    HMETS_Param_21a: '2000'
     HMETS_Param_21b: '2.0'
+    HMETS_Param_05b: '5.0'
+    HMETS_Param_09b: '0.3'
+    HMETS_Param_20a: '500'
+    HMETS_Param_21a: '2000'
 HYMOD:
   names:
     HYMOD_Param_01: HYMOD_K_q #(orig) RES_CONSTANT = Nash UH linear reservoir const./residence time of reservoir series/of quick release reservoir
