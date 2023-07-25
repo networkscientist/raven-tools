@@ -24,17 +24,47 @@ class RavenModel:
     """Class that allows various operations on a selected model. There are methods to create the suggested directory
     structure, to create .rvX RAVEN configuration files and to write Ostrich configuration files.
 
-    Args:
-
     Attributes:
-
+        bbox_filepath: Path to the bounding box file.
+        catchment_ch_id: A string with the catchment id in the form of 'CH-XXXX'.
+        supported_models:
+        raven_filetypes:
+        conf:
+        ctm_info:
+        gauge_lat:
+        gauge_lon:
+        stream_name:
+        model_type:
+        start_year:
+        end_year:
+        root_dir:
+        gauge_id:
+        gauge_short_code:
+        station.elevation:
+        attribute_csv:
+        model_dir:
+        model_sub_dir:
+        dirs:
+        data_dir:
+        meteo_dir:
+        start_year:
+        end_year:
+        glaciation_ratio:
+        glacier_alti:
+        default_params:
+        raven_exe_path:
+        ost_exe_path:
     """
 
     def __init__(self, model_type: str = "GR4J", catchment_ch_id: str = "CH-0057",
-                 start_year=1981, end_year=2020):
-        """
+                 start_year: str=1981, end_year: str=2020):
+        """Initializes the instance.
+
         Args:
-            model_type (str): Name of model_type (GR4J, HYMOD, HMETS, HBV or MOHYSE)
+            model_type: Name of model_type (GR4J, HYMOD, HMETS, HBV or MOHYSE)
+            catchment_ch_id: Catchment id in the form of 'CH-XXXX'.
+            start_year: First year to be used in calculations.
+            end_year: Last year to be used in calculations.
         """
         self.bbox_filepath = Path(os.getcwd())
         logger.debug(f"Starting __init__ of {__name__}...")
@@ -108,7 +138,7 @@ class RavenModel:
 
     @property
     def model_sub_dir(self) -> str:
-        """Returns model_sub_dir."""
+        """Sub-directory in which the RAVEN model files are located."""
         assert isinstance(self._model_sub_dir,
                           str), f"model_sub_dir should be str, is type {type(self._model_sub_dir)} instead."
         return self._model_sub_dir
