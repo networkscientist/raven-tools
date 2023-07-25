@@ -14,7 +14,6 @@ models_by_name = rt.config.variables.supported_models
 catchments_by_id = [key for key in rt.config.variables.catchments]
 start_year = 1981
 end_year = 2020
-m = "GR4J"
 
 # Do the following snippet for each forcing_dir
 # ---------------------------------------------
@@ -38,5 +37,5 @@ for c in catchments_by_id:
 #            model_instance.write_rvx(rvx_type=s, ostrich_template=True, raven_template=True)
 #        model_instance.write_rvt()
 #        model_instance.write_ost(run_number=20)
-        model_instance.create_symlinks(forcings=False, discharge=True, raven_executable=False, ostrich_executable=False,
+        model_instance.create_symlinks(forcings=False, discharge=True, raven_executable=True, ostrich_executable=True,
                                        rvx_files=False, raven_diag=False, delete=False)

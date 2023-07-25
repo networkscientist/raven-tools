@@ -591,7 +591,8 @@ class RavenModel:
         if raven_diag:
             shutil.copy(raven_diag.__file__, Path(self.model_dir, self.model_sub_dir, "output", "raven_diag.py"))
 
-    def write_rvx(self, ostrich_template: bool = False, raven_template: bool = True, rvx_type: str = "rvi"):
+    def write_rvx(self, ostrich_template: bool = False, raven_template: bool = True, rvx_type: str = "rvi",
+                  glacier_module: bool = False):
         """Write .rvX file for Raven and/or Ostrich
 
         :param rvx_type: Suffix of the Raven file to be written (rvi,rvp,rvc,rvt or rvh)
@@ -615,7 +616,8 @@ class RavenModel:
             rr.write_rvx(catchment_ch_id=self.catchment_ch_id, hru_info=hru_info_dict, model_dir="models",
                          model_type=self.model_type,
                          project_dir=self.root_dir, params=self.default_params, template_type="Raven",
-                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year)
+                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year,
+                         glacier_module=glacier_module)
             logger.debug(f".{rvx_type} for Raven created by rr.write_rvx function")
         if ostrich_template is True:
             logger.debug("Variable ostrich_template is True...")
@@ -623,7 +625,8 @@ class RavenModel:
             rr.write_rvx(catchment_ch_id=self.catchment_ch_id, hru_info=hru_info_dict, model_dir="models",
                          model_type=self.model_type,
                          project_dir=self.root_dir, params=self.default_params, template_type="Ostrich",
-                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year)
+                         rvx_type=rvx_type, start_year=self.start_year, end_year=self.end_year,
+                         glacier_module=glacier_module)
             logger.debug(f".{rvx_type}.tpl for Ostrich created by rr.write_rvx function")
         if ostrich_template is False and raven_template is False:
             logger.debug("Variables ostrich_template and raven_template set to False.")

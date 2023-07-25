@@ -245,7 +245,8 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                           params=default_params,
                           param_or_name="names",
                           start_year: int = start_year, end_year: int = end_year,
-                          cali_end_year: str = cali_end_year) -> dict:
+                          cali_end_year: str = cali_end_year,
+                          glacier_module: bool = False) -> dict:
     """Generates template text which can be written to .rvX file.
 
         Args:
@@ -329,6 +330,54 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                 "   :Units, m, none, mm_per_s",
                 "   VEG_ALL, 0.0, 0.0, 0.0",
                 ":EndVegetationClasses"
+            ]
+        
+    if not glacier_module:
+        gr4j_hydro_proc = \
+            [
+                ":HydrologicProcesses",
+                "   :Precipitation            PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
+                "   :SnowTempEvolve           SNOTEMP_NEWTONS    SNOW_TEMP",
+                "   :SnowBalance              SNOBAL_CEMA_NIEGE  SNOW            PONDED_WATER",
+                "   :OpenWaterEvaporation     OPEN_WATER_EVAP    PONDED_WATER    ATMOSPHERE     	 # Pn",
+                "   :Infiltration             INF_GR4J           PONDED_WATER    MULTIPLE       	 # Ps-",
+                "   :SoilEvaporation          SOILEVAP_GR4J      PRODUCT_STORE   ATMOSPHERE     	 # Es",
+                "   :Percolation              PERC_GR4J          PRODUCT_STORE   TEMP_STORE     	 # Perc",
+                "   :Flush                    RAVEN_DEFAULT      SURFACE_WATER   TEMP_STORE     	 # Pn-Ps",
+                "   :Split                    RAVEN_DEFAULT      TEMP_STORE      CONVOLUTION[0] CONVOLUTION[1] 0.9  # Split Pr",
+                "   :Convolve                 CONVOL_GR4J_1      CONVOLUTION[0]  ROUTING_STORE  	 # Q9",
+                "   :Convolve                 CONVOL_GR4J_2      CONVOLUTION[1]  TEMP_STORE     	 # Q1",
+                "   :Percolation              PERC_GR4JEXCH      ROUTING_STORE   GW_STORE       	 # F(x1)",
+                "   :Percolation              PERC_GR4JEXCH2     TEMP_STORE      GW_STORE       	 # F(x1)",
+                "   :Flush                    RAVEN_DEFAULT      TEMP_STORE      SURFACE_WATER  	 # Qd",
+                "   :Baseflow                 BASE_GR4J          ROUTING_STORE   SURFACE_WATER  	 # Qr",
+                ":EndHydrologicProcesses"
+            ]
+    else:
+        gr4j_hydro_proc = \
+            [
+                ":HydrologicProcesses",
+                "   :Precipitation            PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
+                "   :SnowTempEvolve           SNOTEMP_NEWTONS    SNOW_TEMP",
+                "   :SnowBalance              SNOBAL_CEMA_NIEGE  SNOW            PONDED_WATER",
+                "   :OpenWaterEvaporation     OPEN_WATER_EVAP    PONDED_WATER    ATMOSPHERE     	 # Pn",
+                "   :Infiltration             INF_GR4J           PONDED_WATER    MULTIPLE       	 # Ps-",
+                "   :Flush                    RAVEN_DEFAULT      PONDED_WATER    GLACIER",
+                "     :-->Conditional HRU_TYPE IS GLACIER",
+                "   :GlacierMelt              GMELT_SIMPLE_MELT  GLACIER_ICE     GLACIER",
+                "   :GlacierRelease           GRELEASE_LINEAR_STORAGE  GLACIER   SURFACE_WATER",
+                "   :SoilEvaporation          SOILEVAP_GR4J      PRODUCT_STORE   ATMOSPHERE     	 # Es",
+                "   :Percolation              PERC_GR4J          PRODUCT_STORE   TEMP_STORE     	 # Perc",
+                "   :Flush                    RAVEN_DEFAULT      SURFACE_WATER   TEMP_STORE     	 # Pn-Ps",
+                "     :-->Conditional HRU_TYPE IS_NOT GLACIER",
+                "   :Split                    RAVEN_DEFAULT      TEMP_STORE      CONVOLUTION[0] CONVOLUTION[1] 0.9  # Split Pr",
+                "   :Convolve                 CONVOL_GR4J_1      CONVOLUTION[0]  ROUTING_STORE  	 # Q9",
+                "   :Convolve                 CONVOL_GR4J_2      CONVOLUTION[1]  TEMP_STORE     	 # Q1",
+                "   :Percolation              PERC_GR4JEXCH      ROUTING_STORE   GW_STORE       	 # F(x1)",
+                "   :Percolation              PERC_GR4JEXCH2     TEMP_STORE      GW_STORE       	 # F(x1)",
+                "   :Flush                    RAVEN_DEFAULT      TEMP_STORE      SURFACE_WATER  	 # Qd",
+                "   :Baseflow                 BASE_GR4J          ROUTING_STORE   SURFACE_WATER  	 # Qr",
+                ":EndHydrologicProcesses"
             ]
 
     gr4j = {
@@ -427,25 +476,7 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                         ":Alias GW_STORE           SOIL[3]"
                     ],
                 "Hydrologic Process Order":
-                    [
-                        ":HydrologicProcesses",
-                        "   :Precipitation            PRECIP_RAVEN       ATMOS_PRECIP    MULTIPLE",
-                        "   :SnowTempEvolve           SNOTEMP_NEWTONS    SNOW_TEMP",
-                        "   :SnowBalance              SNOBAL_CEMA_NIEGE  SNOW            PONDED_WATER",
-                        "   :OpenWaterEvaporation     OPEN_WATER_EVAP    PONDED_WATER    ATMOSPHERE     	 # Pn",
-                        "   :Infiltration             INF_GR4J           PONDED_WATER    MULTIPLE       	 # Ps-",
-                        "   :SoilEvaporation          SOILEVAP_GR4J      PRODUCT_STORE   ATMOSPHERE     	 # Es",
-                        "   :Percolation              PERC_GR4J          PRODUCT_STORE   TEMP_STORE     	 # Perc",
-                        "       :Flush                    RAVEN_DEFAULT      SURFACE_WATER   TEMP_STORE     	 # Pn-Ps",
-                        "   :Split                    RAVEN_DEFAULT      TEMP_STORE      CONVOLUTION[0] CONVOLUTION[1] 0.9  # Split Pr",
-                        "   :Convolve                 CONVOL_GR4J_1      CONVOLUTION[0]  ROUTING_STORE  	 # Q9",
-                        "   :Convolve                 CONVOL_GR4J_2      CONVOLUTION[1]  TEMP_STORE     	 # Q1",
-                        "   :Percolation              PERC_GR4JEXCH      ROUTING_STORE   GW_STORE       	 # F(x1)",
-                        "   :Percolation              PERC_GR4JEXCH2     TEMP_STORE      GW_STORE       	 # F(x1)",
-                        "       :Flush                    RAVEN_DEFAULT      TEMP_STORE      SURFACE_WATER  	 # Qd",
-                        "   :Baseflow                 BASE_GR4J          ROUTING_STORE   SURFACE_WATER  	 # Qr",
-                        ":EndHydrologicProcesses"
-                    ],
+                    gr4j_hydro_proc,
                 "Output Options":
                     [
                     ]
@@ -1752,6 +1783,7 @@ def write_rvx(catchment_ch_id: str,
               author=conf['Author'],
               start_year: int = start_year,
               end_year: int = end_year,
+              glacier_module: bool = False
               ):
     import shutil
     """Writes .rvX file(s), either as an Ostrich or Raven template.
@@ -1793,7 +1825,7 @@ def write_rvx(catchment_ch_id: str,
         template_sections = generate_template_rvx(model_type=model_type, hru_info=hru_info, csv_file=csv_file,
                                                   params=params,
                                                   param_or_name="init", start_year=start_year, end_year=end_year,
-                                                  catchment_ch_id=catchment_ch_id)
+                                                  catchment_ch_id=catchment_ch_id, glacier_module=glacier_module)
         logger.debug(f"Wrote .{rvx_type} template sections generated by generate_template() to dict template_sections")
     if template_type == "Ostrich":
         file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, file_name)
@@ -1804,7 +1836,7 @@ def write_rvx(catchment_ch_id: str,
         template_sections = generate_template_rvx(model_type=model_type, hru_info=hru_info, csv_file=csv_file,
                                                   params=params,
                                                   param_or_name="names", start_year=start_year, end_year=end_year,
-                                                  catchment_ch_id=catchment_ch_id)
+                                                  catchment_ch_id=catchment_ch_id, glacier_module=glacier_module)
         logger.debug(
             f"Wrote .{rvx_type}.tpl template sections generated by generate_template() to dict template_sections")
 

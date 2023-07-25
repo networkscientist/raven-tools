@@ -60,29 +60,74 @@ HBV:
     HBV_Param_01: HBV_RainSnow_Temp
     #RAINSNOW_TEMP (C) -3-3 (-0.15) (RavenManual)
     #TT -1.5-1.2 (vt-hydroinfo)
+    #TB->TTH -3-3 -> -3-3 (Herman)
+    #TT 0 (Parra)
+    #TT (Lindström)
+    #TT -1.5-1.5 (UZH)
     HBV_Param_02: HBV_Melt_Fact
     #MELT_FACTOR (mm/dC/d) -9999-9999 (5.04) (RavenManual)
     #or 3.5 (RavenManual)
+    #C0 DD melt factor (Bergström)
+    #CFMAX 1-8 (VT)
+    #DDF 0-20 (Herman)
+    #CFMAX 1-10 (UZH)
+    #C_melt 0.5-7 (Parra)
+    #CFMAX (Lindström)
     HBV_Param_03: HBV_Refreeze_Fact
     #REFREEZE_FACTOR: (mm/d/dC) 3 (RavenManual)
+    #CFR (Lindström)
+    #CFR 0-0.1 (UZH)
     HBV_Param_04: HBV_Snow_SWI
     #SNOW_SWI (-) 0.04-0.07 (RavenManual)
+    #C_wh Water holding capacity
+    #CWH 0-0.2 (UZH)
+    #CWH (Lindström)
     HBV_Param_05: HBV_Porosity
     #POROSITY (-) 0.1-0.6 (RavenManual)
     HBV_Param_06: HBV_Field_Cap
     #FIELD_CAPACITY (-) 0.0-1.0 (0.0) = Saturation @ field capacity
     # (mm) 40-400 (vt-hydroinformatics) = Max. soil moisture storage, field capacity
     # (mm) 50-500 (uzh hbv-light ex.6) = Maximum of SM (storage in soil box)
+    # 10-2000 (Herman)
+    # 0-2000 (Parra)
+    # FC (Lindström)
+    # 50-500 (Wang)
+    # F_c (Berg)
     HBV_Param_07: HBV_Beta
     #HBV_BETA (-) 0.0-7.0 (1) (RavenManual)
     #1-6 (vt-hydroinfo) =
     #1-6 (uzh)
+    #0-7 (Herman)
+    #BETA (Lindström)
+    #0-7 (Parra)
+    #1-6 (Wang)
+    #B (Bergström)
     HBV_Param_08: HBV_Max_Perc_Rate_Fast_Res
     #MAX_PERC_RATE(FAST_RES) (mm/d) 0.01-1000 (RavenManual)
+    # 0-8 (Wang)
+    # 0-100 (Herman)
+    # 0-3 (UZH)
+    # PERC (Lindström)
+    # k_P (d-1) 0.01-0.1 (Parra)
+    # 0-4 (VT)
+    # C_Perc (Bergström)
     HBV_Param_09: HBV_BaseFlow_Coeff_Fast_Res
+    # BASEFLOW_COEFF(FAST_RES) (1/d) (RavenManual)
+    # K (mm/d) 0.005-0.5 (Wang)
+    # K (Lindström)
+    # K_0 (Bergström)
+    # k_0 0.3-0.6 (Parra)
+    # K1 0.01-0.4 (UZH)
+    # k_0 0.05-0.5 (VT)
+    # K_0 0.5-20 (Herman)
     HBV_Param_10: HBV_BaseFlow_Coeff_Slow_Res
     HBV_Param_11: HBV_T_Conc_Max_Bas
-    #MAXBAS (d) 1-3 (vt-hydroinfo)
+    # MAXBAS (d) 1-3 (vt-hydroinfo)
+    # MAXBAS 1-3 (d) (RavenManual??)
+    # B_max (Bergström)
+    # MAXBAS (d) 1-7 (UZH)
+    # MaxBas 24-120 (h) (Herman)
+    # MAXBAS (Lindström)
     HBV_Param_11b: HBV_Time_To_Peak
     HBV_Param_12: HBV_Prec_Lapse_PCALT
     #PRECIP_LAPSE (mm/d/km) 0-100 (RavenManual)
@@ -92,11 +137,21 @@ HBV:
     #SAT_WILT (-) 0.0-0.9 (0.0) (RavenManual) = Saturation at wilting point
     #LP 0.3-1 (vt-hydroinfo) = Threshold for reduction of evapo
     #LP (-) 0.3-1 (uzh) = Threshold for reduction of evapo (SM/FC)
+    # LP 0.3-1 (Herman)
+    # LP (Lindström)
+    # LP 0.3-1 (Parra)
+    # 0.3-1 (Wang)
+    # LP (Bergström)
     HBV_Param_15: HBV_Alpha
     #BASEFLOW_N-1
+    # ALFA (Lindström)
+    # ALFA 0-4 (Wang)
     HBV_Param_15b: HBV_Baseflow_N
     #Alpha+1=BASEFLOW_N(Raven) (-) 1.0-10.0
     HBV_Param_16: HBV_Max_Cap_Rise_Rate
+    # MAX_CAP_RISE_RATE (mm/d)
+    # CFLUX (Lindström)
+    # CFLUX 0-1 (Wang)
     HBV_Param_17: HBV_Thickness_Topsoil
     HBV_Param_17b: HBV_Initial_Thickness_Topsoil
     HBV_Param_18: HBV_Melt_For_Corr
@@ -105,9 +160,13 @@ HBV:
     #GLAC_STORAGE_EFFECT=max linear storage coefficient for glacial melt (-)
     HBV_Param_20: HBV_Rain_Correction_RFCF
     #RainCorrection (-) 0.5-2 (1) (RavenManual) = A multiplier (hopefully near 1.0) applied to all reported rainfall rates at this gauge
+    # RFCF (Lindström)
     HBV_Param_21: HBV_Snow_Correction_SFCF
     #SFCF 0.4-1.2 (vt-hydro) = Snowfall correction factor
     #SCF 0.4-1 (uzh) = Snowfall correction factor
+    # S_f 0.5-1.2 (Parra)
+    # C_SF (Bergström)
+    # SFCF (Lindström)
   init:
     HBV_Param_01: '-0.15'
     HBV_Param_02: '3.5'
@@ -135,52 +194,52 @@ HBV:
     HBV_Param_21: '1.0'
   lower:
     HBV_Param_01: '-3'
-    HBV_Param_02: '3.5'
-    HBV_Param_03: '3'
+    HBV_Param_02: '1'
+    HBV_Param_03: '0'
     HBV_Param_04: '0.04'
     HBV_Param_05: '0.1'
     HBV_Param_06: '0.0'
     HBV_Param_07: '0.0'
     HBV_Param_08: '0.01'
-    HBV_Param_09: '0.5'
-    HBV_Param_10: '0.5'
+    HBV_Param_09: '0.01'
+    HBV_Param_10: '0.01'
     HBV_Param_11: '1.0'
     HBV_Param_11b: '0.5'
     HBV_Param_12: '0.0'
     HBV_Param_13: '0.0'
     HBV_Param_14: '0.0'
-    HBV_Param_15: '0.5'
+    HBV_Param_15: '0'
     HBV_Param_15b: '1.0'
-    HBV_Param_16: '0.5'
-    HBV_Param_17: '0.5'
-    HBV_Param_17b: '0.5'
-    HBV_Param_18: '0.1'
-    HBV_Param_19: '0.5'
+    HBV_Param_16: '0'
+    HBV_Param_17: '0.1'
+    HBV_Param_17b: '0.1'
+    HBV_Param_18: '0.01'
+    HBV_Param_19: '0.1'
     HBV_Param_20: '0.5'
     HBV_Param_21: '0.4'
   upper:
     HBV_Param_01: '3'
-    HBV_Param_02: '3.5'
-    HBV_Param_03: '3'
+    HBV_Param_02: '10'
+    HBV_Param_03: '3.5'
     HBV_Param_04: '0.07'
     HBV_Param_05: '0.6'
     HBV_Param_06: '1.0'
     HBV_Param_07: '7.0'
     HBV_Param_08: '1000'
-    HBV_Param_09: '0.5'
-    HBV_Param_10: '0.5'
+    HBV_Param_09: '0.6'
+    HBV_Param_10: '0.6'
     HBV_Param_11: '3.0'
     HBV_Param_11b: '0.5'
     HBV_Param_12: '100'
     HBV_Param_13: '7.0'
     HBV_Param_14: '0.9'
-    HBV_Param_15: '0.5'
+    HBV_Param_15: '9'
     HBV_Param_15b: '10.0'
-    HBV_Param_16: '0.5'
-    HBV_Param_17: '0.5'
-    HBV_Param_17b: '0.5'
+    HBV_Param_16: '1'
+    HBV_Param_17: '10'
+    HBV_Param_17b: '10'
     HBV_Param_18: '0.99'
-    HBV_Param_19: '0.5'
+    HBV_Param_19: '2'
     HBV_Param_20: '2.0'
     HBV_Param_21: '1.2'
 HMETS:
@@ -290,15 +349,47 @@ HMETS:
     HMETS_Param_21a: '2000'
 HYMOD:
   names:
-    HYMOD_Param_01: HYMOD_K_q #(orig) RES_CONSTANT = Nash UH linear reservoir const./residence time of reservoir series/of quick release reservoir
-    HYMOD_Param_02: HYMOD_C_max #(orig) Thickness TOPSOIL(of Default_P SoilProfile)/Max. storage capacity
-    HYMOD_Param_03: HYMOD_T_zero #RAINSNOW_TEMP = Rain/Snow halfway transition temp (Raven)/Threshold temp. (Moore1993)
-    HYMOD_Param_04: HYMOD_K_s #(orig) BASEFLOW_COEFF(GWSOIL) = Residence time single reservoir/slow release reservoirs
-    HYMOD_Param_05: HYMOD_C_melt #max. MELT_FACTOR for DD pot. melt (Raven)
-    HYMOD_Param_06: HYMOD_T_melt #DD_MELT_TEMP for DD pot. melt (Raven)
-    HYMOD_Param_07: HYMOD_B_exp #(orig) PDM_B = Degree of spat. variability of soil moisture capacity
-    HYMOD_Param_08: HYMOD_PET_Corr #PET_CORRECTION(Topsoil) = /PET modified by soil param PET_CORRECTION
-    HYMOD_Param_09: HYMOD_Alpha #(orig) Distribution ratio slow vs. quick release reservoir
+    HYMOD_Param_01: HYMOD_K_q
+    #(orig) RES_CONSTANT = Nash UH linear reservoir const./residence time of reservoir series/of quick release reservoir
+    #R_q (d) 0.1-0.99 (Vrugt) = Residence time of linear quick reservoir
+    #K_q (d-1) 0-0.9 (BastolaMurphy) = Residence time of quick release reservoir
+    #Rq (1/d) 0-1 (Bastola) = Residence time of quick release reservoir
+    #K_f (1/d) 0-1 (KnobenSupplement) = Runoff coeff/Fast reservoir time scale
+    HYMOD_Param_02: HYMOD_C_max
+    #(orig) Thickness TOPSOIL(of Default_P SoilProfile)/Max. storage capacity
+    #C_max (mm or L) 1-500 (Vrugt) = Max storage capacity in ctm
+    #C_max (mm or L) 200-500 (bastolaMurphy) = Max storage capacity in basin
+    #Cmax (L) 1-500 (Bastola) = Max. storage capacity in basin
+    #S_max (mm) 1-2000 (KnobenSupplement) = Max. SM storage
+    HYMOD_Param_03: HYMOD_T_zero
+    #RAINSNOW_TEMP (dC) -3-3 (-0.15)= Rain/Snow halfway transition temp (Raven)/Threshold temp. (Moore1993)
+    #TT (dC) -3-5 (KnobenSupplement) = Thresh. temp. for snowfall (and melt, if not specified otherwise)
+    HYMOD_Param_04: HYMOD_K_s
+    #(orig) BASEFLOW_COEFF(GWSOIL) = Residence time single reservoir/slow release reservoirs
+    #R_s (d or T) 0-0.1 (Vrugt) = Residence time of linear slow reservoir
+    #K_s (d-1) 0-0.1 (BastolaMurphy) = Residence time of slow release reservoir
+    #Rs (1/d) 0.0001-0.1 (Bastola) = Residence time of slow release reservoir
+    #k_s (1/d) 0-1 (KnobenSupplement) = Runoff coeff/Slow reservoir time scale
+    HYMOD_Param_05: HYMOD_C_melt
+    #max. MELT_FACTOR for DD pot. melt (Raven)
+    #CFMAX (mm(dC/d) 0-20 (KnobenSupplement) = Degree-day factor for snowmelt
+    HYMOD_Param_06: HYMOD_T_melt
+    #DD_MELT_TEMP for DD pot. melt (Raven) = melt temp.
+    #TTM (dC) -3-3 (KnobenSupplement) = Thresh. temp. for snowmelt
+    HYMOD_Param_07: HYMOD_B_exp
+    #(orig) PDM_B = Degree of spat. variability of soil moisture capacity
+    #b_exp (-) 0.1-2 (Vrugt) = degree of spat. variability of SMC within ctm.
+    #B_exp (-) 0.1-2 (BastolaMurphy) = Spatial variability of SM distribution within basin
+    #Bexp (-) 0-2 (Bastola) = Spat. variability of SM distribution within basin
+    #b (-) 0-10 (KnobenSupplement) = Contributing area curve shape parameter/ Soil Depth distribution
+    HYMOD_Param_08: HYMOD_PET_Corr
+    #PET_CORRECTION(Topsoil) 0-1 (1) (Raven) = /PET modified by soil param PET_CORRECTION
+    HYMOD_Param_09: HYMOD_Alpha
+    #(orig) Distribution ratio slow vs. quick release reservoir
+    #Alpha (-) 0.1-0.99 (Vrugt) = Factor distributing flow bt. two series of reservoirs
+    #A (-) 0.2-1 (BastolaMurphy) = Flow distribution btw quick & slow linear reservoirs
+    #Alpha (-) 0-1 (Bastola) = Flow distribution btw. quick & slow linear reservoirs
+    #a (-) 0-1 (KnobenSupplement) = Fraction of effective precipitation that is fast flow /fast and slow flow distribution
   init:
     HYMOD_Param_01: '1.0'
     HYMOD_Param_02: '0.5'
@@ -310,25 +401,25 @@ HYMOD:
     HYMOD_Param_08: '1.0'
     HYMOD_Param_09: '0.5'
   lower:
-    HYMOD_Param_01: '0.5'
-    HYMOD_Param_02: '0.01'
-    HYMOD_Param_03: '-1.0'
-    HYMOD_Param_04: '0.01'
-    HYMOD_Param_05: '0.5'
-    HYMOD_Param_06: '-4.0'
-    HYMOD_Param_07: '0.0'
+    HYMOD_Param_01: '0'
+    HYMOD_Param_02: '1'
+    HYMOD_Param_03: '-3'
+    HYMOD_Param_04: '0'
+    HYMOD_Param_05: '0'
+    HYMOD_Param_06: '-3'
+    HYMOD_Param_07: '0'
     HYMOD_Param_08: '0.0'
-    HYMOD_Param_09: '0.2'
+    HYMOD_Param_09: '0'
   upper:
-    HYMOD_Param_01: '1.2'
-    HYMOD_Param_02: '0.5'
-    HYMOD_Param_03: '1.0'
-    HYMOD_Param_04: '0.5'
-    HYMOD_Param_05: '4.0'
-    HYMOD_Param_06: '4.0'
-    HYMOD_Param_07: '2.0'
+    HYMOD_Param_01: '1'
+    HYMOD_Param_02: '2000'
+    HYMOD_Param_03: '3'
+    HYMOD_Param_04: '1'
+    HYMOD_Param_05: '20'
+    HYMOD_Param_06: '3'
+    HYMOD_Param_07: '10'
     HYMOD_Param_08: '1.0'
-    HYMOD_Param_09: '0.99'
+    HYMOD_Param_09: '1'
 MOHYSE:
   names:
     MOHYSE_Param_01: MOHYSE_Pet_Coeff #c_ETP = coeff. d'ajustement de l'evapo potentielle (Fortin & Turcotte2007) 0.5-2 (Hamaoui2019)
