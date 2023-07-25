@@ -138,7 +138,7 @@ class RavenModel:
 
     @property
     def model_sub_dir(self) -> str:
-        """Returns model_sub_dir."""
+        """Sub-directory in which the RAVEN model files are located."""
         assert isinstance(self._model_sub_dir,
                           str), f"model_sub_dir should be str, is type {type(self._model_sub_dir)} instead."
         return self._model_sub_dir
