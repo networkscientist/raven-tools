@@ -733,15 +733,14 @@ def area_ratio(catchment_filepath: Path, glacier_shape_path: Path):
 #         return glaciation_ratio, gla_height, non_glaciation_ratio, non_gla_height, glaciacted_centroid, non_glaciated_centroid
 
 
-def weighted_centroid(feature_gdf: GeoDataFrame):
+def weighted_centroid(feature_gdf: GeoDataFrame) -> tuple:
     """Calculates weighted centroid of a GDF feature
 
     Args:
-        feature_gdf: GeoDataFrame
+        feature_gdf: The feature whose centroid to calculate.
 
     Returns:
-        weighted_centroid_y:
-        weighted_centroid_x:
+        A tuple with the X and Y coordinates of the centroid.
 
     """
     feature_gdf.set_crs(epsg='2056')
