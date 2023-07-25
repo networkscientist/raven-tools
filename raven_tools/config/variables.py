@@ -182,15 +182,15 @@ catchments = {
          "catchment_id": "CH-0161",
          "stream_name": "Saltina"
          },
-    "CH-0171":
-        {"ID": 2364,
-         "lat": 694610,
-         "lon": 152450,
-         "short_code": "TicPio",
-         "station_elevation": "1007",
-         "catchment_id": "CH-0171",
-         "stream_name": "Ticino"
-         },
+    # "CH-0171":
+    #     {"ID": 2364,
+    #      "lat": 694610,
+    #      "lon": 152450,
+    #      "short_code": "TicPio",
+    #      "station_elevation": "1007",
+    #      "catchment_id": "CH-0171",
+    #      "stream_name": "Ticino"
+    #      },
     "CH-0198":
         {"ID": 2432,
          "lat": 532040,
