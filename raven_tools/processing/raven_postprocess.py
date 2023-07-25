@@ -2,18 +2,20 @@
 Tools to processing-process Raven output files.
 """
 import glob
+import re
+import sys
 from pathlib import Path
 
+import matplotlib.animation as animation
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-import matplotlib.animation as animation
-import raven_tools.config.variables as var
-import numpy as np
-import re
-import os
 
-model_path = Path("/home/sirian/Downloads/Raven Computations/test")
-model_types = ["GR4J", "MOHYSE", "HYMOD"]
+import raven_tools.config.variables as var
+
+# model_path = Path("/media/mainman/Work/RAVEN/results/incoming")
+model_path = ("/media/mainman/Work/RAVEN/results/incoming")
+model_types = ["GR4J", "MOHYSE", "HYMOD", "HMETS", "HBV"]
 
 csv_dict = {}
 perf_metrics = ['Run', 'KGE_NP', 'PBIAS', 'RMSE', 'VE']
@@ -129,7 +131,7 @@ def perf_diag_across_ctms(model_type: str):
     fig.supxlabel('Ostrich Iteration Steps')
     fig.suptitle(f"Model: {model_type}\nCalibration with 5000 Runs")
     plt.savefig(
-        f"/home/sirian/Downloads/Raven Computations/test/figures/perf_comp_{model_type}_cali.png")
+        f"{model_path}/figures/perf_comp_{model_type}_cali.png")
     # fig.supxlabel('Ostrich Iteration Steps')
     # fig.suptitle(f"{m} - {c}")
     # plt.show()
@@ -172,15 +174,22 @@ def df_diag_generator(df_name, model_name, type):
 
 def df_sol_generator(ctm, model_type):
     cols = ["Run", "KGE_NP_CALI", "PBIAS_CALI", "RMSE_CALI", "VE_CALI"]
-#    cols = ["Run", "KGE_NP", "PBIAS", "RMSE", "VE"]
+    #    cols = ["Run", "KGE_NP", "PBIAS", "RMSE", "VE"]
     df = pd.DataFrame(columns=cols)
-    for sol in range(0, 100):
-        ot = pd.read_csv(Path(model_path, ctm, model_type, f"OstModel{sol}.txt"), sep="\s+", skiprows=0)
-        df = pd.concat([df, ot])
+    #    for sol in range(0, 100):
+    #        ot = pd.read_csv(Path(model_path, ctm, model_type, f"OstModel{sol}.txt"), sep="\s+", skiprows=0)
+    #        df = pd.concat([df, ot])
+    df = ostmodel_loader(model_path, ctm, model_type)
     df = df[cols].sort_values(by=cols[1])
     df.index = np.arange(1, len(df) + 1)
     run = df.index.values
     # kge_np = df['KGE_NP'].values
+    return df
+
+
+def ostmodel_loader(model_path, ctm, model_type):
+    df = pd.concat([pd.read_csv(f, sep="\s+", skiprows=0) for f in
+                    glob.glob(model_path + "/" + ctm + "/" + model_type + "/OstModel*.txt")])
     return df
 
 
@@ -189,10 +198,8 @@ def df_factors_generator(ctm, model_type):
             "RMSE_VALI", "VE_VALI"]
     df = pd.DataFrame(columns=cols)
     new_cols = []
-    for sol in range(0, 8):
-        ot = pd.read_csv(Path(model_path, ctm, model_type, f"OstModel{sol}.txt"), sep="\s+", skiprows=0)
-        df = pd.concat([df, ot])
-    for col in ot.columns.tolist():
+    df = ostmodel_loader(model_path, ctm, model_type)
+    for col in df.columns.tolist():
         if col in cols:
             pass
         else:
@@ -240,14 +247,17 @@ def perf_metrics_chart(model_type: str):
                     else:
                         # ax.hlines(bounds[nn], 0, 500, colors='red', linestyles='dotted')
                         pass
-                    df_sol[f"{df_sol.columns[nn + 1]}"].plot(ax=ax, ylabel=ylabels[nn])
+                    try:
+                        df_sol[f"{df_sol.columns[nn + 1]}"].plot(ax=ax, ylabel=ylabels[nn])
+                    except TypeError:
+                        pass
                     ax.set_title(axtitles[nn])
                 else:
                     pass
             fig.supxlabel('Ostrich Iteration Steps')
             fig.suptitle(f"Model: {model_type}\nCatchment: {c}\nCalibration with {xlim_right - 1} Runs")
             plt.savefig(
-                f"/home/sirian/Downloads/Raven Computations/test/figures/perf_{model_type}_{c}_{xlim_right}_cali.png")
+                f"{model_path}/figures/perf_{model_type}_{c}_{xlim_right}_cali.png")
 
 
 def bounds_reader(model_type):
@@ -269,9 +279,10 @@ def model_factors_chart(model_type):
         [0.5, 30],
         [0, 1]
     ]
+    nn_max = 0
     # for m in model_types:
     for c in catchments_by_id:
-#    c = "CH-0139"
+        #    c = "CH-0139"
         file_path = Path(model_path, c, model_type, "dds_status.out")
         factors = pd.read_csv(file_path, sep='\t')
         factors.set_index("STEP", inplace=True)
@@ -280,16 +291,36 @@ def model_factors_chart(model_type):
         axtitles = ["Non-Parametric KGE", "Percent Bias", "Root Mean Squared Error", "Volumetric Efficiency"]
         df_list = []
 
-    # for df, df_str in df_names.items():
-    #     df_out = pd.DataFrame()
-    #     df_gen = df_diag_generator(df, model_type, type=df_str)
-    #     df_out = pd.concat([df_out, df_gen])
-    #     df_list.append(df_out)
+        # for df, df_str in df_names.items():
+        #     df_out = pd.DataFrame()
+        #     df_gen = df_diag_generator(df, model_type, type=df_str)
+        #     df_out = pd.concat([df_out, df_gen])
+        #     df_list.append(df_out)
         df_sol = df_factors_generator(c, model_type)
         bnd_upper, bnd_lower = bounds_reader(model_type=model_type)
-        fig, axes = plt.subplots(nrows=7, ncols=3, figsize=(13, 13), sharex=True, dpi=150, layout='constrained')
+        if model_type == "GR4J":
+            nrows = 2
+            ncols = 3
+            nn_max = 6
+        elif model_type == "HBV":
+            nrows = 7
+            ncols = 3
+            nn_max = 21
+        elif model_type == "HMETS":
+            nrows = 7
+            ncols = 3
+            nn_max = 21
+        elif model_type == "HYMOD":
+            nrows = 2
+            ncols = 3
+            nn_max = 9
+        elif model_type == "MOHYSE":
+            nrows = 4
+            ncols = 3
+            nn_max = 9
+        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(13, 13), sharex=True, dpi=150, layout='constrained')
         for nn, ax in enumerate(axes.flat):
-            if nn <= 9:
+            if nn <= nn_max:
                 # else:
 
                 #     pass
@@ -298,6 +329,8 @@ def model_factors_chart(model_type):
                 try:
                     df_sol[f"{df_sol.columns[nn]}"].plot(ax=ax)
                 except IndexError:
+                    pass
+                except TypeError:
                     pass
                 ax.set_xlim(left=xlim_left, right=xlim_right)
                 ax.set_ylim(
@@ -314,13 +347,14 @@ def model_factors_chart(model_type):
                 pass
         fig.supxlabel('Ostrich Iteration Steps')
         fig.suptitle(f"Model: {model_type}\nCatchment: {c}\nCalibration with {xlim_right - 1} Runs")
- #   plt.show()
+        #   plt.show()
         plt.savefig(
-            f"/home/sirian/Downloads/Raven Computations/test/figures/factors_{model_type}_{c}_{xlim_right}.png")
+            f"{model_path}/figures/factors_{model_type}_{c}_{xlim_right}.png")
+        plt.close()
 
 
 # model_factors_chart("MOHYSE")
-model_type="MOHYSE"
+model_type = sys.argv[1]
 perf_diag_across_ctms(model_type=model_type)
 model_factors_chart(model_type=model_type)
 perf_metrics_chart(model_type=model_type)
