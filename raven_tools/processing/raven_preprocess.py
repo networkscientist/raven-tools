@@ -9,9 +9,10 @@ Functions:
     netcdf_clipper(Path,Path,GeoDataFrame)
     netcdf_clipper_multi(Path,GeoDataFrame)
 """
-import ctypes
+import glob
 import json
 import logging
+import math
 import os
 import re
 import shutil
@@ -19,28 +20,21 @@ import subprocess
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
+from typing import Union
 
 import geopandas as gpd
 import netCDF4
 import numpy as np
 import pandas as pd
+import rioxarray as rxr
 import xarray as xr
 from geopandas import GeoDataFrame
 from netCDF4 import Dataset
 from numpy import exp
-import shapely
-from shapely.geometry import Polygon, Point, shape
+from shapely.geometry import Polygon, Point
 from shapely.ops import unary_union
-import rioxarray as rxr
-import rasterio as rio
-from rasterio.features import shapes
-import math
-import glob
 
-import raven_tools.config.variables
 from raven_tools import config
-from typing import Union
-import matplotlib.pyplot as plt
 
 logger = logging.getLogger(__name__)
 logger.debug("Entered raven_preprocess.py.")
@@ -673,6 +667,22 @@ def glacier_extent_from_shp(ctm_shp: Path, glacier_shp: Path):
     return ctm_glaciation, ctm_non_glaciation
 
 
+def area_from_ratio_dem_props(area_ratios: dict, ctm_id: str):
+    props = pd.read_csv("/media/mainman/Work/RAVEN/data/Catchment/hru_info.csv")
+    non_gla_area = float(props[props['Ctm'] == ctm_id]['NonGlaArea'])
+    gla_area = float(props[props['Ctm'] == ctm_id]['NonGlaArea'])
+    total_area = non_gla_area + gla_area
+    for lower_bound, ratio in area_ratios.items():
+        area_ratios[lower_bound] = ratio * non_gla_area
+    return area_ratios
+
+
+def dict_to_txt(dict, ctm):
+    with open(f"/media/mainman/Work/RAVEN/data/DEM/hbv/non_glacier/elevation_band_areas_{ctm}.txt", 'w') as f:
+        for key, value in dict.items():
+            f.write(f"{key}:{value}\n")
+
+
 def area_ratio(catchment_filepath: Path, glacier_shape_path: Path):
     """Calculates the relative glaciated area of a catchment
 
@@ -808,30 +818,38 @@ def dem_mean(filepath: Path):
     mean = dem_mean_raster.tolist()
     return mean
 
+
 def dem_mean_rasterio(dem: Union[Dataset, xr.DataArray, list[Dataset]]):
     dem_mean_raster = dem.mean(dim=["x", "y"], skipna=True).to_numpy()
     mean = dem_mean_raster.tolist()
     return mean
+
+
 def elevation_bands(filepath_non_glacier: Path, filepath_glacier: Path, ctm_id: str):
     df_non_glacier = load_dem_tif_to_dataframe(filepath_non_glacier)
     df_glacier = load_dem_tif_to_dataframe(filepath_glacier)
     rio_non_glacier = rxr.open_rasterio(filepath_non_glacier, masked=True).squeeze()
     lower = round_down(df_non_glacier.alti.min())
     upper = round_up(df_non_glacier.alti.max())
-    rio_elevation_band_dict = extract_elevation_band_from_rio_dem(dem=rio_non_glacier, lower=lower, upper=upper, save_to_tif=True, ctm_id=ctm_id)
-    #df_elevation_band_list = load_rio_dataset_list_to_dataframe(rio_elevation_band_list)
+    number_points_total: int = int(df_non_glacier['alti'].count())
+
+    rio_elevation_band_dict = extract_elevation_band_from_rio_dem(dem=rio_non_glacier, lower=lower, upper=upper,
+                                                                  save_to_tif=False, ctm_id=ctm_id)
+
+    number_points = {}
+    for i in rio_elevation_band_dict.keys():
+        number_points[i] = (rio_elevation_band_dict[i].count().data.min() * 1000) / (number_points_total * 1000)
+
+    # df_elevation_band_list = load_rio_dataset_list_to_dataframe(rio_elevation_band_list)
 
     rio_elevation_band_dict_to_txt(rio_elevation_band_dict, ctm_id, df_non_glacier, df_glacier)
 
-
     dem_glacier = rxr.open_rasterio(filepath_glacier, masked=True).squeeze()
-
-
 
     dem_im = rxr.open_rasterio(filepath_non_glacier, masked=True).squeeze()
     dem_new = dem_im.where(dem_im.values > 2200).where(dem_im.values < 2300)
-    dem_new.rio.to_raster("/home/sirian/Downloads/out.tif")
-    #dem_gdf = gpd.read_file("/home/sirian/Downloads/out.tif")
+    # dem_new.rio.to_raster("/home/sirian/Downloads/out.tif")
+    # dem_gdf = gpd.read_file("/home/sirian/Downloads/out.tif")
     dem_new.name = "data"
     dem_im.name = "data"
     df_im = dem_im.to_dataframe().reset_index()
@@ -839,25 +857,32 @@ def elevation_bands(filepath_non_glacier: Path, filepath_glacier: Path, ctm_id: 
     geometry = gpd.points_from_xy(df_new.x, df_new.y)
     gdf = gpd.GeoDataFrame(df_new, crs=dem_new.rio.crs, geometry=geometry)
     df_nan = df_new[df_new['data'].isna()]
+    with open(f"/media/mainman/Work/RAVEN/data/DEM/hbv/non_glacier/area_ratios_{ctm_id}.txt", 'w') as f:
+        for key, value in number_points.items():
+            f.write(f"{key}:{value}\n")
+
+    return number_points
 
 
 def raster_to_polygon(raster_file_path: Path):
     df = load_dem_tif_to_dataframe(raster_file_path)
     df.dropna(subset=["alti"], inplace=True)
     df['points'] = gpd.points_from_xy(df.x, df.y)
-    #df['poly'] = Polygon(((df['x']-5, df['y']-5), (df['x']-5, df['y']+5), (df['x']+5, df['y']+5), (df['x']+5, df['y']-5), (df['x']-5, df['y']-5)))
+    # df['poly'] = Polygon(((df['x']-5, df['y']-5), (df['x']-5, df['y']+5), (df['x']+5, df['y']+5), (df['x']+5, df['y']-5), (df['x']-5, df['y']-5)))
     x_pt_list = df['x']
     y_pt_list = df['y']
     df.reset_index(inplace=True)
     for i in range(len(df)):
         x = df.loc[i, 'x']
         y = df.loc[i, 'y']
-        df.loc[i, 'poly'] = Polygon(((x-5, y-5), (x-5, y+5), (x+5, y+5), (x+5, y-5), (x-5, y-5)))
+        df.loc[i, 'poly'] = Polygon(((x - 5, y - 5), (x - 5, y + 5), (x + 5, y + 5), (x + 5, y - 5), (x - 5, y - 5)))
     df_mean = pd.DataFrame(columns=['alti'])
     df_mean['alti'] = df.mean().loc['alti']
     boundary = gpd.GeoSeries(unary_union(df['poly']))
-    gl = gpd.GeoDataFrame.from_file(Path("/home/sirian/Applications/Hydrology/RAVEN/data/glaciers", "SGI_2016_glaciers.shp"))
-    ct = gpd.GeoDataFrame.from_file(Path("/home/sirian/Applications/Hydrology/RAVEN/data/Catchment/reproject_2056/CH-0105.shp"))
+    gl = gpd.GeoDataFrame.from_file(
+        Path("/home/sirian/Applications/Hydrology/RAVEN/data/glaciers", "SGI_2016_glaciers.shp"))
+    ct = gpd.GeoDataFrame.from_file(
+        Path("/home/sirian/Applications/Hydrology/RAVEN/data/Catchment/reproject_2056/CH-0105.shp"))
     geodf = gpd.GeoDataFrame(geometry=boundary, crs='epsg:2056')
     geodf.set_crs('epsg:2056')
     gl.set_crs('epsg:2056')
@@ -867,7 +892,7 @@ def raster_to_polygon(raster_file_path: Path):
     ct.to_crs('epsg:32632', inplace=True)
     u = geodf.overlay(gl, how='difference')
     p = u.overlay(ct, how='intersection')
-    p['area']=p.area
+    p['area'] = p.area
     p.to_crs('epsg:2056', inplace=True)
     p['centroid_x'] = p.centroid.x
     p['centroid_y'] = p.centroid.y
@@ -877,25 +902,32 @@ def raster_to_polygon(raster_file_path: Path):
     geodf['centroid'] = boundary.centroid
     return p
 
+
 def rio_elevation_band_dict_to_txt(rio_elevation_band_dict, ctm_id, df_non_glacier, df_glacier):
     ratio_dict = {}
     it = rio_elevation_band_dict.items()
     for key, elevation_band in it:
         df_band = load_rio_dataset_to_dataframe(elevation_band)
         ratio_dict[key] = ((df_non_glacier.count().y - df_band[df_band['alti'].isna()].count().y) / \
-                             ((df_non_glacier.count().y - df_non_glacier[df_non_glacier['alti'].isna()].count().y) + \
-                              (df_glacier.count().y - df_glacier[df_glacier['alti'].isna()].count().y)))
-    with open(f"/home/sirian/Applications/Hydrology/RAVEN/data/DEM/hbv/bands_ratio_{ctm_id}.txt", mode="w") as f:
+                           ((df_non_glacier.count().y - df_non_glacier[df_non_glacier['alti'].isna()].count().y) + \
+                            (df_glacier.count().y - df_glacier[df_glacier['alti'].isna()].count().y)))
+    with open(f"/media/mainman/Work/RAVEN/data/DEM/hbv/bands_ratio_{ctm_id}.txt", mode="w") as f:
         f.write(json.dumps(ratio_dict))
+
+
 def round_up(x):
     return int(math.ceil(x / 100.0)) * 100
 
+
 def round_down(x):
     return int(math.floor(x / 100.0)) * 100
+
+
 def load_dem_tif_to_dataframe(dem_tif_filepath: Path):
     rio_dem = rxr.open_rasterio(dem_tif_filepath, masked=True).squeeze()
     rio_dem.name = "alti"
     return rio_dem.to_dataframe().reset_index()
+
 
 def load_rio_dataset_list_to_dataframe(rio_dataset_list):
     df_list = []
@@ -904,18 +936,21 @@ def load_rio_dataset_list_to_dataframe(rio_dataset_list):
         df_list.append(i.to_dataframe().reset_index())
     return df_list
 
+
 def load_rio_dataset_to_dataframe(rio_dataset):
     rio_dataset.name = "alti"
     return rio_dataset.to_dataframe().reset_index()
 
+
 def extract_elevation_band_from_rio_dem(dem: xr.DataArray, lower: int, upper: int, save_to_tif: False, ctm_id) -> dict:
     elevation_band_dict = {}
     for r in range(lower, upper, 100):
-        elevation_band = dem.where(dem.values >= r).where(dem.values < r+100)
+        elevation_band = dem.where(dem.values >= r).where(dem.values < r + 100)
         elevation_band_dict[r] = elevation_band
         if save_to_tif:
-            elevation_band.rio.to_raster(f"/home/sirian/Applications/Hydrology/RAVEN/data/DEM/hbv/dem_{ctm_id}_{r}_{r+99}.tif")
+            elevation_band.rio.to_raster(f"/media/mainman/Work/RAVEN/data/DEM/hbv/dem_{ctm_id}_{r}_{r + 99}.tif")
     return elevation_band_dict
+
 
 def crs_old_to_new(lat_old, lon_old, epsg_old: int, epsg_new: int):
     """Converts lat/lon coordinates to a new EPSG
@@ -936,7 +971,8 @@ def crs_old_to_new(lat_old, lon_old, epsg_old: int, epsg_new: int):
     lat_new, lon_new = transformer.transform(lat_old, lon_old)
     return lat_new, lon_new
 
-def create_elevation_band_tif_list(base_path:str,  type:str):
+
+def create_elevation_band_tif_list(base_path: str, type: str):
     asp_list = glob.glob(base_path + f'/{type}/dem_{ctm}_*_{type}.tif')
     band_lower_list = []
     for a in asp_list:
@@ -945,32 +981,55 @@ def create_elevation_band_tif_list(base_path:str,  type:str):
     band_lower_list.sort()
     return band_lower_list
 
+
 def get_lower_band_limit_from_filepath(filepath):
     lower_band_limit = re.search(r'(\d{4})', re.search(r'(?:_)(\d{4}?)(?:_)', filepath).group()).group()
     return lower_band_limit
 
+
 if __name__ == '__main__':
-    #catchments_by_id = [key for key in raven_tools.config.variables.catchments]
-    #r = raster_to_polygon(Path("/home/sirian/Applications/Hydrology/RAVEN/data/DEM/hbv/aspects/dem_CH-0105_1400_1499_aspects.tif"))
+    # catchments_by_id = [key for key in raven_tools.config.variables.catchments]
+    # r = raster_to_polygon(Path("/home/sirian/Applications/Hydrology/RAVEN/data/DEM/hbv/aspects/dem_CH-0105_1400_1499_aspects.tif"))
     catchments_by_id = ["CH-0105"]
-    base_path = "/home/sirian/Applications/Hydrology/RAVEN/data/DEM/hbv"
+    base_path = "/media/mainman/Work/RAVEN/data/DEM/hbv"
+    base_path_path = Path(base_path)
     for ctm in catchments_by_id:
-    #     elevation_bands(
-    #         filepath_non_glacier= Path(f"/home/sirian/Applications/Hydrology/RAVEN/data/DEM/dem_clipped/non_glacier/dem_{ctm}.tif"), filepath_glacier= Path(f"/home/sirian/Applications/Hydrology/RAVEN/data/DEM/dem_clipped/glacier/dem_{ctm}_glacier.tif"), ctm_id=ctm)
-        type = "aspects"
-        band_lower_list = create_elevation_band_tif_list(base_path=base_path, type=type)
+        # area_ratios = elevation_bands(
+        #     filepath_non_glacier=Path(base_path_path.parent, f"dem_clipped/non_glacier/dem_{ctm}.tif"),
+        #     filepath_glacier=Path(base_path_path.parent,
+        #                           f"dem_clipped/glacier/dem_{ctm}_glacier.tif"),
+        #     ctm_id=ctm)
+        area_ratios = {}
+        with open(f"/media/mainman/Work/RAVEN/data/DEM/hbv/non_glacier/area_ratios_{ctm}.txt", "r") as f:
+            for line in f:
+                s = line.strip().split(":")
+                area_ratios[s[0]] = float(s[1])
+        elevation_band_areas = area_from_ratio_dem_props(area_ratios=area_ratios, ctm_id=ctm)
+        dict_to_txt(dict=elevation_band_areas, ctm=ctm)
+        grid = gpd.read_file(
+            "/media/mainman/Work/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/grid_weights_CH-0105.shp")
+        dem = rxr.open_rasterio("/media/mainman/Work/RAVEN/data/DEM/hbv/non_glacier/dem_CH-0105_1400_1499.tif",
+                                masked=True).squeeze()
+        dem_df = dem.to_dataframe(name='alti').dropna()
+        dem_gdf = gpd.GeoDataFrame(dem_df, crs='epsg:2056',
+                                   geometry=gpd.points_from_xy(dem_df.reset_index().x, dem_df.reset_index().y))
+        dem_gdf.reset_index(inplace=True)
+        res = create_overlay(grd=grid, ctm_gdf=dem_gdf)
 
-        mean_asp_dict = {}
-        mean_slo_dict = {}
-        mean_alti_dict = {}
-        r = []
-        for b in band_lower_list:
-            r.append(raster_to_polygon(Path(base_path, type, f"dem_{ctm}_{int(b)}_{int(b)+99}_{type}.tif")))
-        r_concat = gpd.GeoDataFrame(pd.concat(r))
-        r_concat.drop(columns=["id", "ezgnr", "ar_1903", "watr_nm", "place", "geometry"]).set_index("lower_bound").to_csv(Path(base_path, type, f"dem_{ctm}_{type}.txt"))
-        with open(Path(base_path, type, f"dem_{ctm}_{type}.txt"), "w") as f:
-            f.writelines([f"{str(i['area'][0])}\n" for i in r])
-        mean_slo = dem_mean(Path(base_path, f"/slopes/dem_{ctm}_1400_1499_slopes.tif"))
-        mean_hei = dem_mean(Path(base_path, f"/non_glacier/dem_{ctm}_1400_1499.tif"))
-
-    print()
+        res = dem_gdf.overlay(grid, how='intersection')
+        # type = "aspects"
+        # band_lower_list = create_elevation_band_tif_list(base_path=base_path, type=type)
+        #
+        # mean_asp_dict = {}
+        # mean_slo_dict = {}
+        # mean_alti_dict = {}
+        # r = []
+        # for b in band_lower_list:
+        #     r.append(raster_to_polygon(Path(base_path, type, f"dem_{ctm}_{int(b)}_{int(b) + 99}_{type}.tif")))
+        # r_concat = gpd.GeoDataFrame(pd.concat(r))
+        # r_concat.drop(columns=["id", "ezgnr", "ar_1903", "watr_nm", "place", "geometry"]).set_index(
+        #     "lower_bound").to_csv(Path(base_path, type, f"dem_{ctm}_{type}.txt"))
+        # with open(Path(base_path, type, f"dem_{ctm}_{type}.txt"), "w") as f:
+        #     f.writelines([f"{str(i['area'][0])}\n" for i in r])
+        # mean_slo = dem_mean(Path(base_path, f"/slopes/dem_{ctm}_1400_1499_slopes.tif"))
+        # mean_hei = dem_mean(Path(base_path, f"/non_glacier/dem_{ctm}_1400_1499.tif"))
