@@ -7,8 +7,8 @@ import re
 import shutil
 from pathlib import Path
 
-import pandas as pd
 import geopandas as gpd
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 logger.debug("Logging from raven_model to console started")
@@ -57,7 +57,7 @@ class RavenModel:
     """
 
     def __init__(self, model_type: str = "GR4J", catchment_ch_id: str = "CH-0057",
-                 start_year: str=1981, end_year: str=2020):
+                 start_year: str = 1981, end_year: str = 2020):
         """Initializes the instance.
 
         Args:
@@ -552,7 +552,8 @@ class RavenModel:
             logger.debug("List with source folders created.")
             for s in src:
                 try:
-                    src_path = Path("/storage/homefs/pz09y074/raven_master_files/RAVEN", "data", "MeteoSwiss_gridded_products", s)
+                    src_path = Path("/storage/homefs/pz09y074/raven_master_files/RAVEN", "data",
+                                    "MeteoSwiss_gridded_products", s)
                     dst = Path(self.model_dir, self.model_sub_dir, "data_obs", s)
                     logger.debug(f"Symlink src: {src_path}")
                     logger.debug(f"Symlink dst: {dst}")
@@ -874,7 +875,7 @@ class RavenModel:
                 catchment_filepath=catchment_filepath, glacier_shape_path=glacier_extent_filepath)
             aspect_slope.loc[self.catchment_ch_id, f"GlaArea"] = glaciation_area
 
-            gla_lat, gla_lon = rpe.weighted_centroid(ctm_glaciation_gdf)
+            gla_lat, gla_lon = rpe.weighted_centroid_vector(ctm_glaciation_gdf)
             aspect_slope.loc[self.catchment_ch_id, f"GlaLat"] = gla_lat
             aspect_slope.loc[self.catchment_ch_id, f"GlaLon"] = gla_lon
         else:
@@ -891,7 +892,7 @@ class RavenModel:
         aspect_slope.loc[self.catchment_ch_id, f"NonGlaSlope"] = rpe.dem_mean(filepath_slope)
 
         aspect_slope.loc[self.catchment_ch_id, f"NonGlaAlti"] = rpe.dem_mean(filepath_hru)
-        non_gla_lat, non_gla_lon = rpe.weighted_centroid(ctm_non_glaciation_gdf)
+        non_gla_lat, non_gla_lon = rpe.weighted_centroid_vector(ctm_non_glaciation_gdf)
         aspect_slope.loc[self.catchment_ch_id, f"NonGlaLat"] = non_gla_lat
         aspect_slope.loc[self.catchment_ch_id, f"NonGlaLon"] = non_gla_lon
         aspect_slope = aspect_slope[columns]

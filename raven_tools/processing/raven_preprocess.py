@@ -743,7 +743,7 @@ def area_ratio(catchment_filepath: Path, glacier_shape_path: Path):
 #         return glaciation_ratio, gla_height, non_glaciation_ratio, non_gla_height, glaciacted_centroid, non_glaciated_centroid
 
 
-def weighted_centroid(feature_gdf: GeoDataFrame) -> tuple:
+def weighted_centroid_vector(feature_gdf: GeoDataFrame) -> tuple:
     """Calculates weighted centroid of a GDF feature
 
     Args:
@@ -764,6 +764,13 @@ def weighted_centroid(feature_gdf: GeoDataFrame) -> tuple:
                                                               32632, 4326)
     weighted_centroid_point = Point(weighted_centroid_x, weighted_centroid_y)
     return weighted_centroid_y, weighted_centroid_x
+
+
+def weighted_centroid_raster_points(raster_points_gdf: GeoDataFrame) -> tuple:
+    raster_points_gdf_new = raster_points_gdf.to_crs(epsg='32632')
+    raster_points_gdf_diss = raster_points_gdf_new.dissolve()
+    centroid = raster_points_gdf_diss.centroid[0]
+    return crs_old_to_new(lat_old=centroid.y, lon_old=centroid.x, epsg_old=32632, epsg_new=4326)
 
 
 # def hru_height(hru_area_gdf: GeoDataFrame, dem_filepaths: list[Path], dem_out_dir: Path, ctm_ch_id, glacier=False):
@@ -968,12 +975,22 @@ def crs_old_to_new(lat_old, lon_old, epsg_old: int, epsg_new: int):
     """
     from pyproj import Transformer
     transformer = Transformer.from_crs(f"EPSG:{epsg_old}", f"EPSG:{epsg_new}")
-    lat_new, lon_new = transformer.transform(lat_old, lon_old)
+    lat_new, lon_new = transformer.transform(yy=lat_old, xx=lon_old)
     return lat_new, lon_new
 
 
 def create_elevation_band_tif_list(base_path: str, type: str):
     asp_list = glob.glob(base_path + f'/{type}/dem_{ctm}_*_{type}.tif')
+    band_lower_list = []
+    for a in asp_list:
+        rs = re.search(r'(?:_)(\d{4}?)(?:_)', a).group()
+        band_lower_list.append(re.search(r'(\d{4})', re.search(r'(?:_)(\d{4}?)(?:_)', a).group()).group())
+    band_lower_list.sort()
+    return band_lower_list
+
+
+def create_elevation_band_tif_list_hbv(base_path: str, type: str):
+    asp_list = glob.glob(base_path + f'/{type}/dem_{ctm}_*.tif')
     band_lower_list = []
     for a in asp_list:
         rs = re.search(r'(?:_)(\d{4}?)(?:_)', a).group()
@@ -1006,17 +1023,78 @@ if __name__ == '__main__':
                 area_ratios[s[0]] = float(s[1])
         elevation_band_areas = area_from_ratio_dem_props(area_ratios=area_ratios, ctm_id=ctm)
         dict_to_txt(dict=elevation_band_areas, ctm=ctm)
-        grid = gpd.read_file(
-            "/media/mainman/Work/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/grid_weights_CH-0105.shp")
-        dem = rxr.open_rasterio("/media/mainman/Work/RAVEN/data/DEM/hbv/non_glacier/dem_CH-0105_1400_1499.tif",
-                                masked=True).squeeze()
-        dem_df = dem.to_dataframe(name='alti').dropna()
-        dem_gdf = gpd.GeoDataFrame(dem_df, crs='epsg:2056',
-                                   geometry=gpd.points_from_xy(dem_df.reset_index().x, dem_df.reset_index().y))
-        dem_gdf.reset_index(inplace=True)
-        res = create_overlay(grd=grid, ctm_gdf=dem_gdf)
+        res = pd.DataFrame(columns=['cell_id'])
+        band_list = create_elevation_band_tif_list_hbv(base_path, 'non_glacier')
+        hru_id = list(range(2, len(band_list) + 1))
+        for (bd, hru) in zip(band_list, hru_id):
+            grid = gpd.read_file(
+                f"/media/mainman/Work/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/grid_weights_{ctm}.shp")
+            dem = rxr.open_rasterio(
+                f"/media/mainman/Work/RAVEN/data/DEM/hbv/non_glacier/dem_{ctm}_{bd}_{str(int(bd) + 99)}.tif",
+                masked=True).squeeze()
+            dem_df = dem.to_dataframe(name='alti').dropna()
+            dem_gdf = gpd.GeoDataFrame(dem_df, crs='epsg:2056',
+                                       geometry=gpd.points_from_xy(dem_df.reset_index().x, dem_df.reset_index().y))
+            dem_gdf.reset_index(inplace=True)
+            centroid = dem_gdf.dissolve().centroid
+            ov = create_overlay(grd=grid, ctm_gdf=dem_gdf)
+            cou = ov.value_counts('cell_id')
+            cou = cou.to_frame().reset_index()
+            dem_aspect = rxr.open_rasterio(
+                filename=f"/media/mainman/Work/RAVEN/data/DEM/hbv/aspects/dem_{ctm}_{bd}_{str(int(bd) + 99)}_aspects.tif",
+                masked=True).squeeze()
+            dem_slope = rxr.open_rasterio(
+                filename=f"/media/mainman/Work/RAVEN/data/DEM/hbv/slopes/dem_{ctm}_{bd}_{str(int(bd) + 99)}_slopes.tif",
+                masked=True).squeeze()
+            cou['Ctm'] = ctm
+            cou['Band'] = bd
+            cou['hru_id'] = hru
+            cou['aspect_mean'] = dem_mean_rasterio(dem_aspect)
+            cou['slope_mean'] = dem_mean_rasterio(dem_slope)
+            cou['alti_mean'] = dem_mean_rasterio(dem)
+            cou['centroid_lat'], cou['centroid_lon'] = weighted_centroid_raster_points(raster_points_gdf=dem_gdf)
+            lat, lon = crs_old_to_new(lat_old=dem_gdf.to_crs(epsg=32632).y.mean(),
+                                      lon_old=dem_gdf.to_crs(epsg=32632).y.mean(), epsg_old=32632, epsg_new=4326)
+            res = pd.concat([res, cou], ignore_index=True)
 
+            # res = ov.value_counts('cell_id')
+        res.rename(columns={0: 'area'}, inplace=True)
+        res.area = res.area.astype(int)
+        res['hru_id'] = res['hru_id'].astype(int)
+        hru_info = pd.read_csv("/media/mainman/Work/RAVEN/data/Catchment/hru_info.csv", sep=",")
+        area_non_gla = float(hru_info[hru_info['Ctm'] == ctm]['NonGlaArea'])
+        area_gla = float(hru_info[hru_info['Ctm'] == ctm]['GlaArea'])
+        area_total = area_non_gla + area_gla
+        res['ratio'] = res.area / res.area.sum()
+        res['grid_weight'] = res['ratio'] * (area_non_gla / area_total)
+        tes = res.value_counts('cell_id')
+        res.sort_values(['hru_id', 'cell_id'])
+
+        totar: float = 0
+        with open("/tmp/hrus.txt", "w") as f:
+            for hruid in res['hru_id'].unique().tolist():
+                hru_ratio = res.grid_weight.loc[res.hru_id == hruid].sum()
+                hru_area = hru_ratio * area_total
+                hru_alti = res.alti_mean.loc[res.hru_id == int(hruid)].unique()[0]
+                hru_lat = res.centroid_lat.loc[res.hru_id == int(hruid)].unique()[0]
+                hru_lon = res.centroid_lon.loc[res.hru_id == int(hruid)].unique()[0]
+                hru_asp = res.aspect_mean.loc[res.hru_id == int(hruid)].unique()[0]
+                hru_slo = res.slope_mean.loc[res.hru_id == int(hruid)].unique()[0]
+                f.write(
+                    f"            {hruid}, {hru_area}, {hru_alti},{hru_lat}, {hru_lon}, 1, LU_ALL, VEG_ALL, DEFAULT_P, [NONE], [NONE], {hru_slo}, {hru_asp}\n")
+
+        with open("/tmp/weights.txt", "w") as f:
+            for hruid in res['hru_id'].unique():
+                for cellnum in res[res['hru_id'] == hruid]['cell_id'].sort_values():
+                    weight = \
+                        res.grid_weight.loc[(res.hru_id == hruid) & (res.cell_id.astype(int) == int(cellnum))].values[
+                            0] / \
+                        (res.grid_weight.loc[(res.hru_id == hruid)].sum())
+                    f.write(
+                        f"   {hruid}   {cellnum}   {weight}\n")
         res = dem_gdf.overlay(grid, how='intersection')
+
+        # res = pd.concat([res, pd.DataFrame(ov)], ignore_index=True)
         # type = "aspects"
         # band_lower_list = create_elevation_band_tif_list(base_path=base_path, type=type)
         #
