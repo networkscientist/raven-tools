@@ -206,7 +206,7 @@ def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
     cdf_dataset_out.close()
 
 
-def netcdf_elevation(netcdf_filepath: Path)
+def netcdf_elevation(netcdf_filepath: Path):
 
     infile = Dataset(filename=netcdf_filepath, mode="r+", format="NETCDF4")
 
@@ -1047,18 +1047,32 @@ def get_lower_band_limit_from_filepath(filepath):
 
 def add_elevation_to_netcdf(netcdf_filepath):
     netcdf_filepath = Path(
-        "/media/mainman/Work/RAVEN/results/incoming/CH-0053/HBV/model/data_obs/RhiresD_v2.0_swiss.lv95/out/RhiresD_v2.0_swiss.lv95_198101010000_202012310000_CH-0053_clipped (copy).nc", )
+        "/home/sirian/Applications/Hydrology/RAVEN/data/MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/RhiresD_v2.0_swiss.lv95_198101010000_202012310000_CH-0105_clipped (copy).nc", )
     start_year = 1981
     infile = Dataset(filename=netcdf_filepath, mode="r+", format="NETCDF4")
     ds = xr.open_dataset(netcdf_filepath, engine='netcdf4')
-    ds = netcdf_to_dataset(netcdf_filepath)
+    nc = netcdf_to_dataset(netcdf_filepath)
+
     start_date = f"01-01-{start_year}"
     start_date = datetime.strptime(str(start_date), "%d-%m-%Y")
-    ds = ds.sel(time=slice(start_date, (start_date + timedelta(days=1))))
+    nc = nc.sel(time=slice(start_date, (start_date + timedelta(days=1))))
+    dem = load_dem_tif_to_dataframe("/home/sirian/Applications/Hydrology/RAVEN/data/DEM/dem_clipped/non_glacier/dem_CH-0105_resampled.tif")
+    alti = []
+    rio_dem = rxr.open_rasterio("/home/sirian/Applications/Hydrology/RAVEN/data/DEM/dem_clipped/non_glacier/dem_CH-0105_resampled.tif", masked=True).squeeze()
+
+    for e in range(len(nc.E.values)):
+        for n in range(len(nc.N.values)):
+            #print(nc.E.values[e],nc.N.values[n])
+            alti.append(dem[(dem["x"] >= nc.E.values[e])
+                & (dem["y"] >= nc.N.values[n])
+                & (dem["x"] < (nc.E.values[e] + 1000))
+                & (dem["y"] < (nc.N.values[n] + 1000))
+            ].alti.mean())
+    df = nc.to_dataframe()
     e_nc = infile.dimensions['E']
     n_nc = infile.dimensions['N']
     time_nc = infile.dimensions['time']
-    ele = infile.createVariable('Elevation', np.float32, fill_value=-999.99, dimensions=('time', 'N', 'E'))
+    ele = infile.createVariable('ele', np.float32, fill_value=-999.99, dimensions=('N', 'E'))
     ele.units = 'meters'
     ele.long_name = 'elevation above sea level'
     ele.setncatts({'grid_name': "ch01r.swiss.lv95",
@@ -1067,6 +1081,7 @@ def add_elevation_to_netcdf(netcdf_filepath):
                    'coordinates': "lon lat",
                    'grid_mapping': u"swiss_lv95_coordinates"})
     latitude = infile['lat'][:, 1]
+    x = infile['E'][:, 1]
     longitude = infile['lon'][:, 1]
     xarr: xr.DataArray = ds['Elevation']
     df = xarr.to_dataframe().reset_index()
