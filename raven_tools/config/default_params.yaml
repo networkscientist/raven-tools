@@ -128,7 +128,6 @@ HBV:
     # MAXBAS (d) 1-7 (UZH)
     # MaxBas 24-120 (h) (Herman)
     # MAXBAS (Lindström)
-    HBV_Param_11b: HBV_Time_To_Peak
     HBV_Param_12: HBV_Prec_Lapse_PCALT
     #PRECIP_LAPSE (mm/d/km) 0-100 (RavenManual)
     HBV_Param_13: HBV_Adiab_Lapse_TCALT
@@ -146,14 +145,11 @@ HBV:
     #BASEFLOW_N-1
     # ALFA (Lindström)
     # ALFA 0-4 (Wang)
-    HBV_Param_15b: HBV_Baseflow_N
-    #Alpha+1=BASEFLOW_N(Raven) (-) 1.0-10.0
     HBV_Param_16: HBV_Max_Cap_Rise_Rate
     # MAX_CAP_RISE_RATE (mm/d)
     # CFLUX (Lindström)
     # CFLUX 0-1 (Wang)
     HBV_Param_17: HBV_Thickness_Topsoil
-    HBV_Param_17b: HBV_Initial_Thickness_Topsoil
     HBV_Param_18: HBV_Melt_For_Corr
     #HBV_MELT_FOR_CORR=HBV snowmelt forest correction (-) <1
     HBV_Param_19: HBV_Glac_Storage_Effect
@@ -167,6 +163,10 @@ HBV:
     # S_f 0.5-1.2 (Parra)
     # C_SF (Bergström)
     # SFCF (Lindström)
+    HBV_Param_11b: HBV_Time_To_Peak
+    HBV_Param_15b: HBV_Baseflow_N
+    #Alpha+1=BASEFLOW_N(Raven) (-) 1.0-10.0
+    HBV_Param_17b: HBV_Initial_Thickness_Topsoil
   init:
     HBV_Param_01: '-0.15'
     HBV_Param_02: '3.5'
@@ -179,19 +179,19 @@ HBV:
     HBV_Param_09: '0.5'
     HBV_Param_10: '0.5'
     HBV_Param_11: '1.1'
-    HBV_Param_11b: '0.5'
     HBV_Param_12: '10'
     HBV_Param_13: '5'
     HBV_Param_14: '0.5'
     HBV_Param_15: '0.5'
-    HBV_Param_15b: '3.0'
     HBV_Param_16: '0.5'
     HBV_Param_17: '0.5'
-    HBV_Param_17b: '0.5'
     HBV_Param_18: '0.5'
     HBV_Param_19: '0.5'
     HBV_Param_20: '1.0'
     HBV_Param_21: '1.0'
+    HBV_Param_11b: '0.5'
+    HBV_Param_15b: '3.0'
+    HBV_Param_17b: '0.5'
   lower:
     HBV_Param_01: '-3'
     HBV_Param_02: '1'
@@ -204,19 +204,19 @@ HBV:
     HBV_Param_09: '0.01'
     HBV_Param_10: '0.01'
     HBV_Param_11: '1.0'
-    HBV_Param_11b: '0.5'
     HBV_Param_12: '0.0'
     HBV_Param_13: '0.0'
     HBV_Param_14: '0.0'
     HBV_Param_15: '0'
-    HBV_Param_15b: '1.0'
     HBV_Param_16: '0'
     HBV_Param_17: '0.1'
-    HBV_Param_17b: '0.1'
     HBV_Param_18: '0.01'
     HBV_Param_19: '0.1'
     HBV_Param_20: '0.5'
     HBV_Param_21: '0.4'
+    HBV_Param_11b: '0.5'
+    HBV_Param_15b: '1.0'
+    HBV_Param_17b: '0.1'
   upper:
     HBV_Param_01: '3'
     HBV_Param_02: '10'
@@ -229,19 +229,19 @@ HBV:
     HBV_Param_09: '0.6'
     HBV_Param_10: '0.6'
     HBV_Param_11: '3.0'
-    HBV_Param_11b: '0.5'
     HBV_Param_12: '100'
     HBV_Param_13: '7.0'
     HBV_Param_14: '0.9'
     HBV_Param_15: '9'
-    HBV_Param_15b: '10.0'
     HBV_Param_16: '1'
     HBV_Param_17: '10'
-    HBV_Param_17b: '10'
     HBV_Param_18: '0.99'
     HBV_Param_19: '2'
     HBV_Param_20: '2.0'
     HBV_Param_21: '1.2'
+    HBV_Param_11b: '0.5'
+    HBV_Param_15b: '10.0'
+    HBV_Param_17b: '10'
 HMETS:
   names:
     HMETS_Param_01: HMETS_alpha1 #GAMMA_SHAPE for surface UH

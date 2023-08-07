@@ -20,7 +20,7 @@ import subprocess
 from datetime import datetime
 from datetime import timedelta
 from pathlib import Path
-from typing import Union, Tuple, Dict, Any
+from typing import Union, Any
 
 import geopandas as gpd
 import netCDF4
@@ -205,6 +205,23 @@ def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
     # Close the dataset and write the file
     cdf_dataset_out.close()
 
+
+def netcdf_elevation(netcdf_filepath: Path)
+
+    infile = Dataset(filename=netcdf_filepath, mode="r+", format="NETCDF4")
+
+    try:
+        ele = infile.createVariable('Elevation', np.float32, fill_value=-999.99, dimensions=('time', 'N', 'E'))
+        ele.units = 'meters'
+        ele.long_name = 'elevation above sea level'
+        ele.setncatts({'grid_name': "ch01r.swiss.lv95",
+                       'version': "v1.2",
+                       'prod_date': "2022-10-01",
+                       'coordinates': "lon lat",
+                       'grid_mapping': u"swiss_lv95_coordinates"})
+    except RuntimeError:
+        pass
+    latitude = infile['lat'][:, 1]
 
 def pet_temp_monthly_ave(pet_filepath: Path, temp_filepath: Path):
     """Calculates monthly averages for temperature and PET from CSV values
@@ -832,7 +849,7 @@ def dem_mean_rasterio(dem: Union[Dataset, xr.DataArray, list[Dataset]]):
     return mean
 
 
-def elevation_bands(filepath_non_glacier: Path, filepath_glacier: Path, ctm_id: str):
+def elevation_bands(filepath_non_glacier: Path, filepath_glacier: Path, ctm_id: str, base_path_prefix, save_to_tif):
     df_non_glacier = load_dem_tif_to_dataframe(filepath_non_glacier)
     df_glacier = load_dem_tif_to_dataframe(filepath_glacier)
     rio_non_glacier = rxr.open_rasterio(filepath_non_glacier, masked=True).squeeze()
@@ -840,31 +857,35 @@ def elevation_bands(filepath_non_glacier: Path, filepath_glacier: Path, ctm_id: 
     upper = round_up(df_non_glacier.alti.max())
     number_points_total: int = int(df_non_glacier['alti'].count())
 
-    rio_elevation_band_dict, ratio_dict = extract_elevation_band_from_rio_dem(dem=rio_non_glacier, lower=lower, upper=upper,
-                                                                  save_to_tif=False, ctm_id=ctm_id, number_points_total=number_points_total, df_non_glacier=df_non_glacier, df_glacier=df_glacier)
+    rio_elevation_band_dict, ratio_dict = extract_elevation_band_from_rio_dem(dem=rio_non_glacier, lower=lower,
+                                                                              upper=upper,
+                                                                              save_to_tif=save_to_tif, ctm_id=ctm_id,
+                                                                              number_points_total=number_points_total,
+                                                                              df_non_glacier=df_non_glacier,
+                                                                              df_glacier=df_glacier,
+                                                                              base_path_prefix=base_path_prefix)
 
-
-    #for i in rio_elevation_band_dict.keys():
+    # for i in rio_elevation_band_dict.keys():
     #    number_points[i] = (rio_elevation_band_dict[i].count().data.min() * 1000) / (number_points_total * 1000)
 
     # df_elevation_band_list = load_rio_dataset_list_to_dataframe(rio_elevation_band_list)
 
-    #rio_elevation_band_dict_to_txt(rio_elevation_band_dict, ctm_id, df_non_glacier, df_glacier)
+    # rio_elevation_band_dict_to_txt(rio_elevation_band_dict, ctm_id, df_non_glacier, df_glacier)
 
-    #dem_glacier = rxr.open_rasterio(filepath_glacier, masked=True).squeeze()
+    # dem_glacier = rxr.open_rasterio(filepath_glacier, masked=True).squeeze()
 
-    #dem_im = rxr.open_rasterio(filepath_non_glacier, masked=True).squeeze()
-    #dem_new = dem_im.where(dem_im.values > 2200).where(dem_im.values < 2300)
+    # dem_im = rxr.open_rasterio(filepath_non_glacier, masked=True).squeeze()
+    # dem_new = dem_im.where(dem_im.values > 2200).where(dem_im.values < 2300)
     # dem_new.rio.to_raster("/home/sirian/Downloads/out.tif")
     # dem_gdf = gpd.read_file("/home/sirian/Downloads/out.tif")
-    #dem_new.name = "data"
-    #dem_im.name = "data"
-    #df_im = dem_im.to_dataframe().reset_index()
-    #df_new = dem_new.to_dataframe().reset_index()
-    #geometry = gpd.points_from_xy(df_new.x, df_new.y)
-    #gdf = gpd.GeoDataFrame(df_new, crs=dem_new.rio.crs, geometry=geometry)
-    #df_nan = df_new[df_new['data'].isna()]
-    with open(f"/home/sirian/Applications/Hydrology/RAVEN/data/DEM/hbv/non_glacier/area_ratios_{ctm_id}.txt", 'w') as f:
+    # dem_new.name = "data"
+    # dem_im.name = "data"
+    # df_im = dem_im.to_dataframe().reset_index()
+    # df_new = dem_new.to_dataframe().reset_index()
+    # geometry = gpd.points_from_xy(df_new.x, df_new.y)
+    # gdf = gpd.GeoDataFrame(df_new, crs=dem_new.rio.crs, geometry=geometry)
+    # df_nan = df_new[df_new['data'].isna()]
+    with open(f"{base_path_prefix}RAVEN/data/DEM/hbv/non_glacier/area_ratios_{ctm_id}.txt", 'w') as f:
         for key, value in rio_elevation_band_dict.items():
             f.write(f"{key}:{value}\n")
 
@@ -921,6 +942,7 @@ def rio_elevation_band_dict_to_txt(rio_elevation_band_dict, ctm_id, df_non_glaci
     with open(f"/media/mainman/Work/RAVEN/data/DEM/hbv/bands_ratio_{ctm_id}.txt", mode="w") as f:
         f.write(json.dumps(ratio_dict))
 
+
 def elevation_band_dict_to_txt(elevation_band_dict, ctm_id, df_non_glacier, df_glacier):
     ratio_dict = {}
 
@@ -952,8 +974,9 @@ def load_rio_dataset_to_dataframe(rio_dataset):
     return rio_dataset.to_dataframe().reset_index()
 
 
-def extract_elevation_band_from_rio_dem(dem: xr.DataArray, lower: int, upper: int, save_to_tif: False, ctm_id, number_points_total, df_non_glacier, df_glacier) -> \
-tuple[dict[int, Union[float, Any]], dict[int, Any]]:
+def extract_elevation_band_from_rio_dem(dem: xr.DataArray, lower: int, upper: int, save_to_tif: False, ctm_id,
+                                        number_points_total, df_non_glacier, df_glacier, base_path_prefix) -> \
+        tuple[dict[int, Union[float, Any]], dict[int, Any]]:
     elevation_band_dict = {}
     number_points = {}
     ratio_dict = {}
@@ -966,12 +989,13 @@ tuple[dict[int, Union[float, Any]], dict[int, Any]]:
         number_points[r] = (elevation_band.count().data.min() * 1000) / (number_points_total * 1000)
         df_band = load_rio_dataset_to_dataframe(elevation_band)
         ratio_dict[r] = ((df_non_glacier_count - df_band[df_band['alti'].isna()].count().y) / \
-                           ((df_non_glacier_count - df_non_glacier_non_nan_count) + \
-                            (df_glacier_count - df_glacier_non_nan_count)))
-        #elevation_band_dict[r] = elevation_band
+                         ((df_non_glacier_count - df_non_glacier_non_nan_count) + \
+                          (df_glacier_count - df_glacier_non_nan_count)))
+        # elevation_band_dict[r] = elevation_band
         if save_to_tif:
-            elevation_band.rio.to_raster(f"/home/sirian/Applications/Hydrology/RAVEN/data/DEM/hbv/dem_{ctm_id}_{r}_{r + 99}.tif")
-    with open(f"/home/sirian/Applications/Hydrology/RAVEN/data/DEM/hbv/bands_ratio_{ctm_id}.txt", mode="w") as f:
+            elevation_band.rio.to_raster(
+                f"{base_path_prefix}RAVEN/data/DEM/hbv/dem_{ctm_id}_{r}_{r + 99}.tif")
+    with open(f"{base_path_prefix}RAVEN/data/DEM/hbv/bands_ratio_{ctm_id}.txt", mode="w") as f:
         f.write(json.dumps(ratio_dict))
     return number_points, ratio_dict
 
@@ -1010,7 +1034,7 @@ def create_elevation_band_tif_list_hbv(base_path: str, tif_type: str):
     asp_list = glob.glob(base_path + f'/{tif_type}/dem_{ctm}_*.tif')
     band_lower_list = []
     for a in asp_list:
-        #rs = re.search(r'(?:_)(\d+?)(?:_)', str(a)).group()
+        # rs = re.search(r'(?:_)(\d+?)(?:_)', str(a)).group()
         band_lower_list.append(int(re.search(r'(\d+)', (re.search(r'(?:_)(\d+)(?:_)', a).group())).group()))
     band_lower_list.sort()
     return band_lower_list
@@ -1021,27 +1045,57 @@ def get_lower_band_limit_from_filepath(filepath):
     return lower_band_limit
 
 
+def add_elevation_to_netcdf(netcdf_filepath):
+    netcdf_filepath = Path(
+        "/media/mainman/Work/RAVEN/results/incoming/CH-0053/HBV/model/data_obs/RhiresD_v2.0_swiss.lv95/out/RhiresD_v2.0_swiss.lv95_198101010000_202012310000_CH-0053_clipped (copy).nc", )
+    start_year = 1981
+    infile = Dataset(filename=netcdf_filepath, mode="r+", format="NETCDF4")
+    ds = xr.open_dataset(netcdf_filepath, engine='netcdf4')
+    ds = netcdf_to_dataset(netcdf_filepath)
+    start_date = f"01-01-{start_year}"
+    start_date = datetime.strptime(str(start_date), "%d-%m-%Y")
+    ds = ds.sel(time=slice(start_date, (start_date + timedelta(days=1))))
+    e_nc = infile.dimensions['E']
+    n_nc = infile.dimensions['N']
+    time_nc = infile.dimensions['time']
+    ele = infile.createVariable('Elevation', np.float32, fill_value=-999.99, dimensions=('time', 'N', 'E'))
+    ele.units = 'meters'
+    ele.long_name = 'elevation above sea level'
+    ele.setncatts({'grid_name': "ch01r.swiss.lv95",
+                   'version': "v1.2",
+                   'prod_date': "2022-10-01",
+                   'coordinates': "lon lat",
+                   'grid_mapping': u"swiss_lv95_coordinates"})
+    latitude = infile['lat'][:, 1]
+    longitude = infile['lon'][:, 1]
+    xarr: xr.DataArray = ds['Elevation']
+    df = xarr.to_dataframe().reset_index()
+
+    xr = rxr.open_rasterio(netcdf_filepath)
+
+
 if __name__ == '__main__':
     # # catchments_by_id = [key for key in raven_tools.config.variables.catchments]
     # # r = raster_to_polygon(Path("/home/sirian/Applications/Hydrology/RAVEN/data/DEM/hbv/aspects/dem_CH-0105_1400_1499_aspects.tif"))
     #
     catchments_by_id = ["CH-0053"]
-    base_path_prefix = "/home/sirian/Applications/Hydrology/"
+    base_path_prefix = "/media/mainman/Work/"
     base_path = base_path_prefix + "RAVEN/data/DEM/hbv"
     base_path_path = Path(base_path)
     for ctm in catchments_by_id:
-    #     area_ratios, ratio_dict = elevation_bands(
-    #         filepath_non_glacier=Path(base_path_path.parent, f"dem_clipped/non_glacier/dem_{ctm}.tif"),
-    #         filepath_glacier=Path(base_path_path.parent,
-    #                               f"dem_clipped/glacier/dem_{ctm}_glacier.tif"),
-    #         ctm_id=ctm)
-    #     area_ratios = {}
-    #     with open(f"{base_path_prefix}RAVEN/data/DEM/hbv/non_glacier/area_ratios_{ctm}.txt", "r") as f:
-    #         for line in f:
-    #             s = line.strip().split(":")
-    #             area_ratios[s[0]] = float(s[1])
-    #     elevation_band_areas = area_from_ratio_dem_props(area_ratios=area_ratios, ctm_id=ctm, base_path_prefix=base_path_prefix)
-    #     dict_to_txt(dict=elevation_band_areas, ctm=ctm, base_path_prefix=base_path_prefix)
+        # area_ratios, ratio_dict = elevation_bands(
+        #     filepath_non_glacier=Path(base_path_path.parent, f"dem_clipped/non_glacier/dem_{ctm}.tif"),
+        #     filepath_glacier=Path(base_path_path.parent,
+        #                           f"dem_clipped/glacier/dem_{ctm}_glacier.tif"),
+        #     ctm_id=ctm, save_to_tif=True, base_path_prefix=base_path_prefix)
+        # # area_ratios = {}
+        # with open(f"{base_path_prefix}RAVEN/data/DEM/hbv/non_glacier/area_ratios_{ctm}.txt", "r") as f:
+        #     for line in f:
+        #         s = line.strip().split(":")
+        #         area_ratios[s[0]] = float(s[1])
+        # elevation_band_areas = area_from_ratio_dem_props(area_ratios=area_ratios, ctm_id=ctm,
+        #                                                  base_path_prefix=base_path_prefix)
+        # dict_to_txt(dict=elevation_band_areas, ctm=ctm, base_path_prefix=base_path_prefix)
         res = pd.DataFrame(columns=['cell_id'])
         band_list = create_elevation_band_tif_list_hbv(base_path, 'non_glacier')
         hru_id = list(range(2, len(band_list) + 2))

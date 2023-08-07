@@ -21,6 +21,7 @@ csv_dict = {}
 perf_metrics = ['Run', 'KGE_NP', 'PBIAS', 'RMSE', 'VE']
 
 catchments_by_id = [key for key in var.catchments]
+catchments_by_id = ["CH-0053"]
 # model_name = "HYMOD"
 file_list = []
 
@@ -351,6 +352,33 @@ def model_factors_chart(model_type):
         plt.savefig(
             f"{model_path}/figures/factors_{model_type}_{c}_{xlim_right}.png")
         plt.close()
+
+
+def hydrograph():
+    hydro = pd.read_csv(Path(model_path, "CH-0053/HBV/processor_0/model/output/CH-0053_HBV_Hydrographs.csv", sep=","))
+    hydro['date'] = pd.to_datetime(hydro['date'], format='%Y-%m-%d')
+    hydro.set_index('date', inplace=True)
+    hydro.drop(columns=['time', 'hour'], inplace=True)
+    hydro.plot()
+
+    watershedStorage = pd.read_csv(
+        Path(model_path, "CH-0053/HBV/processor_0/model/output/CH-0053_HBV_WatershedStorage.csv", sep=','))
+    watershedStorage['date'] = pd.to_datetime(watershedStorage['date'], format='%Y-%m-%d')
+    watershedStorage.set_index('date', inplace=True)
+    watershedStorage.drop(columns=['time [d]', 'hour'], inplace=True)
+    watershedStorage.plot()
+
+    end_cali = watershedStorage.index.searchsorted("2001-01-01")
+    start_vali = watershedStorage.index.searchsorted("2001-01-01")
+    end_vali = watershedStorage.index.searchsorted("2021-01-01")
+    simulations_cali = watershedStorage.iloc[:end_cali]
+    observations_cali = watershedStorage.iloc[:end_cali]
+    simulations_vali = watershedStorage.iloc[start_vali:end_vali]
+    observations_vali = watershedStorage.iloc[start_vali:end_vali]
+
+    end_test = watershedStorage.index.searchsorted('1981-12-31')
+    df_test = watershedStorage.iloc[:end_test]
+    df_test.plot()
 
 
 # model_factors_chart("MOHYSE")
