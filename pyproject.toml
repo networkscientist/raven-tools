@@ -9,21 +9,27 @@ repository = "https://github.com/networkscientist/raven-tools"
 keywords = ["raven", "hydrology"]
 
 [tool.poetry.dependencies]
-python = "^3.8.14"
-pandas = "^1.5.0"
-geopandas = "^0.12.1"
-xarray = "^2022.9.0"
+python = "^3.9"
+pandas = "^2.0"
+geopandas = "^0.13.2"
+xarray = "^2023.7.0"
 numpy = "^1.24.2"
-Shapely = "^1.8.4"
+Shapely = "^2.0"
 netCDF4 = "^1.6.2"
 pyet = "^1.2.2"
-rioxarray = "^0.13.3"
+rioxarray = "^0.14.1"
 PyYAML = "^6.0"
 hydroeval = "^0.1.0"
 matplotlib = "^3.7.1"
 hydroerr = "^1.24"
 rtree = "^1.0.1"
 pygeos = "^0.14"
+owslib = "^0.29.2"
+dask = "^2023.8.0"
+line-profiler-pycharm = "^1.1.0"
+dask-geopandas = "^0.3.1"
+geodatasets = "^2023.3.0"
+
 
 [tool.poetry.group.docs]
 optional = true
