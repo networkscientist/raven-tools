@@ -200,4 +200,4 @@ cython_debug/
 /raven_tools/config/new_model_config.yaml
 /raven_tools/*.bkp
 /raven_tools/raven_tools_gist.md
-raven_tools/RAVEN
+/raven_tools/RAVEN
