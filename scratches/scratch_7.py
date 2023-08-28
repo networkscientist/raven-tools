@@ -1,14 +1,14 @@
-import math
 from pathlib import Path
 
 import pandas as pd
 
 import raven_tools as rt
 
-models_by_name = rt.config.variables.supported_models
+# models_by_name = rt.config.variables.supported_models
+models_by_name = ["HBV"]
 # catchments_by_id = list(rt.config.variables.catchments.keys())
 catchments_by_id = [key for key in rt.config.variables.catchments]
-# catchments_by_id = ["CH-0057"]
+# catchments_by_id = ["CH-0140"]
 # catchments_by_id = ["CH-0058"]
 # dem_filepaths = []
 # with open(f"/media/mainman/Work/RAVEN/data/DEM/linklist_{catchments_by_id[0]}.csv", "r") as f:
@@ -18,21 +18,24 @@ data_dir = Path("/media/mainman/Work/RAVEN/data")
 hru_info_df_orig = pd.read_csv(Path(data_dir, "Catchment", "hru_info.csv"), na_values='-')
 
 for c in catchments_by_id:
+    # c = "CH-0053"
     hru_info_df = hru_info_df_orig[hru_info_df_orig['Ctm'] == c]
     hru_info_dict = hru_info_df.to_dict('records')[0]
-    for f in rt.config.variables.forcings_dirs:
-        model_instance = rt.model.raven_model.RavenModel(catchment_ch_id=c, start_year=1981, end_year=2020)
-        # model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment", f"{model_instance.catchment}_bbox.shp")
-        model_instance.data_dir = Path("/media/mainman/Work/RAVEN/data")
-        model_instance.create_bbox()
-        # model_instance.clip_netcdf(forcing_prefix=f)
-        model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment",
-                                            f"{model_instance.catchment_ch_id}_bbox.shp")
+    # for f in rt.config.variables.forcings_dirs:
+    model_instance = rt.model.raven_model.RavenModel(catchment_ch_id=c, start_year=1981, end_year=2020,
+                                                     model_type=models_by_name[0])
+    # model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment", f"{model_instance.catchment}_bbox.shp")
+    model_instance.data_dir = data_dir
+    # model_instance.create_bbox()
+    # # model_instance.clip_netcdf(forcing_prefix=f)
+    # model_instance.bbox_filepath = Path(model_instance.data_dir, "Catchment",
+    #                                     f"{model_instance.catchment_ch_id}_bbox.shp")
 
-        if not math.isnan(hru_info_dict['GlaArea']):
-            model_instance.create_grid_weights(forcing_name=f, glacier=True)
-        else:
-            model_instance.create_grid_weights(forcing_name=f, glacier=False)
+    # if not math.isnan(hru_info_dict['GlaArea']):
+    #     model_instance.create_grid_weights(forcing_name=f, glacier=True)
+    # else:
+    #     model_instance.create_grid_weights(forcing_name=f, glacier=False)
+    model_instance.create_grid_weights(read_from_file=False)
 print("Finished")
 
 # This snippet gets the glaciation ratio for the non glaciated and for the glaciated HRU and writes the values with

@@ -9,8 +9,8 @@ from pathlib import Path
 import pandas
 import pandas as pd
 
-import raven_tools.processing.raven_preprocess
 import raven_tools.config.variables
+import raven_tools.processing.raven_preprocess
 from raven_tools import config
 
 try:
@@ -24,7 +24,6 @@ try:
     conf = config.variables.project_config
     model_dir = conf['ModelDir']
     model_type = conf['ModelName']
-    data_dir = conf['DataDir']
     project_dir = conf['ProjectDir']
     catchment_name = conf['Catchment']
     catchment_id = conf['CatchmentID']
@@ -72,7 +71,7 @@ def create_header(catchment_ch_id: str, author=conf['Author'], creation_date=gen
         pass
 
 
-def forcing_block(start_year: int, end_year: int, catchment_ch_id: str, glacier: bool = False):
+def forcing_block(start_year: int, end_year: int, catchment_ch_id: str, model_type: str):
     """Create Dictionary of forcing data to write in RVT file.
 
     This function creates a Dictionary of forcing data to be written into an RVT file. From a start and end year,
@@ -90,13 +89,17 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str, glacier:
             The forcing data block
 
     """
+    if model_type == "HBV":
+        grid_weights_file_path = f"data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}_hbv.txt"
+    else:
+        grid_weights_file_path = f"data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt"
     forcing_rainfall = [
         ":GriddedForcing           Rainfall",
         "    :ForcingType          RAINFALL",
         f"    :FileNameNC           data_obs/RhiresD_v2.0_swiss.lv95/out/RhiresD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
         "    :VarNameNC            RhiresD",
         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-        f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
+        f"    :RedirectToFile       {grid_weights_file_path}",
         ":EndGriddedForcing"]
     forcing_temp_ave = [
         ":GriddedForcing           Average Temperature",
@@ -154,7 +157,8 @@ def write_rvt(start_year: int,
               catchment_gauge_id="1000",
               params=default_params,
               param_or_name: str = "names",
-              template_type: str = "Raven"):
+              template_type: str = "Raven",
+              data_dir: Path = Path(conf['ProjectDir'], conf['DataDir'])):
     import shutil
     """Write to Raven .rvt file.
 
@@ -230,7 +234,7 @@ def write_rvt(start_year: int,
         ff.writelines(f"{line}{newline}" for line in
                       create_header(author=author, catchment_ch_id=catchment_ch_id, model=model_type, rvx_type="rvt"))
         ff.write(f"# meteorological forcings\n")
-        for f in forcing_block(start_year, end_year, catchment_ch_id=catchment_ch_id, glacier=glacier).values():
+        for f in forcing_block(start_year, end_year, catchment_ch_id=catchment_ch_id, model_type=model_type).values():
             for t in f:
                 ff.write(f"{t}\n")
 
@@ -246,7 +250,8 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                           param_or_name="names",
                           start_year: int = start_year, end_year: int = end_year,
                           cali_end_year: str = cali_end_year,
-                          glacier_module: bool = False) -> dict:
+                          glacier_module: bool = False, hrus=None,
+                          data_dir=conf['ModelName']) -> dict:
     """Generates template text which can be written to .rvX file.
 
         Args:
@@ -279,15 +284,31 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
         glacier_lon: float = float(hru_info['GlaLon'])
         glacier_aspect: float = float(hru_info['GlaAspect'])
         glacier_slope: float = float(hru_info['GlaSlope'])
-        hru_list = \
-            [
-                ":HRUs",
-                "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
-                "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
-                f"            1, {non_glaciated_area},     {non_glacier_altitude},   {non_glacier_lat},     {non_glacier_lon},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {non_glacier_slope},  {non_glacier_aspect}",
-                f"            2, {glaciated_area}, {glacier_altitude}, {glacier_lat},     {glacier_lon}, 1,        GLACIER,   GLACIER,    GLACIER,          [NONE],        [NONE],   {glacier_slope},  {glacier_aspect}",
-                ":EndHRUs"
-            ]
+        new = pd.read_csv(Path(data_dir, "Catchment", "HBV", f"hrus_{catchment_ch_id}.txt"), sep=",", header=None)
+        if model_type == "HBV":
+            with open(Path(data_dir, "Catchment", "HBV", f"hrus_{catchment_ch_id}.txt"), "r") as f:
+                lines = f.readlines()
+                lines = [line.strip("\n") for line in lines]
+                hru_non_gla_list = []
+                hru_list = \
+                    [
+                        ":HRUs",
+                        "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
+                        "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
+                        f"            1, {glaciated_area}, {glacier_altitude}, {glacier_lat}, {glacier_lon}, 1, GLACIER, GLACIER, GLACIER, [NONE], [NONE], {glacier_slope}, {glacier_aspect}",
+                        *lines,
+                        ":EndHRUs"
+                    ]
+        else:
+            hru_list = \
+                [
+                    ":HRUs",
+                    "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
+                    "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
+                    f"            1, {non_glaciated_area},     {non_glacier_altitude},   {non_glacier_lat},     {non_glacier_lon},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {non_glacier_slope},  {non_glacier_aspect}",
+                    f"            2, {glaciated_area}, {glacier_altitude}, {glacier_lat},     {glacier_lon}, 1,        GLACIER,   GLACIER,    GLACIER,          [NONE],        [NONE],   {glacier_slope},  {glacier_aspect}",
+                    ":EndHRUs"
+                ]
         land_use_classes = \
             [
                 ":LandUseClasses",
@@ -331,7 +352,7 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                 "   VEG_ALL, 0.0, 0.0, 0.0",
                 ":EndVegetationClasses"
             ]
-        
+
     if not glacier_module:
         gr4j_hydro_proc = \
             [
@@ -1105,7 +1126,7 @@ def generate_template_ostrich(catchment_ch_id: str,
                               catchment_name: str = catchment_name,
                               author: str = author,
                               generation_date: str = generation_date,
-                              max_iterations : int = 20) -> dict:
+                              max_iterations: int = 20) -> dict:
     """
     Generates template text which can be written to .rvp file
 
@@ -1143,7 +1164,7 @@ def generate_template_ostrich(catchment_ch_id: str,
     ]
     tied_response_variable_mohyse = "#"
     if model_type == "MOHYSE":
-        #tied_response_variable_mohyse = f"#{params['MOHYSE']['names']['MOHYSE_Param_08b']}   3 {params['MOHYSE']['names']['MOHYSE_Param_06']} {params['MOHYSE']['names']['MOHYSE_Param_07']} {params['MOHYSE']['names']['MOHYSE_Param_08']} wsum 1.0 1.0 1.0"
+        # tied_response_variable_mohyse = f"#{params['MOHYSE']['names']['MOHYSE_Param_08b']}   3 {params['MOHYSE']['names']['MOHYSE_Param_06']} {params['MOHYSE']['names']['MOHYSE_Param_07']} {params['MOHYSE']['names']['MOHYSE_Param_08']} wsum 1.0 1.0 1.0"
         pass
     else:
         tied_response_variable_mohyse = "#"
@@ -1184,24 +1205,24 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"# OstrichWarmStart yes",
     ]
 
-#    ost_raven = [
-#        f"cp ./{file_name}.rvc model/{file_name}.rvc",
-#        f"cp ./{file_name}.rvh model/{file_name}.rvh",
-#        f"cp ./{file_name}.rvi model/{file_name}.rvi",
-#        f"cp ./{file_name}.rvp model/{file_name}.rvp",
-#        f"cp ./{file_name}.rvt model/{file_name}.rvt{newline}",
-#        f"## cd into the model folder",
-#        f"cd model{newline}",
-#        f"# Run Raven.exe",
-#        f"./Raven.exe {file_name} -o output/",
-#        f"cd output",
-#        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
-#        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
-#        f"source {poetry_location}",
-#        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
-#        f"exit 0",
-#    ]
-    
+    #    ost_raven = [
+    #        f"cp ./{file_name}.rvc model/{file_name}.rvc",
+    #        f"cp ./{file_name}.rvh model/{file_name}.rvh",
+    #        f"cp ./{file_name}.rvi model/{file_name}.rvi",
+    #        f"cp ./{file_name}.rvp model/{file_name}.rvp",
+    #        f"cp ./{file_name}.rvt model/{file_name}.rvt{newline}",
+    #        f"## cd into the model folder",
+    #        f"cd model{newline}",
+    #        f"# Run Raven.exe",
+    #        f"./Raven.exe {file_name} -o output/",
+    #        f"cd output",
+    #        f"DIAG_FILE=$(pwd)/{file_name}_Diagnostics.csv",
+    #        f"HYDROGRAPH_FILE=$(pwd)/{file_name}_Hydrographs.csv",
+    #        f"source {poetry_location}",
+    #        f"python ./raven_diag.py \"$HYDROGRAPH_FILE\" \"$DIAG_FILE\"{newline}",
+    #        f"exit 0",
+    #    ]
+
     ost_raven_script_cp_lines = []
     if model_type in ["GR4J", "HMETS"]:
         ost_raven_script_cp_lines = [
@@ -1242,8 +1263,7 @@ def generate_template_ostrich(catchment_ch_id: str,
         f"exit 0",
     ]
 
-    ost_raven =  ost_raven_header + ost_raven_script_cp_lines + ost_raven_footer
-
+    ost_raven = ost_raven_header + ost_raven_script_cp_lines + ost_raven_footer
 
     ost_mpi_script_cp_lines = []
     if model_type in ["GR4J", "HMETS"]:
@@ -1276,28 +1296,28 @@ def generate_template_ostrich(catchment_ch_id: str,
         "Ostrich MPI run":
             ost_mpi_header + ost_mpi_script_cp_lines + ost_mpi_footer
     }
-    
-#    ost_mpi_script = {
-#        "Ostrich MPI run":
-#            [
-#                f"#!/bin/bash{newline}{newline}",
-#                f"# match assignment to location of OSTRICH installation{newline}",
-#                f"cp ./{file_name}.rvi model/{file_name}.rvi",
-#                f"cp ./{file_name}.rvh model/{file_name}.rvh",
-#                f"cp ./{file_name}.rvt model/{file_name}.rvt",
-#                f"cp ./{file_name}.rvp model/{file_name}.rvp",
-#                f"cp ./{file_name}.rvc model/{file_name}.rvc",
-#                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
-#                f"mpirun $OSTRICH_MPI{newline}"
-#            ]
-#    }
+
+    #    ost_mpi_script = {
+    #        "Ostrich MPI run":
+    #            [
+    #                f"#!/bin/bash{newline}{newline}",
+    #                f"# match assignment to location of OSTRICH installation{newline}",
+    #                f"cp ./{file_name}.rvi model/{file_name}.rvi",
+    #                f"cp ./{file_name}.rvh model/{file_name}.rvh",
+    #                f"cp ./{file_name}.rvt model/{file_name}.rvt",
+    #                f"cp ./{file_name}.rvp model/{file_name}.rvp",
+    #                f"cp ./{file_name}.rvc model/{file_name}.rvc",
+    #                f"OSTRICH_MPI=./OstrichMPI{newline}{newline}",
+    #                f"mpirun $OSTRICH_MPI{newline}"
+    #            ]
+    #    }
 
     model_info = [
-                f"# Model Type: {model_type}",
-                f"# Catchment Name: {catchment_name}",
-                f"# Catchment ID: {catchment_ch_id}",
-                f"# Author: {author}",
-                f"# Generation Date: {generation_date}"
+        f"# Model Type: {model_type}",
+        f"# Catchment Name: {catchment_name}",
+        f"# Catchment ID: {catchment_ch_id}",
+        f"# Author: {author}",
+        f"# Generation Date: {generation_date}"
     ]
 
     extra_dirs = [
@@ -1773,7 +1793,7 @@ def write_rvx(catchment_ch_id: str,
               hru_info: dict,
               model_dir: str = model_dir,
               model_type: str = model_type,
-              data_dir: str = data_dir,
+              data_dir=conf['ModelName'],
               project_dir: Path = project_dir,
               model_sub_dir: str = model_sub_dir,
               params: dict = default_params,
@@ -1783,8 +1803,7 @@ def write_rvx(catchment_ch_id: str,
               author=conf['Author'],
               start_year: int = start_year,
               end_year: int = end_year,
-              glacier_module: bool = False
-              ):
+              glacier_module: bool = False):
     import shutil
     """Writes .rvX file(s), either as an Ostrich or Raven template.
     Args:
@@ -1825,7 +1844,8 @@ def write_rvx(catchment_ch_id: str,
         template_sections = generate_template_rvx(model_type=model_type, hru_info=hru_info, csv_file=csv_file,
                                                   params=params,
                                                   param_or_name="init", start_year=start_year, end_year=end_year,
-                                                  catchment_ch_id=catchment_ch_id, glacier_module=glacier_module)
+                                                  catchment_ch_id=catchment_ch_id, glacier_module=glacier_module,
+                                                  data_dir=data_dir)
         logger.debug(f"Wrote .{rvx_type} template sections generated by generate_template() to dict template_sections")
     if template_type == "Ostrich":
         file_path: Path = Path(project_dir, model_dir, catchment_ch_id, model_type, file_name)
@@ -1836,7 +1856,8 @@ def write_rvx(catchment_ch_id: str,
         template_sections = generate_template_rvx(model_type=model_type, hru_info=hru_info, csv_file=csv_file,
                                                   params=params,
                                                   param_or_name="names", start_year=start_year, end_year=end_year,
-                                                  catchment_ch_id=catchment_ch_id, glacier_module=glacier_module)
+                                                  catchment_ch_id=catchment_ch_id, glacier_module=glacier_module,
+                                                  data_dir=data_dir)
         logger.debug(
             f"Wrote .{rvx_type}.tpl template sections generated by generate_template() to dict template_sections")
 

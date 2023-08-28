@@ -7,13 +7,10 @@ rt_path = Path(os.path.dirname(rt.__file__)).parent.absolute()
 
 os.chdir(rt_path)
 
-suffix = [
-    "rvi", "rvh", "rvp", "rvc"
-]
+suffix = ["rvh", "rvp", "rvc", "rvi"]
 models_by_name = rt.config.variables.supported_models
 catchments_by_id = [key for key in rt.config.variables.catchments]
 models_by_name = ["HBV"]
-catchments_by_id = ["CH-0053"]
 start_year = 1981
 end_year = 2020
 
@@ -36,7 +33,7 @@ for c in catchments_by_id:
         # model_instance.camels_to_rvt()
         for s in suffix:
             model_instance.write_rvx(rvx_type=s, ostrich_template=True, raven_template=True)
-        #        model_instance.write_rvt()
+        model_instance.write_rvt()
         model_instance.write_ost(max_iterations=50)
         # model_instance.create_symlinks(forcings=False, discharge=True, raven_executable=True, ostrich_executable=True,
         #                                rvx_files=False, raven_diag=False, delete=False)
