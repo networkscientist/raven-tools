@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 logger.debug("Entered raven_preprocess.py.")
 
 
-def create_bbox_geometry(extent_shape_path: Path):
+def create_bbox_gdf(extent_shape_path: Path):
     """Create a bounding box Polygon for an input shape file.
 
     Args:
@@ -56,7 +56,7 @@ def create_bbox_geometry(extent_shape_path: Path):
         bbox_poly : Polygon
             A shapely polygon that defines the bounding box.
         ext_gdf : GeoDataFrame
-            The GeoDataFrame with the data from the extent shape file.
+            The GeoDataFrame with the data from the extent shape file. The extent has to be in EPSG:2056
 
     """
     logger.debug("Entered create_bbox_geometry function...")
@@ -75,24 +75,22 @@ def create_bbox(extent_shape_file_path: Path, bb_file_path: Path, create_bbox_sh
     GeoDataFrame. Additionally, returns the original extent as a GeoDataFrame.
 
     Args:
-        create_bbox_shp: bool
-            True if create_bbox() should write to a shape file.
         extent_shape_file_path : Path
             Path to the shape file for which to create a bounding box (in EPSG2056).
         bb_file_path : Path
             Full path to the bounding box shape file to be written (in EPSG2056).
+        create_bbox_shp: bool
+            True if bounding box shape file should be written to file.
 
     Returns:
         bbox_gdf : GeoDataFrame
             Bounding box as a GeoDataFrame (in EPSG2056).
         ext_gdf : GeoDataFrame
             The GeoDataFrame with the data from the extent shape file (in EPSG2056)
-        bb_file_path: str
-            (optional) Path to the bounding box shape file (in EPSG2056)
     """
 
     # Create the bounding box Polygon
-    bbox_poly, ext_gdf = create_bbox_geometry(extent_shape_file_path)
+    bbox_poly, ext_gdf = create_bbox_gdf(extent_shape_file_path)
     # Create the bounding shape in a GeoDataFrame
     bbox_gdf: GeoDataFrame = gpd.GeoDataFrame(pd.DataFrame(['p1'], columns=['geom']),
                                               crs={'init': 'epsg:2056'},
@@ -100,9 +98,7 @@ def create_bbox(extent_shape_file_path: Path, bb_file_path: Path, create_bbox_sh
     if create_bbox_shp:
         # This writes the bounding box as a shape file
         bbox_gdf.to_file(str(bb_file_path))
-        return bbox_gdf, ext_gdf, bb_file_path
-    else:
-        return bbox_gdf, ext_gdf
+    return bbox_gdf, ext_gdf
 
 
 def netcdf_to_dataset(netcdf_file_path: Path) -> xr.Dataset:
@@ -110,10 +106,10 @@ def netcdf_to_dataset(netcdf_file_path: Path) -> xr.Dataset:
 
     Args:
         netcdf_file_path : Path
-            Path to the netCDF file to clip. It has to be in CH1903+/LV95 (EPSG=2056).
+            Path to the netCDF file. It has to be in CH1903+/LV95 (EPSG=2056).
 
     Returns:
-        xds : Dataset
+        xds : xr.Dataset
             The netCDF data as a netCDF4 dataset in CH1903+/LV95 (EPSG=2056).
 
     """
@@ -138,18 +134,18 @@ def dataset_to_netcdf(xds_to_write: xr.Dataset, netcdf_file_path: Path, catchmen
     """ Writes xarray dataset to netCDF
 
     Args:
-        catchment:
-        xds_to_write : Dataset
+        xds_to_write : xr.Dataset
             xarray Dataset to write.
         netcdf_file_path : Path
             netCDF file path to write to.
+        catchment: Catchment name
 
     """
     try:
         os.mkdir(f"{netcdf_file_path.parent.parent}/out/{catchment}")
     except FileExistsError:
         pass
-    # Write the clipped netCDF file
+    # Write the netCDF file
     xds_to_write.to_netcdf(
         f"{netcdf_file_path.parent.parent}/out/{catchment}/{netcdf_file_path.stem}_{catchment}_clipped{netcdf_file_path.suffix}",
         mode="w")
@@ -159,8 +155,8 @@ def netcdf_clipper(netcdf_file_path: Path, extent_file_path: Path):
     """
 
     Args:
-        netcdf_file_path:
-        extent_file_path:
+        netcdf_file_path: Path to netCDF file to clip.
+        extent_file_path: Path to extent to which netCDF file should be clipped.
     """
     logger.debug("Trying to call extent.sh...")
     rcode = subprocess.call(['raven_tools/extent.sh', str(extent_file_path), str(netcdf_file_path)])
@@ -168,10 +164,11 @@ def netcdf_clipper(netcdf_file_path: Path, extent_file_path: Path):
 
 
 def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
-    """
-
+    """Calculates PET with Hamon approach and adds values to netCDF file.
+    %TODO: Check how the name_pattern works and document it properly
     Args:
         name_pattern : dict[str, str]
+            Contains the pattern for the cdf_out_path variable.
         netcdf_file_path : Path
             Path to the netCDF file to calculate PET from
 
@@ -212,6 +209,12 @@ def netcdf_pet_hamon(netcdf_file_path: Path, name_pattern: dict[str, str]):
 
 
 def netcdf_elevation(netcdf_filepath: Path):
+    """Adds elevation variable to netCDF file.
+
+    Args:
+        netcdf_filepath: Path to netCDF file for which elevation variable should be added.
+    """
+
     infile = Dataset(filename=netcdf_filepath, mode="r+", format="NETCDF4")
 
     try:
@@ -233,28 +236,25 @@ def pet_temp_monthly_ave(pet_filepath: Path, temp_filepath: Path):
 
     Args:
         pet_filepath: Path
+            Path to PET CSV file.
         temp_filepath: Path
+            Path to temperature CSV file.
 
     Returns:
-        pet_monthly:
-        temp_monthly:
+        pet_monthly: Monthly PET means.
+        temp_monthly: Monthly temperature means.
     """
-    import pandas as pd
-    from pathlib import Path
-    pet_filepath = Path(pet_filepath)
+
     pet_monthly_from_order = pd.read_csv(pet_filepath, sep=";")
 
     pet_monthly_from_order['time'] = pd.to_datetime(pet_monthly_from_order['time'], format='%Y%m')
     pet_monthly_from_order['month'] = pet_monthly_from_order['time'].dt.month
     pet_monthly = pet_monthly_from_order.groupby(pet_monthly_from_order.time.dt.month)['ets150m0'].mean()
-    print(str(pet_monthly_from_order['ets150m0'].mean()))
-    print(str(pet_monthly.values.mean()))
 
-    temp_filepath = Path(temp_filepath)
     temp_hourly_from_order = pd.read_csv(temp_filepath, sep=";")
     temp_hourly_from_order['time'] = pd.to_datetime(temp_hourly_from_order['time'], format='%Y%m%d%H')
     temp_monthly = temp_hourly_from_order.groupby(temp_hourly_from_order.time.dt.month)['tre200h0'].mean()
-    print(temp_monthly.values)
+
     return pet_monthly, temp_monthly
 
 
@@ -272,19 +272,21 @@ def resample_netcdf_monthly():
     monthly_data = ds.resample(freq='m', dim='time', how='mean')
 
 
-def nc_merge(start_year: int, end_year: int, forcing_dir: Path, forcing_prefix: str, catchment: str = "Broye",
+def nc_merge(start_year: int, end_year: int, forcing_dir: Path, forcing_prefix: str, catchment_name: str = "Broye",
              legacy_mode: bool = False):
-    """
+    """Merges multiple netCDF files into one.
 
     Args:
         legacy_mode: bool
             True if you want to use legacy mode
-        catchment: str
+        catchment_name: str
+            Name of catchment.
         forcing_prefix: str
+            Prefix to meteo forcings.
         start_year : int
-            Start year
+            Start year, e.g. first file to merge.
         end_year : int
-            End Year
+            End Year, e.g. last file to merge.
         forcing_dir : Path
             Root directory where forcing files are located
 
@@ -292,7 +294,7 @@ def nc_merge(start_year: int, end_year: int, forcing_dir: Path, forcing_prefix: 
     if legacy_mode:
         logger.debug("Trying to call nc_combine.sh...")
         rcode = subprocess.call(
-            ['raven_tools/nc_combine.sh', str(start_year), str(end_year), str(forcing_dir), catchment])
+            ['raven_tools/nc_combine.sh', str(start_year), str(end_year), str(forcing_dir), catchment_name])
         logger.debug(f"nc_combine.sh executed with return code: {rcode}")
     else:
         logger.info("Trying to call nc_combine.sh...")
@@ -306,16 +308,16 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
     """Creates a grid GeoDataFrame and optionally exports to shape file
 
     Args:
-        start_year :
-            Used to slice data so as to save computation time
-        forcing_name : str
-            Used to select column in netCDF data
-        out_path : Path
-            If export_shp=True, write shape file to this Path
         netcdf_filepath : Path
             Path to netCDF file whose grid should be used (in EPSG2056)
         bounding_box_filename : Path
             Path to bounding box shape file (in EPSG2056)
+        out_path : Path
+            If export_shp=True, write shape file to this Path
+        forcing_name : str
+            Used to select column in netCDF data
+        start_year :
+            Used to slice data so as to save computation time
         export_shp : bool
             Set to True if you want to export the grid into a shape file (with EPSG2056)
 
@@ -374,8 +376,7 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
             cell_id.append(f"{str(cid)}")
 
     # Use the polygon list in the GeoDataFrame and set the projection accordingly
-    grid["polygons"] = polygons
-    grid["cell_id"] = cell_id
+    grid["polygons"], grid["cell_id"] = polygons, cell_id
 
     if export_shp:
         # Export the grid to a shape file
@@ -384,27 +385,24 @@ def create_grid(netcdf_filepath: Path, bounding_box_filename: Path, out_path: Pa
     return grid
 
 
-def create_overlay(grd: GeoDataFrame, ctm_gdf: GeoDataFrame):
+def create_overlay(grd: GeoDataFrame, ctm_gdf: GeoDataFrame) -> GeoDataFrame:
     """Overlays a GeoDataFrame over another to create overlay Polygons
 
-    Overlays two GeoDataFrame over each other and returns two new GeoDataFrames, one for the mode 'intersection',
-    the second for the mode 'difference'
+    Overlays two GeoDataFrame over each other and returns a new GeoDataFrame for the mode 'intersection'.
 
     Args:
-        ctm_gdf: GeoDataFrame
-            Catchment GDF
         grd : GeoDataFrame
             Grid as given by the netCDF file in EPSG2056
+        ctm_gdf: GeoDataFrame
+            Catchment GDF
 
     Returns:
         res_u : GeoDataFrame
             Grid cells within the catchment area in EPSG2056
-
     """
-    ctm_gdf.set_crs(epsg="2056")
-    grd.set_crs(epsg='2056')
-    ctm_gdf.to_crs(32632)
-    grd.to_crs(32632)
+
+    ctm_gdf.set_crs(epsg="2056"), grd.set_crs(epsg='2056')
+    ctm_gdf.to_crs(32632), grd.to_crs(32632)
     res_u: GeoDataFrame = ctm_gdf.overlay(grd, how='intersection')
     # res_u.set_index("cell_id", inplace=True)
     res_u.to_crs(2056)
@@ -413,10 +411,30 @@ def create_overlay(grd: GeoDataFrame, ctm_gdf: GeoDataFrame):
 
 def create_dask_overlay(underlay: gpd.GeoDataFrame, overlay: gpd.GeoDataFrame, keep_geom_type=True,
                         overlay_type='intersection'):
+    """Overlays a GeoDataFrame over another to create overlay Polygons
+
+    Overlays two GeoDataFrame over each other and returns a new GeoDataFrame for the mode 'intersection'.
+
+    Args:
+        underlay : GeoDataFrame
+            GeoDataFrame to use as underlying, in EPSG:2056
+        overlay: GeoDataFrame
+            GeoDataFrame to use as overlying, in EPSG:2056
+        keep_geom_type: bool
+            Used as parameter to the gpd.overlay function
+        overlay_type: str
+            Type of overlay to be used, e.g. 'intersection' or 'difference'
+
+    Returns:
+        res_u : GeoDataFrame
+            GeoDataFrame after overlay operation in EPSG:2056
+    """
     overlay.set_crs(2056)
     underlay.set_crs(2056)
     overlay.to_crs(32632)
     underlay.to_crs(32632)
+    # overlay = overlay.explode()
+    # underlay = underlay.explode()
     # res_u: dgpd.GeoDataFrame = ctm_gdf.overlay(grd, how='intersection', keep_geom_type=keep_geom_type)
     res_u = gpd.overlay(underlay, overlay, overlay_type, keep_geom_type)
     # res_u.set_index("cell_id", inplace=True)
@@ -431,13 +449,14 @@ def calc_relative_area(hru_gdf: GeoDataFrame, hru_short_name: str) -> GeoDataFra
     returns the GeoDataFrame with EPSG=2056.
 
     Args:
-        hru_short_name: str
         hru_gdf : GeoDataFrame
             GeoDataFrame in EPSG=2056
+        hru_short_name: str
+            Short name of HRU to be used as column name prefix
 
     Returns:
         gdf : GeoDataFrame
-            GeoDataFrame with relative areas of each polygon
+            GeoDataFrame with relative areas of each polygon, in EPSG:2056
 
     """
     area_column_name: str = f"{hru_short_name}_area_rel"
@@ -454,18 +473,18 @@ def calc_relative_area(hru_gdf: GeoDataFrame, hru_short_name: str) -> GeoDataFra
     return hru_gdf
 
 
-def create_grid_data_list(grd: GeoDataFrame, glacier: bool = False):
+def create_grid_data_dict(grd: GeoDataFrame, glacier: bool = False) -> dict:
     """Loops over each grid cell and extracts the grid weights.
 
     Args:
-        glacier : bool
-            True if glacier
         grd : GeoDataFrame
             Grid as derived from the netCDF file
+        glacier : bool
+            True if glacier
 
     Returns:
-        data_to_write : list[list[float]]
-            List with the relative areas/grid weights of each cell.
+        data_to_write : dict
+            Dict with the relative areas/grid weights of each cell.
 
     """
     # Loop over each intersected feature and write the relative area (compared with the total catchment area) into a new
@@ -485,8 +504,10 @@ def write_grid_data_to_file(gdf: gpd.GeoDataFrame, grid_weights_file_path: Path)
     """Writes grid weight data to rvt file.
 
     Args:
-        grd:
+        gdf: GeoDataFrame
+            GeoDataFrame containing the grid data to write.
         grid_weights_file_path: Path
+            Path to grid weights file to be written to.
     """
     col_list = list(gdf.columns)
     col_list.remove('polygons')
@@ -506,7 +527,15 @@ def write_grid_data_to_file(gdf: gpd.GeoDataFrame, grid_weights_file_path: Path)
 
 
 def write_grid_data_to_file(weights: pd.DataFrame, grid_weights_file_path: Path):
-    col_list = list(weights.columns)
+    """Writes grid weight data to rvt file.
+
+    Args:
+        weights: DataFrame
+            DataFrame containing the grid data to write.
+        grid_weights_file_path: Path
+            Path to grid weights file to be written to.
+    """
+
     with open(grid_weights_file_path, 'w') as ff:
         ff.write(':GridWeights                     \n')
         ff.write('   #                                \n')
@@ -591,11 +620,15 @@ def subset_dataframe_time(dataframe: pd.DataFrame, start_date: str, end_date: st
 
     Args:
         dataframe: pd.DataFrame
+            DataFrame with data
         start_date: str
+            Start date of subset
         end_date: str
+            End date of subset
 
     Returns:
         subset_dataframe: pd.DataFrame
+            DataFrame with new start and end date.
 
     """
     # Date to string conversion
@@ -618,9 +651,13 @@ def export_to_rvt_file(start_date, start_time, df, out_path):
 
     Args:
         start_date: str
+            Start date of simulation
         start_time: str
+            End date of simulation
         df: pd.DataFrame
+            DataFrame to write
         out_path:
+            Path to RVT file to be written
 
     """
     with open(out_path, 'w') as f:
@@ -634,16 +671,20 @@ def export_to_rvt_file(start_date, start_time, df, out_path):
         f.write("\n:EndObservationData")
 
 
-def glacier_extent(ctm_gdf: GeoDataFrame, glacier_gdf: GeoDataFrame):
-    """Creates a GDF with the glaciated area in a catchment from GeoDataFrames.
+def glacier_extent(ctm_gdf: GeoDataFrame, glacier_gdf: GeoDataFrame) -> tuple[GeoDataFrame, GeoDataFrame]:
+    """Creates glaciated and non-glaciated area in a catchment from catchment extent and glacier extent.
 
     Args:
         ctm_gdf: GeoDataFrame
+            Catchment extent.
         glacier_gdf: GeoDataFrame
+            Glacier extent.
 
     Returns:
         ctm_glaciation: GeoDataFrame
+            Glaciated area.
         ctm_non_glaciation: GeoDataFrame
+            Non-glaciated area.
 
     """
     ctm_glaciation: GeoDataFrame = ctm_gdf.overlay(glacier_gdf, how='intersection')
@@ -656,19 +697,22 @@ def glacier_extent(ctm_gdf: GeoDataFrame, glacier_gdf: GeoDataFrame):
 
 
 def hru_extent_from_shp(ctm_shp: Path, hru_shp: Path) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
-    """Creates a GDF with the hru area in a catchment from shape files.
+    """Creates a HRU and non_HRU area in a catchment from shape files.
 
     Args:
         ctm_shp: Path
+            Path to catchment shape file
         hru_shp: Path
+            Path to HRU shape file
 
     Returns:
         ctm_hru_intersection: GeoDataFrame
+            Area of HRU within catchment
         ctm_hru_difference: GeoDataFrame
+            Area within catchment that is not HRU
 
     """
-    ctm_gdf: GeoDataFrame = gpd.read_file(ctm_shp)
-    hru_gdf: GeoDataFrame = gpd.read_file(hru_shp)
+    ctm_gdf, hru_gdf = gpd.read_file(ctm_shp), gpd.read_file(hru_shp)
     drop_col_match = ['ezgnr', 'ar_1903', 'watr_nm', 'place', 'gid', 'pk_glacier', 'sgi-id', 'name', 'rl_0', 'rl_1',
                       'rl_2', 'rl_3', 'i_code', 'year_acq', 'year_rel', 'area_km2', 'length_km', 'masl_min', 'masl_med',
                       'masl_mean', 'masl_max', 'slope_deg', 'aspect_deg']
@@ -680,7 +724,21 @@ def hru_extent_from_shp(ctm_shp: Path, hru_shp: Path) -> tuple[gpd.GeoDataFrame,
     return ctm_hru_intersection, ctm_hru_difference
 
 
-def area_from_ratio_dem_props(area_ratios: dict, ctm_ch_id: str, data_dir: Path):
+def area_from_ratio_dem_props(area_ratios: dict, ctm_ch_id: str, data_dir: Path) -> dict:
+    """Return dictionary with area per elevation band.
+
+    Args:
+        area_ratios: dict
+            Dictionary with lower bounds of elevation bands as keys.
+        ctm_ch_id:
+            Catchment id.
+        data_dir:
+            Path to project data directory.
+
+    Returns:
+        area_ratios: dict
+            Dictionary with lower bounds of elevation bands as keys and respective areas as values.
+    """
     props = pd.read_csv(Path(data_dir, f"Catchment/hru_info.csv"))
     non_gla_area = float(props[props['Ctm'] == ctm_ch_id]['NonGlaArea'])
     gla_area = float(props[props['Ctm'] == ctm_ch_id]['GlaArea'])
@@ -690,7 +748,18 @@ def area_from_ratio_dem_props(area_ratios: dict, ctm_ch_id: str, data_dir: Path)
     return area_ratios
 
 
-def dict_to_txt(dict, ctm_ch_id, data_dir: Path):
+def dict_to_txt(dict: dict, ctm_ch_id: str, data_dir: Path):
+    """Writes elevation band areas from dictionary to text file.
+
+    Args:
+        dict: dict
+            Elevation band areas to write
+        ctm_ch_id:
+            Catchment id.
+        data_dir:
+            Path to data directory.
+    """
+
     with open(Path(data_dir, f"DEM/hbv/non_glacier/elevation_band_areas_{ctm_ch_id}.txt"), 'w') as f:
         for key, value in dict.items():
             f.write(f"{key}:{value}\n")
@@ -701,12 +770,17 @@ def area_ratio(catchment_filepath: Path, glacier_shape_path: Path):
 
     Args:
         catchment_filepath: Path
+            Path to catchment extent shape file.
         glacier_shape_path: Path
+            Path to glacier extent shape file.
 
     Returns:
         ctm_total_area: float
+            Total catchment area
         non_glaciation_area:
+            Total non-glaciated area within catchment.
         glaciation_area (optional):
+            Total glaciated area within catchment, if any.
 
     """
     ctm_gdf: GeoDataFrame = gpd.read_file(catchment_filepath)
@@ -756,11 +830,12 @@ def area_ratio(catchment_filepath: Path, glacier_shape_path: Path):
 #         return glaciation_ratio, gla_height, non_glaciation_ratio, non_gla_height, glaciacted_centroid, non_glaciated_centroid
 
 
-def weighted_centroid_vector(feature_gdf: GeoDataFrame) -> tuple:
-    """Calculates weighted centroid of a GDF feature
+def weighted_centroid_vector(feature_gdf: GeoDataFrame) -> tuple[float, float]:
+    """Calculates weighted centroid of a GeoDataFrame feature
 
     Args:
-        feature_gdf: The feature whose centroid to calculate.
+        feature_gdf: GeoDataFrame
+            The feature whose centroid to calculate.
 
     Returns:
         A tuple with the X and Y coordinates of the centroid.
@@ -780,6 +855,15 @@ def weighted_centroid_vector(feature_gdf: GeoDataFrame) -> tuple:
 
 
 def weighted_centroid_raster_points(raster_points_gdf: GeoDataFrame) -> tuple:
+    """Calculates weighted centroid for raster
+
+    Args:
+        raster_points_gdf: GeoDataFrame
+            Raster points
+
+    Returns:
+
+    """
     raster_points_gdf_new = raster_points_gdf.to_crs(epsg='32632')
     raster_points_gdf_diss = raster_points_gdf_new.dissolve()
     centroid = raster_points_gdf_diss.centroid[0]
@@ -821,16 +905,17 @@ def weighted_centroid_raster_points(raster_points_gdf: GeoDataFrame) -> tuple:
 
 
 def dem_mean(filepath: Path):
-    """Calculates mean height of a DEM
+    """Calculates mean value of a DEM tif file
 
     Args:
         filepath: Path
-            Path to DEM
+            Path to DEM tif file
 
     Returns:
         mean:
-
+            Mean value of DEM
     """
+
     dem_im = rxr.open_rasterio(filepath, masked=True).squeeze()
     dem_mean_raster = dem_im.mean(dim=["x", "y"], skipna=True).to_numpy()
     mean = dem_mean_raster.tolist()
@@ -838,13 +923,47 @@ def dem_mean(filepath: Path):
 
 
 def dem_mean_rasterio(dem: Union[Dataset, xr.DataArray, list[Dataset]]):
+    """Calculates mean value of a DEM Dataset or DataArray
+
+    Args:
+        dem: Union[xr.Dataset, xr.DataArray, list[Dataset]]
+            DEM from xarray.
+
+    Returns:
+        mean:
+            Mean value of DEM
+    """
+
     dem_mean_raster = dem.mean(dim=["x", "y"], skipna=True).to_numpy()
     mean = dem_mean_raster.tolist()
     return mean
 
 
-def elevation_bands(ctm_ch_id: str, data_dir: Path, catchment_filepath, save_to_tif: bool = False,
+def elevation_bands(ctm_ch_id: str, data_dir: Path, catchment_filepath: Path, save_to_tif: bool = False,
                     glacier_shape_path=None, basic_grid=None, has_glacier: bool = False):
+    """Calculates elevation bands of a catchment and returns the grid file with the elevation bands overlayed.
+
+    Args:
+        ctm_ch_id: str
+            Catchment id.
+        data_dir: Path
+            Data directory.
+        catchment_filepath: Path
+            Catchment extent shape file path.
+        save_to_tif: bool
+            Set True if elevation bands should also be saved to tif files.
+        glacier_shape_path (optional):
+            Path to glacier extent shape file. Leave empty, if no glacier in catchment.
+        basic_grid: GeoDataFrame
+            The grid GeoDataFrame from the netCDF file. Elevation bands will be written to it.
+        has_glacier: bool
+            Set True if catchment has glacier.
+
+    Returns:
+        grid_weights_dgdf: dgpd.GeoDataFrame
+            Grid weights Dask GeoDataFrame with elevation bands.
+
+    """
     rio_non_glacier = rxr.open_rasterio(Path(data_dir, "DEM", "out", f"dem_{ctm_ch_id}.tif"), masked=True,
                                         chunks=True).squeeze()
     if has_glacier:
@@ -871,6 +990,14 @@ def elevation_bands(ctm_ch_id: str, data_dir: Path, catchment_filepath, save_to_
 
 
 def raster_to_polygon(raster_file_path: Path):
+    """
+
+    Args:
+        raster_file_path:
+
+    Returns:
+
+    """
     df = load_dem_tif_to_dataframe(raster_file_path)
     df.dropna(subset=["alti"], inplace=True)
     df['points'] = gpd.points_from_xy(df.x, df.y)
@@ -910,6 +1037,18 @@ def raster_to_polygon(raster_file_path: Path):
 
 
 def rio_elevation_band_dict_to_txt(rio_elevation_band_dict, ctm_id, df_non_glacier, df_glacier):
+    """Writes elevation band data from rasterio to text file.
+
+    Args:
+        rio_elevation_band_dict: dict
+            Contains elevation bands as rasterio rasters.
+        ctm_id: str
+            Catchment id.
+        df_non_glacier: GeoDataFrame
+            Non-glaciated extent.
+        df_glacier: GeoDataFrame
+            Glaciated extent.
+    """
     ratio_dict = {}
     it = rio_elevation_band_dict.items()
     for key, elevation_band in it:
@@ -921,63 +1060,151 @@ def rio_elevation_band_dict_to_txt(rio_elevation_band_dict, ctm_id, df_non_glaci
         f.write(json.dumps(ratio_dict))
 
 
-def elevation_band_dict_to_txt(elevation_band_dict, ctm_id, df_non_glacier, df_glacier):
-    ratio_dict = {}
+def round_up(x: float) -> int:
+    """Rounds up number.
+
+    Args:
+        x: float
+            Number to round up.
+
+    Returns:
+        rounded_up: int
+            Rounded up number.
+    """
+    rounded_up = int(math.ceil(x / 100.0)) * 100
+    return rounded_up
 
 
-def round_up(x):
-    return int(math.ceil(x / 100.0)) * 100
+def round_down(x: float) -> int:
+    """Rounds down number.
+
+    Args:
+        x: float
+            Number to round down.
+
+    Returns:
+        rounded_down: int
+            Rounded down number.
+    """
+
+    rounded_down = int(math.floor(x / 100.0)) * 100
+    return rounded_down
 
 
-def round_down(x):
-    return int(math.floor(x / 100.0)) * 100
+def load_dem_tif_to_dataframe(dem_tif_filepath: Path) -> pd.DataFrame:
+    """Creates DataFrame from raster tif file.
 
+    Args:
+        dem_tif_filepath: Path
+            Path to tif file to convert into dataframe.
 
-def load_dem_tif_to_dataframe(dem_tif_filepath: Path):
+    Returns:
+        dem_df: pd.DataFrame
+            DataFrame with DEM data.
+    """
+
     rio_dem = rxr.open_rasterio(dem_tif_filepath, masked=True).squeeze()
     rio_dem.name = "alti"
-    return rio_dem.to_dataframe().reset_index()
+    dem_df = rio_dem.to_dataframe().reset_index()
+    return dem_df
 
 
-def load_dem_tif_to_dask_dataframe(dem_tif_filepath: Path):
+def load_dem_tif_to_dask_dataframe(dem_tif_filepath: Path) -> dd.DataFrame:
+    """Creates Dask DataFrame from raster tif file.
+
+    Args:
+        dem_tif_filepath: Path
+            Path to tif file to convert into Dask DataFrame.
+
+    Returns:
+        dem_ddf: dd.DataFrame
+            Dask DataFrame with DEM data.
+    """
+
     rio_dem = rxr.open_rasterio(dem_tif_filepath, masked=True, chunks=True).squeeze()
     rio_dem.name = "alti"
-    return rio_dem.to_dask_dataframe()
+    dem_ddf = rio_dem.to_dask_dataframe()
+    return dem_ddf
 
 
-def load_rio_dataset_list_to_dataframe(rio_dataset_list):
-    df_list = []
+def load_rio_dataset_list_to_dataframe(rio_dataset_list) -> list[pd.DataFrame]:
+    """Creates list containing DataFrames, each one of which converted from a rasterio DataSet.
+
+    Args:
+        rio_dataset_list: list
+            List with rasterio DataSets to convert to DataFrames.
+    Returns:
+        df_list: list[pd.DataFrame]
+            List with DataFrames
+    """
+
+    df_list: list[pd.DataFrame] = []
     for idx, i in enumerate(rio_dataset_list):
         i.name = "alti"
         df_list.append(i.to_dataframe().reset_index())
     return df_list
 
 
-def load_rio_dataset_to_dataframe(rio_dataset):
+def load_rio_dataset_to_dataframe(rio_dataset) -> pd.DataFrame:
+    """Convert a single rasterio DataSet to a DataFrame
+
+    Args:
+        rio_dataset:
+            Rasterio DataSet
+    Returns:
+        df: pd.DataFrame
+            Converted DataFrame
+    """
+
     rio_dataset.name = "alti"
-    return rio_dataset.to_dataframe().reset_index()
+    df: pd.DataFrame = rio_dataset.to_dataframe().reset_index()
+    return df
 
 
-def load_rio_dataset_to_dask_dataframe(rio_dataset: xr.DataArray):
+def load_rio_dataset_to_dask_dataframe(rio_dataset: xr.DataArray) -> dd.DataFrame:
+    """Convert a single xarray DataArray to a Dask DataFrame
+
+    Args:
+        rio_dataset: xr.DataArray
+            DataArray to convert.
+    Returns:
+        ddf: dd.DataFrame
+            Converted Dask DataFrame
+    """
     rio_dataset.name = "alti"
-    return rio_dataset.to_dask_dataframe()
+    ddf: dd.DataFrame = rio_dataset.to_dask_dataframe()
+    return ddf
 
 
 def extract_elevation_band_from_rio_dem(dem: xr.DataArray, ctm_ch_id: str, data_dir: Path, catchment_filepath: Path,
                                         save_to_tif: bool = False, glacier_shape_path=None,
                                         basic_grid=None, has_glacier: bool = False) -> \
         tuple[dict[Any, Any], dict, Any]:
-    """
+    """Extracts elevation bands from DataArray and writes them to a grid file.
 
     Args:
-        dem:
-        ctm_ch_id:
-        data_dir:
-        save_to_tif:
+        dem: xr.DataArray
+            DEM elevation data.
+        ctm_ch_id: str
+            Catchment id.
+        data_dir: Path
+            Data directory
+        catchment_filepath: Path
+            Path to catchment extent shape file
+        save_to_tif: bool
+            Set True if elevation bands should be saved to tif files.
+        glacier_shape_path: Path
+            Path to glacier extent shape file
+        basic_grid: gpd.GeoDataFrame
+            Grid to which elevation band data is added.
+        has_glacier: bool
+            Set True if catchment has glaciers
 
     Returns:
-
+        new_grid_dgdf: dgpd.GeoDataFrame
+            Grid Dask GeoDataFrame to which elevation band data has been added.
     """
+
     catchment_extent = gpd.read_file(catchment_filepath)
     dem_clipped_to_ctm = dem.rio.clip(catchment_extent.geometry, crs="epsg:2056")
     lower = round_down(float(dem_clipped_to_ctm.min().compute()))
@@ -1060,7 +1287,19 @@ def crs_old_to_new(lat_old, lon_old, epsg_old: int, epsg_new: int):
     return lat_new, lon_new
 
 
-def create_elevation_band_tif_list(base_path: str, type: str):
+def create_elevation_band_tif_list(base_path: str, type: str) -> list:
+    """Creates list of all elevation band limits from tif files
+
+    Args:
+        base_path: Path
+        type: str
+            Tif file type, e.g. 'aspect', 'slopes', etc.
+
+    Returns:
+        band_lower_list: list
+            Lower limits of elevations bands.
+    """
+
     asp_list = glob.glob(base_path + f'/{type}/dem_{ctm}_*_{type}.tif')
     band_lower_list = []
     for a in asp_list:
@@ -1071,6 +1310,20 @@ def create_elevation_band_tif_list(base_path: str, type: str):
 
 
 def create_elevation_band_tif_list_hbv(data_dir: Path, tif_type: str, ctm_ch_id: str):
+    """Creates list of all elevation band limits from tif files
+
+    Args:
+        data_dir: Path
+            Data directory
+        tif_type: str
+            Tif file type, e.g. 'aspect', 'slopes', etc.
+        ctm_ch_id: str
+            Catchment id.
+
+    Returns:
+        band_lower_list: list
+            Lower limits of elevation bands.
+    """
     asp_list = glob.glob(str(data_dir) + f'/DEM/hbv/{tif_type}/dem_{ctm_ch_id}_*.tif')
     band_lower_list = []
     for a in asp_list:
@@ -1081,11 +1334,31 @@ def create_elevation_band_tif_list_hbv(data_dir: Path, tif_type: str, ctm_ch_id:
 
 
 def get_lower_band_limit_from_filepath(filepath):
+    """Returns lower elevation band limit from a file path.
+
+    Args:
+        filepath: Path
+            Path to elevation band tif file.
+
+    Returns:
+        lower_band_limit: str
+            Lower elevation band limit.
+    """
     lower_band_limit = re.search(r'(\d{4})', re.search(r'(?:_)(\d{4}?)(?:_)', filepath).group()).group()
     return lower_band_limit
 
 
-def add_elevation_to_netcdf(base_path, ctm_ch_id, forcing_type):
+def add_elevation_to_netcdf(base_path: Path, ctm_ch_id: str, forcing_type: str):
+    """Add elevation variable and data to netCDF file.
+
+    Args:
+        base_path: Path
+            Directory where RAVEN folder resides.
+        ctm_ch_id: str
+            Catchment id.
+        forcing_type: str
+            Forcing type.
+    """
     netcdf_filepath = Path(base_path,
                            f"RAVEN/data/MeteoSwiss_gridded_products/{forcing_type}/out/{forcing_type}_198101010000_202012310000_{ctm_ch_id}_clipped.nc")
     infile = Dataset(filename=netcdf_filepath, mode="r+", format="NETCDF4")
@@ -1114,6 +1387,9 @@ def add_elevation_to_netcdf(base_path, ctm_ch_id, forcing_type):
 
 
 def dhm_transform():
+    """Reprojects and slices dem.
+
+    """
     dem_old = rxr.open_rasterio("/media/mainman/Work/RAVEN/data/DEM/shape/ASCII_GRID_1part/dhm25_grid_raster.asc",
                                 masked=True).squeeze()
     dem_new = dem_old.rio.reproject(dst_crs='EPSG:2056', dst_resolution=(1000.0, 1000.0))
@@ -1136,11 +1412,34 @@ def dhm_transform():
     }
     dem_slice = dem_new.rio.slice_xy(minx=2739000, miny=1143000, maxx=2742000, maxy=1146000)
     dem_slice.rio.to_raster("/media/mainman/Work/RAVEN/data/DEM/shape/ASCII_GRID_1part/slice_out.tif")
-    pass
 
 
 def elevation_band_slope_aspect(data_dir: Path, ctm_ch_id: str, band_list, hru_id, hru_info_df, grid: gpd.GeoDataFrame,
                                 grid_weights_df):
+    """Calculates slope and aspect for each elevation band and, if not already existent, creates corresponding tif files.
+
+    Args:
+        data_dir: Path
+            Data directory.
+        ctm_ch_id: str
+            Catchment extent
+        band_list: list
+            Elevation band names.
+        hru_id: list
+            HRU ids.
+        hru_info_df: pd.DataFrame
+            DataFrame with info on all hrus
+        grid: gpd.GeoDataFrame
+            Grid from netCDF file
+        grid_weights_df: pd.DataFrame
+
+    Returns:
+        slope_aspect_info_df: pd.DataFrame
+            Slope and aspect for each elevation band.
+        area_total: float
+            Total catchment area.
+        info: pd.DataFrame
+    """
     if grid.empty:
         grid = gpd.read_file(Path(data_dir,
                                   f"MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/grid_weights_{ctm_ch_id}.shp"))
@@ -1213,6 +1512,22 @@ def elevation_band_slope_aspect(data_dir: Path, ctm_ch_id: str, band_list, hru_i
 
 
 def elevation_band_ratio(data_dir: Path, ctm_ch_id: str, band_list, hru_id, hru_info_df, grid: gpd.GeoDataFrame):
+    """Returns ratio for each elevation band of the total catchment area.
+
+    Args:
+        data_dir: Path
+            Data directory
+        ctm_ch_id: str
+            Catchment id
+        band_list: list
+            Elevation band limits
+        hru_id: list
+            HRU ids
+        hru_info_df: pd.DataFrame
+            Info on each HRU
+        grid: gpd.GeoDataFrame
+            Grid from netCDF file
+    """
     if grid.empty:
         grid = gpd.read_file(Path(data_dir,
                                   f"MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/grid_weights_{ctm_ch_id}.shp"))
@@ -1232,6 +1547,18 @@ def elevation_band_ratio(data_dir: Path, ctm_ch_id: str, band_list, hru_id, hru_
 
 
 def write_hru_info(data_dir, catchment_ch_id, area_total, res):
+    """Writes HRU info for each elevation band into a file to be used in HBV .rvh file.
+
+    Args:
+        data_dir: Path
+            Data directory
+        catchment_ch_id: str
+            Catchment id
+        area_total: float
+            Total area
+        res: pd.DataFrame
+            HRU info for each elevation band.
+    """
     with open(Path(data_dir, f"Catchment/HBV/hrus_{catchment_ch_id}.txt"), "w") as f:
         for hruid in res['hru_id'].unique().tolist():
             hru_ratio = res.grid_weight.loc[res.hru_id == hruid].sum()
@@ -1246,6 +1573,14 @@ def write_hru_info(data_dir, catchment_ch_id, area_total, res):
 
 
 def write_hbv_weights_to_file(grid_weights_file_path, grid_weights_dgdf):
+    """Writes grid weights file for HBV with elevation bands.
+
+    Args:
+        grid_weights_file_path: Path
+            Output file path.
+        grid_weights_dgdf: dgpd.GeoDataFrame
+            Dask GeoDataFrame with grid weight data.
+    """
     hru_id_list = range(1, grid_weights_dgdf.shape[1])
     col_dict = {hru_id: col_name for hru_id, col_name in zip(hru_id_list, (col_name for col_name in
                                                                            grid_weights_dgdf.columns.to_list() if
