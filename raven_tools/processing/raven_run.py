@@ -55,6 +55,24 @@ def get_catchment_info(csv_file):
 
 def create_header(catchment_ch_id: str, author=conf['Author'], creation_date=generation_date, model=model_type,
                   rvx_type: str = "rvi"):
+    """Creates header info for .rvX files
+
+    Args:
+        catchment_ch_id: str
+            Catchment id
+        author: str
+            Author name
+        creation_date: str
+            Date of file generation
+        model: str
+            Model type, e.g. 'GR4J'
+        rvx_type: str
+            .rvX file type
+
+    Returns:
+        header: list
+            List with header info
+    """
     try:
         header_line = "#########################################################################"
         file_type = f":FileType          {rvx_type} ASCII Raven 3.5"
@@ -83,6 +101,10 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str, model_ty
             Start year of forcings data files
         end_year : int
             End year of forcings data files
+        catchment_ch_id: str
+            Catchment id
+        model_type: str
+            Model type, e.g. 'GR4J'
 
     Returns:
         forcing_data: dict[str, list[str]]
@@ -159,20 +181,48 @@ def write_rvt(start_year: int,
               param_or_name: str = "names",
               template_type: str = "Raven",
               data_dir: Path = Path(conf['ProjectDir'], conf['DataDir'])):
-    import shutil
     """Write to Raven .rvt file.
 
     Args:
-        model_sub_dir:
-        project_dir:
         start_year : int
             Start year of forcings data files
         end_year : int
             End year of forcings data files
-        model_dir: Root directory of .rvX files
-        model_type: Name of the .rvt file to be written
+        catchment_ch_id: str
+            Catchment id
+        hru_info: dict
+            Information on the HRU
+        model_dir: str
+            Root directory of .rvX files
+        model_type: str
+            Model type, e.g. 'GR4J'
+        project_dir: str
+            Root directory of project
+        gauge_lat: str
+            Latitude of gauge location
+        gauge_lon: str
+            Longitude of gauge location
+        model_sub_dir: str
+            Directory name where model files are located, e.g. 'model'
+        author: str
+            Author name
+        gauge_short_code: str
+            Short code of gauge
+        station_elevation: str
+            Elevation of gauge
+        catchment_gauge_id: str
+            Gauge id
+        params: dict
+            Default model parameters
+        param_or_name: str
+            Should parameter values or their names be used?
+        template_type: str
+            Either 'Ostrich' or 'Raven'
+        data_dir: Path
+            Data directory path
 
     """
+    import shutil
     if template_type == "Raven":
         param_or_name = "init"
         file_name: str = f"{catchment_ch_id}_{model_type}.rvt"
@@ -250,20 +300,33 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                           param_or_name="names",
                           start_year: int = start_year, end_year: int = end_year,
                           cali_end_year: str = cali_end_year,
-                          glacier_module: bool = False, hrus=None,
+                          glacier_module: bool = False,
                           data_dir=conf['ModelName']) -> dict:
     """Generates template text which can be written to .rvX file.
 
         Args:
+            catchment_ch_id: str
+                Catchment id
+            hru_info: dict
+                HRU information
+            csv_file : str
+                File path of the csv file with catchment information
             model_type : str
                 Name of the model type
-            csv_file : str
-                File path of the csv file
             params : dict
-                Parameters for the model
+                Default model parameters
             param_or_name : str
-                Name of the parameter or parameter value
-
+                Should parameters values or their names be used?
+            start_year: str
+                Simulation start year
+            end_year: str
+                Simulation end year
+            cali_end_year: str
+                Calibration end year
+            glacier_module: bool
+                Set True if catchment contains glaciers
+            data_dir: str
+                Data directory
         Returns:
             rvx_params : dict
                 Dictionary containing the parameters for the .rvX file
@@ -1131,12 +1194,20 @@ def generate_template_ostrich(catchment_ch_id: str,
     Generates template text which can be written to .rvp file
 
     Args:
-        catchment_name : str
-            Catchment name
+        catchment_ch_id: str
+            Catchment id
         model_type : str
-            Name of model type
+            Name of model type, e.g. 'GR4J'
         params : dict
             Dictionary containing parameters values
+        catchment_name : str
+            Catchment name
+        author: str
+            Author name
+        generation_date: str
+            File generation date
+        max_iterations: int
+            Maximum number of Ostrich iteration runs.
 
     Return:
         ost_params[model_type] : dict
@@ -1773,7 +1844,7 @@ def generate_template_ostrich(catchment_ch_id: str,
 def subsection_header(title: str) -> list[str]:
     """Generates subsection header for a .rvX file from given title.
     Args:
-        title (str):
+        title: str
             Title to be used in subsection header.
     Returns:
         subsection_head: list[str]
@@ -1804,23 +1875,44 @@ def write_rvx(catchment_ch_id: str,
               start_year: int = start_year,
               end_year: int = end_year,
               glacier_module: bool = False):
-    import shutil
     """Writes .rvX file(s), either as an Ostrich or Raven template.
     Args:
-        model_dir (str): The directory where the model files are stored. Default is "model_dir".
-        model_type (str): The type of model to use. Default is "model_type".
-        data_dir (str): The directory where the input data is stored. Default is "data_dir".
-        project_dir (Path): The directory of the project. Default is "project_dir".
-        model_sub_dir (str): The sub-directory where the model files are stored. Default is "model_sub_dir".
-        params (dict): A dictionary of model parameters. Default is "default_params".
-        template_type (str): The type of template to use. Default is "Raven".
-        attribute_csv_name (str): The name of the attribute CSV file. Default is "CH-0057_attributes.csv".
-        attribute_csv_dir (str): The directory where the attribute CSV file is stored. Default is "Hydromap Attributes".
-        rvx_type (str): The type of RVX file to create. Default is "rvi".
+        catchment_ch_id: str
+            Catchment id
+        hru_info: dict
+            HRU information
+        model_dir: str
+            The directory where the model files are stored. Default is "model_dir".
+        model_type: str
+            The type of model to use. Default is "model_type".
+        data_dir: str
+            The directory where the input data is stored. Default is "data_dir".
+        project_dir: Path
+            The directory of the project. Default is "project_dir".
+        model_sub_dir: str
+            The sub-directory where the model files are stored. Default is "model_sub_dir".
+        params: dict
+            A dictionary of model parameters. Default is "default_params".
+        template_type: str
+            The type of template to use. Default is "Raven".
+        attribute_csv_name: str
+            The name of the attribute CSV file. Default is "CH-0057_attributes.csv".
+        attribute_csv_dir: str
+            The directory where the attribute CSV file is stored. Default is "Hydromap Attributes".
+        rvx_type: str
+            The type of RVX file to create. Default is "rvi".
+        author: str
+            Author name
+        start_year: str
+            Start year of simulation.
+        end_year: str
+            End year of simulation.
+        glacier_module: bool
+            Set True if catchment contains glacier.
 
-        This function writes the RVX file for the given catchment, model type, and parameters.
     """
 
+    import shutil
     assert model_type in config.variables.supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
                                                             f"supported_models."
     attribute_csv_name = f"{raven_tools.config.variables.catchments[catchment_ch_id]['catchment_id']}_attributes.csv"
@@ -1893,20 +1985,32 @@ def write_ostrich(
         save_best: bool = True,
         ost_raven: bool = True,
         ost_mpi_script: bool = True,
-        max_iterations: int = 500
-):
+        max_iterations: int = 500):
     """Writes Ostrich input files ostIn.txt, save_best.sh and Ost-RAVEN.sh
-    Args:
-        model_dir (str): The directory where the model files are stored. Default is "model_dir".
-        model_type (str): The type of model to use. Default is "model_type".
-        project_dir (Path): The directory of the project. Default is "project_dir".
-        catchment_name (str): The name of the catchment for which the RVX file should be created. Default is "catchment".
-        params (dict): A dictionary of model parameters. Default is "default_params".
-        ost_in (bool): Flag to indicate if Ostrich input file should be created. Default is True.
-        save_best (bool): Flag to indicate if save_best.sh file should be created. Default is True.
-        ost_raven (bool): Flag to indicate if Ost-RAVEN.sh file should be created. Default is True.
 
-    This function writes Ostrich input files ostIn.txt, save_best.sh and Ost-RAVEN.sh
+    Args:
+        model_dir: str
+            The directory where the model files are stored. Default is "model_dir".
+        model_type: str
+            The type of model to use. Default is "model_type".
+        project_dir: Path
+            The directory of the project. Default is "project_dir".
+        catchment_name: str
+            The name of the catchment for which the RVX file should be created. Default is "catchment".
+        catchment_ch_id: str
+            Catchment id
+        params: dict
+            A dictionary of model parameters. Default is "default_params".
+        ost_in: bool
+            Flag to indicate if Ostrich input file should be created. Default is True.
+        save_best: bool
+            Flag to indicate if save_best.sh file should be created. Default is True.
+        ost_raven: bool
+            Flag to indicate if Ost-RAVEN.sh file should be created. Default is True.
+        ost_mpi_script: bool
+            Flag to indicate if Ostrich_MPI.sh file should be created.
+        max_iterations: int
+            Maximum number of Ostrich iterations.
     """
     assert model_type in config.variables.supported_models, f"Got model type: {model_type}, which is not supported, check variable \"" \
                                                             f"supported_models."
