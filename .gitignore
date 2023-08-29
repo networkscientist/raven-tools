@@ -77,7 +77,7 @@ instance/
 .scrapy
 
 # Sphinx documentation builds
-docs/build*/
+docs/build$
 
 # PyBuilder
 <<<<<<< HEAD
