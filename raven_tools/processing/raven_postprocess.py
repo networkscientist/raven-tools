@@ -29,11 +29,17 @@ file_list = []
 # other = pd.read_csv(Path(model_path, "CH-0053", model_name, f"OstNonDomSolutions0.txt"), sep="\s+", skiprows=1)
 
 
-def pareto(model_name: str):
+def pareto(model_type: str):
+    """Analyse Non-Dominated pareto solutions from a multi-threaded Ostrich run.
+
+    Args:
+        model_type: str
+            Model type, e.g. 'GR4J'
+    """
     cols = ["KGE_NP", "PBIAS", "RMSE", "VE"]
     df = pd.DataFrame(columns=cols)
     for sol in range(0, 8):
-        ot = pd.read_csv(Path(model_path, "CH-0053", model_name, f"OstNonDomSolutions{sol}.txt"), sep="\s+",
+        ot = pd.read_csv(Path(model_path, "CH-0053", model_type, f"OstNonDomSolutions{sol}.txt"), sep="\s+",
                          skiprows=1)
         df = pd.concat([df, ot])
     df = df[cols]
@@ -45,6 +51,11 @@ def pareto(model_name: str):
 
 
 def pareto2(model_name: str):
+    """Analyse performance metrics from a multi-threaded Ostrich run.
+
+    Args:
+        model_name:
+    """
     cols = ["KGE_NP", "PBIAS", "RMSE", "VE"]
     df = pd.DataFrame(columns=cols)
     for sol in range(0, 8):
@@ -57,6 +68,10 @@ def pareto2(model_name: str):
 
 
 def ani_gr4J():
+    """Shows a plot with performance metrics for a running, multi-threaded Ostrich run, which auto-updates
+
+    Start the Ostrich run, then use this function the get auto-updated plot of the performance metrics.
+    """
     model_name = "GR4J"
     fig = plt.figure()
     ax1 = fig.add_subplot(1, 1, 1)
@@ -87,11 +102,17 @@ def ani_gr4J():
 
 
 def perf_diag_across_ctms(model_type: str):
+    """Compare performance metrics for multiple catchments
+
+    Args:
+        model_type: str
+            Model type, e.g. 'GR4J'.
+    """
     df_names = {'cali_df': 'cali', 'vali_df': 'vali'}
     df_list = []
     df_out = pd.DataFrame()
     for df, df_str in df_names.items():
-        df_gen = df_diag_generator(df, model_type, type=df_str)
+        df_gen = df_diag_generator(df, model_type, cali_or_vali=df_str)
         df_out = pd.concat([df_out, df_gen])
         df_list.append(df_out)
     new_cols_clean = [clean_text(f"CH-", tx) for tx in df_out.columns.tolist()]
@@ -145,18 +166,33 @@ def perf_diag_across_ctms(model_type: str):
     # plt.savefig(f"/home/mainman/Documents/Studium/UniBe/Master's Thesis/data/figures/{model_name}.png")
 
 
-def df_diag_generator(df_name, model_name, type):
+def df_diag_generator(df_name, model_type, cali_or_vali: str):
+    """Reads performance metrics from CSV file into DataFrame
+
+    Args:
+        df_name:
+            Name for DataFrame to use
+        model_type: str
+            Model type, e.g. 'GR4J'.
+        cali_or_vali: str
+            Calibration or Validation - 'cali' or 'vali'
+
+    Returns:
+        df: pd.DataFrame
+            Dataframe with performance metrics.
+
+    """
     df = pd.DataFrame(columns=perf_metrics)
     df.name = df_name
-    if type == "cali":
+    if cali_or_vali == "cali":
         cali_vali = 'HYDROGRAPH_CALIBRATION'
         cali_vali_col = 'cali'
-    if type == "vali":
+    if cali_or_vali == "vali":
         cali_vali = 'HYDROGRAPH_VALIDATION'
         cali_vali_col = 'vali'
     for c in catchments_by_id:
-        file_path = Path(model_path, c, model_name, "processor_0", "model_best",
-                         f"{c}_{model_name}_Diagnostics.csv")
+        file_path = Path(model_path, c, model_type, "processor_0", "model_best",
+                         f"{c}_{model_type}_Diagnostics.csv")
         csv_pd = pd.read_csv(open(file_path), sep=",")
         d = csv_pd.loc[csv_pd['Run'] == cali_vali, perf_metrics]
         # vali = csv_pd.loc[csv_pd['Run'] == 'HYDROGRAPH_VALIDATION', perf_metrics]
@@ -173,14 +209,28 @@ def df_diag_generator(df_name, model_name, type):
     return df
 
 
-def df_sol_generator(ctm, model_type):
+def df_sol_generator(ctm_ch_id: str, model_type: str):
+    """Loads solutions from OstModel files and returns them in a single DataFrame.
+
+    Args:
+        ctm_ch_id: str
+            Catchment id
+        model_type: str
+            Model type, e.g. 'GR4J'
+
+    Returns:
+        df: pd.DataFrame
+            Combined solutions.
+
+    """
+
     cols = ["Run", "KGE_NP_CALI", "PBIAS_CALI", "RMSE_CALI", "VE_CALI"]
     #    cols = ["Run", "KGE_NP", "PBIAS", "RMSE", "VE"]
     df = pd.DataFrame(columns=cols)
     #    for sol in range(0, 100):
     #        ot = pd.read_csv(Path(model_path, ctm, model_type, f"OstModel{sol}.txt"), sep="\s+", skiprows=0)
     #        df = pd.concat([df, ot])
-    df = ostmodel_loader(model_path, ctm, model_type)
+    df = ostmodel_loader(model_path, ctm_ch_id, model_type)
     df = df[cols].sort_values(by=cols[1])
     df.index = np.arange(1, len(df) + 1)
     run = df.index.values
@@ -188,18 +238,46 @@ def df_sol_generator(ctm, model_type):
     return df
 
 
-def ostmodel_loader(model_path, ctm, model_type):
+def ostmodel_loader(model_path: str, ctm_ch_id: str, model_type: str):
+    """Loads solutions from multi-threaded Ostrich OstModel files into single DataFrame.
+
+    Args:
+        model_path: str
+            Path to model files
+        ctm_ch_id: str
+            Catchment id
+        model_type: str
+            Model type, e.g. 'GR4'
+
+    Returns:
+        df: pd.DataFrame
+            DataFrame with OstModel outputs
+
+    """
     df = pd.concat([pd.read_csv(f, sep="\s+", skiprows=0) for f in
-                    glob.glob(model_path + "/" + ctm + "/" + model_type + "/OstModel*.txt")])
+                    glob.glob(model_path + "/" + ctm_ch_id + "/" + model_type + "/OstModel*.txt")])
     return df
 
 
-def df_factors_generator(ctm, model_type):
+def df_factors_generator(ctm_ch_id: str, model_type: str):
+    """Loads performance metrics from OstModel files and returns them in a single DataFrame.
+
+    Args:
+        ctm_ch_id: str
+            Catchment id.
+        model_type: str
+            Model type, e.g. 'GR4J'.
+
+    Returns:
+        df: pd.DataFrame
+            Performance metrics combined in a single DataFrame.
+
+    """
     cols = ["Run", "obj.function", "KGE_NP_CALI", "PBIAS_CALI", "RMSE_CALI", "VE_CALI", "KGE_NP_VALI", "PBIAS_VALI",
             "RMSE_VALI", "VE_VALI"]
     df = pd.DataFrame(columns=cols)
     new_cols = []
-    df = ostmodel_loader(model_path, ctm, model_type)
+    df = ostmodel_loader(model_path, ctm_ch_id, model_type)
     for col in df.columns.tolist():
         if col in cols:
             pass
@@ -213,12 +291,27 @@ def df_factors_generator(ctm, model_type):
 
 
 def clean_text(rgx_patt, text):
+    """Cleans text
+
+    Args:
+        rgx_patt:
+        text:
+
+    Returns:
+
+    """
     new_text = text
     new_text = re.sub(rgx_patt, '', new_text)
     return new_text
 
 
 def perf_metrics_chart(model_type: str):
+    """Creates plots with performance metrics evolving over the Ostrich iteration runs and saves it to file.
+
+    Args:
+        model_type: str
+            Model type, e.g. 'GR4J'.
+    """
     with plt.ioff():
         xlim_left = 0
         xlim_right = 5001
@@ -261,13 +354,32 @@ def perf_metrics_chart(model_type: str):
                 f"{model_path}/figures/perf_{model_type}_{c}_{xlim_right}_cali.png")
 
 
-def bounds_reader(model_type):
+def bounds_reader(model_type: str):
+    """Reads upper and lower bounds of default parameters values from config file.
+
+    Args:
+        model_type: str
+            Model type, e.g. 'GR4J'
+
+    Returns:
+        upper: list
+            List with upper limits.
+        lower: list
+            List with lower limits.
+
+    """
     upper = list(var.default_params[f"{model_type}"]["upper"].values())
     lower = list(var.default_params[f"{model_type}"]["lower"].values())
     return upper, lower
 
 
-def model_factors_chart(model_type):
+def model_factors_chart(model_type: str):
+    """Creates plots for each model type that show performance metrics and save to files.
+
+    Args:
+        model_type: str
+            Model type, e.g. 'GR4J'
+    """
     # with plt.ioff():
     xlim_left = 0
     xlim_right = 400
@@ -355,6 +467,9 @@ def model_factors_chart(model_type):
 
 
 def hydrograph():
+    """Plot the hydrograph generated in a RAVEN run.
+
+    """
     hydro = pd.read_csv(Path(model_path, "CH-0053/HBV/processor_0/model/output/CH-0053_HBV_Hydrographs.csv", sep=","))
     hydro['date'] = pd.to_datetime(hydro['date'], format='%Y-%m-%d')
     hydro.set_index('date', inplace=True)
