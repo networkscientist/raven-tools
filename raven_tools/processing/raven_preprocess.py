@@ -844,24 +844,26 @@ def dem_mean_rasterio(dem: Union[Dataset, xr.DataArray, list[Dataset]]):
 
 
 def elevation_bands(ctm_ch_id: str, data_dir: Path, catchment_filepath, save_to_tif: bool = False,
-                    glacier_shape_path=None, basic_grid=None):
+                    glacier_shape_path=None, basic_grid=None, has_glacier: bool = False):
     rio_non_glacier = rxr.open_rasterio(Path(data_dir, "DEM", "out", f"dem_{ctm_ch_id}.tif"), masked=True,
                                         chunks=True).squeeze()
-    if isinstance(glacier_shape_path, Path):
+    if has_glacier:
         grid_weights_dgdf = extract_elevation_band_from_rio_dem(dem=rio_non_glacier,
                                                                 ctm_ch_id=ctm_ch_id,
                                                                 data_dir=data_dir,
                                                                 catchment_filepath=catchment_filepath,
                                                                 save_to_tif=save_to_tif,
                                                                 glacier_shape_path=glacier_shape_path,
-                                                                basic_grid=basic_grid)
+                                                                basic_grid=basic_grid,
+                                                                has_glacier=has_glacier)
     else:
         grid_weights_dgdf = extract_elevation_band_from_rio_dem(dem=rio_non_glacier,
                                                                 ctm_ch_id=ctm_ch_id,
                                                                 data_dir=data_dir,
                                                                 catchment_filepath=catchment_filepath,
                                                                 save_to_tif=save_to_tif,
-                                                                basic_grid=basic_grid)
+                                                                basic_grid=basic_grid,
+                                                                has_glacier=has_glacier)
     # with open(Path(data_dir, f"DEM/hbv/non_glacier/area_ratios_{ctm_ch_id}.txt"), 'w') as f:
     #     for key, value in rio_elevation_band_dict.items():
     #         f.write(f"{key}:{value}\n")
@@ -963,7 +965,7 @@ def load_rio_dataset_to_dask_dataframe(rio_dataset: xr.DataArray):
 
 def extract_elevation_band_from_rio_dem(dem: xr.DataArray, ctm_ch_id: str, data_dir: Path, catchment_filepath: Path,
                                         save_to_tif: bool = False, glacier_shape_path=None,
-                                        basic_grid=None) -> \
+                                        basic_grid=None, has_glacier: bool = False) -> \
         tuple[dict[Any, Any], dict, Any]:
     """
 
@@ -982,7 +984,7 @@ def extract_elevation_band_from_rio_dem(dem: xr.DataArray, ctm_ch_id: str, data_
     upper = round_up(float(dem_clipped_to_ctm.max().compute()))
     elevation_band_limit_list = list(range(lower, upper, 100))
     basic_grid_dgdf = dgpd.from_geopandas(basic_grid, npartitions=2)
-    if isinstance(glacier_shape_path, Path):
+    if has_glacier:
         gla_extent, non_gla_extent = hru_extent_from_shp(ctm_shp=catchment_filepath,
                                                          hru_shp=glacier_shape_path)
         ctm_without_glacier_extent = create_dask_overlay(underlay=catchment_extent, overlay=gla_extent,

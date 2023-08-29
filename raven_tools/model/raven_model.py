@@ -785,7 +785,8 @@ class RavenModel:
                           gauge_short_code=self.gauge_short_code, start_date=f"{self.start_year}-01-01",
                           end_date=f"{self.end_year + 1}-01-01")
 
-    def create_grid_weights(self, read_from_file: False, forcing_name="RhiresD_v2.0_swiss.lv95"):
+    def create_grid_weights(self, read_from_file: False, forcing_name="RhiresD_v2.0_swiss.lv95",
+                            save_to_tif: bool = False):
         global area_ratios
         hru_info = pd.read_csv(Path(self.data_dir, "Catchment/hru_info.csv"), sep=",", na_values='-')
         has_glacier = False
@@ -827,14 +828,16 @@ class RavenModel:
                     grid_weights_dgdf = rpe.elevation_bands(ctm_ch_id=self.catchment_ch_id,
                                                             data_dir=self.data_dir,
                                                             catchment_filepath=catchment_filepath,
-                                                            save_to_tif=False,
+                                                            save_to_tif=save_to_tif,
                                                             glacier_shape_path=glacier_shape_path,
-                                                            basic_grid=basic_grid)
+                                                            basic_grid=basic_grid,
+                                                            has_glacier=True)
                 if not has_glacier:
                     grid_weights_dgdf = rpe.elevation_bands(ctm_ch_id=self.catchment_ch_id,
                                                             data_dir=self.data_dir,
                                                             catchment_filepath=catchment_filepath,
-                                                            save_to_tif=False, basic_grid=basic_grid)
+                                                            save_to_tif=save_to_tif, basic_grid=basic_grid,
+                                                            has_glacier=False)
                 # rpe.dict_to_txt(dict=area_ratios, ctm_ch_id=self.catchment_ch_id, data_dir=self.data_dir)
 
                 # band_list = rpe.create_elevation_band_tif_list_hbv(self.data_dir, 'non_glacier',
