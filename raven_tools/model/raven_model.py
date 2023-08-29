@@ -8,7 +8,6 @@ import shutil
 from pathlib import Path
 
 import dask_geopandas
-import geopandas as gpd
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -19,7 +18,6 @@ from raven_tools.processing import raven_preprocess as rpe
 from pyproj import Transformer
 import csv
 import subprocess
-import rioxarray as rxr
 import math
 from typing import List
 
@@ -576,7 +574,24 @@ class RavenModel:
         self._ost_exe_path = value
 
     def create_symlinks(self, forcings: bool = True, discharge: bool = True, raven_executable: bool = True,
-                        ostrich_executable: bool = True, rvx_files: bool = True, raven_diag: bool = True, delete=False):
+                        ostrich_executable: bool = True, rvx_files: bool = True, delete=False):
+        """Creates symlinks to various files and folders.
+
+        Args:
+            forcings: bool
+                Set True to symlink forcings folders.
+            discharge: bool
+                Set True to symlink discharge file.
+            raven_executable: bool
+                Set True to symlink Raven.exe file
+            ostrich_executable: bool
+                Set True to symlink Ostrich.exe file
+            rvx_files: bool
+                Set True to symlink .rvX files.
+            delete: bool
+                Set True to delete old symlinks before creation.
+        """
+
         from raven_tools.processing import raven_diag
         if forcings:
             src = ["RhiresD_v2.0_swiss.lv95",
@@ -661,11 +676,15 @@ class RavenModel:
                   glacier_module: bool = False):
         """Write .rvX file for Raven and/or Ostrich
 
-        :param rvx_type: Suffix of the Raven file to be written (rvi,rvp,rvc,rvt or rvh)
-        :param ostrich_template: Set True if Ostrich template should be generated.
-        :param raven_template: Set True if Raven template should be generated.
-        :type raven_template: bool
-        :type ostrich_template: bool
+        Args:
+            ostrich_template: bool
+                Set True to write Ostrich template .tpl files
+            raven_template: bool
+                Set True to write Raven .rvX files
+            rvx_type: str
+                Choose the .rvX file type to write
+            glacier_module: bool
+                Set True if catchment has glaciers
 
         """
         hru_info_dict = {}
@@ -710,9 +729,17 @@ class RavenModel:
                   max_iterations: int = 500):
         """Write Ostrich files ostIn.txt, save_best.sh and ost-raven.sh
 
-        :param ost_raven:
-        :param ost_in:
-        :param save_best:
+        Args:
+            ost_in: bool
+                Set True to write ost_in.txt file
+            save_best: bool
+                Set True to write save_best.sh file
+            ost_raven: bool
+                Set True to write Ost_Raven.sh file
+            ost_mpi_script: bool
+                Set True to write Ostrich_MPI.sh file
+            max_iterations: int
+                Maximum number of Ostrich iteration runs.
         """
 
         logger.debug("Variable raven_template is True...")
@@ -730,6 +757,10 @@ class RavenModel:
     def clip_netcdf(self, forcing_prefix="TabsD_v2.0_swiss.lv95"):
         """Create the netCDF files for the chosen catchment
 
+        Args:
+            forcing_prefix: str
+                Prefix to forcing type, e.g. 'TabsD_v2.0_swiss.lv95'
+
         """
         extent_file_path = Path(self.data_dir, "Catchment", f"{self.catchment_ch_id}.shp")
         netcdf_file_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_prefix, "out",
@@ -741,17 +772,34 @@ class RavenModel:
             logger.exception(f"Error creating netCDF file {netcdf_file_path}")
 
     def merge_netcdf(self, forcing_prefix):
+        """Merges netCDF files of a forcing type in a folder into one file.
+
+        Args:
+            forcing_prefix: str
+                Prefix to forcing type, e.g. 'TabsD_v2.0_swiss.lv95'
+        """
         forcing_dir: Path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_prefix, "original_files")
         rpe.nc_merge(start_year=self.start_year, end_year=self.end_year, forcing_dir=forcing_dir,
                      forcing_prefix=forcing_prefix)
 
     def create_bbox(self):
+        """Create bounding box for catchment extent.
+
+        """
         rpe.create_bbox(extent_shape_file_path=Path(self.data_dir, "Catchment", "reproject_2056",
                                                     f"{self.catchment_ch_id}.shp"),
                         bb_file_path=Path(self.data_dir, "Catchment", f"{self.catchment_ch_id}_bbox.shp"),
                         create_bbox_shp=True)
 
     def write_rvt(self, ostrich_template: bool = True, raven_template: bool = True):
+        """Write Raven .rvt file
+
+        Args:
+            ostrich_template: bool
+                Set True to write Ostrich template .tpl file.
+            raven_template: bool
+                Set True to write Raven file.
+        """
         hru_info_dict = {}
         try:
             hru_info_df = pd.read_csv(Path(self.data_dir, "Catchment", "hru_info.csv"), na_values='-')
@@ -781,12 +829,25 @@ class RavenModel:
             write_rvt_partial(template_type="Raven")
 
     def camels_to_rvt(self):
+        """Convert camels discharge files to .rvt
+
+        """
         rpe.camels_to_rvt(data_dir=self.data_dir, gauge_id=self.gauge_id,
                           gauge_short_code=self.gauge_short_code, start_date=f"{self.start_year}-01-01",
                           end_date=f"{self.end_year + 1}-01-01")
 
     def create_grid_weights(self, read_from_file: False, forcing_name="RhiresD_v2.0_swiss.lv95",
                             save_to_tif: bool = False):
+        """Create grid weights and write to Raven compatible file.
+
+        Args:
+            read_from_file: bool
+                Set True if grid weights have already been calculated and written to file
+            forcing_name: str
+                Forcing type prefix
+            save_to_tif: bool
+                Set True to also write tif file with elevation bands.
+        """
         global area_ratios
         hru_info = pd.read_csv(Path(self.data_dir, "Catchment/hru_info.csv"), sep=",", na_values='-')
         has_glacier = False
@@ -863,114 +924,139 @@ class RavenModel:
             if not self.model_type == "HBV":
                 pass
 
-
-        # -------------------------------------------------------------------------------------------------------------
-        # All other models
-        # -------------------------------------------------------------------------------------------------------------
-        else:
-            if forcing_name == "RhiresD_v2.0_swiss.lv95":
-                forcing_suffix = "ch01h.swiss.lv95"
-            else:
-                forcing_suffix = "ch01r.swiss.lv95"
-            non_gla_out_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "out",
-                                    f"grid_weights_{self.catchment_ch_id}")
-            basic_grid = rpe.create_grid(netcdf_filepath=netcdf_file_path, bounding_box_filename=self.bbox_filepath,
-                                         out_path=non_gla_out_path,
-                                         forcing_name=forcing_name, start_year=self.start_year).drop(
-                columns=['row', 'col', 'area'])
-            # ---------------------------------------------------------------------------------------------------------
-            # Non-Glacier Part
-            # ---------------------------------------------------------------------------------------------------------
-            if math.isnan(hru_info[hru_info['Ctm'] == self.catchment_ch_id]['GlaArea'].iloc[0]):
-                hru_short_name: str = "non_gla"
-                non_gla_extent = gpd.read_file(catchment_filepath).drop(
-                    columns=['ezgnr', 'ar_1903', 'watr_nm', 'place'])
-                cols = ['id', 'geometry']
-                combi_grid = rpe.calc_hru_weight(basic_grid=basic_grid, hru_extent_gdf=non_gla_extent,
-                                                 hru_short_name=hru_short_name).drop(columns=cols)
-            # ---------------------------------------------------------------------------------------------------------
-            # Glacier part
-            # ---------------------------------------------------------------------------------------------------------
-            else:
-                glacier_shape_path = Path(self.data_dir, "glaciers", "SGI_2016_glaciers.shp")
-                gla_extent, non_gla_extent = rpe.hru_extent_from_shp(ctm_shp=catchment_filepath,
-                                                                     hru_shp=glacier_shape_path)
-                gla_extent = gla_extent.dissolve()
-                cols = ['id', 'geometry']
-                non_gla_grid = rpe.calc_hru_weight(basic_grid=basic_grid, hru_extent_gdf=non_gla_extent,
-                                                   hru_short_name=non_gla_short_name).drop(columns=cols)
-                cols = ['id', 'geometry', 'polygons']
-                gla_grid = rpe.calc_hru_weight(basic_grid=basic_grid, hru_extent_gdf=gla_extent,
-                                               hru_short_name=gla_short_name).drop(columns=cols)
-                combi_grid: gpd.GeoDataFrame = non_gla_grid.join(other=gla_grid, rsuffix='_g', on='cell_id')
-            rpe.write_grid_data_to_file(gdf=combi_grid, grid_weights_file_path=grid_weights_file_path)
+            # -------------------------------------------------------------------------------------------------------------
+            # All other models
+            # -------------------------------------------------------------------------------------------------------------
+            # else:
+            #     if forcing_name == "RhiresD_v2.0_swiss.lv95":
+            #         forcing_suffix = "ch01h.swiss.lv95"
+            #     else:
+            #         forcing_suffix = "ch01r.swiss.lv95"
+            #     non_gla_out_path = Path(self.data_dir, "MeteoSwiss_gridded_products", forcing_name, "out",
+            #                             f"grid_weights_{self.catchment_ch_id}")
+            #     basic_grid = rpe.create_grid(netcdf_filepath=netcdf_file_path, bounding_box_filename=self.bbox_filepath,
+            #                                  out_path=non_gla_out_path,
+            #                                  forcing_name=forcing_name, start_year=self.start_year).drop(
+            #         columns=['row', 'col', 'area'])
+            #     # ---------------------------------------------------------------------------------------------------------
+            #     # Non-Glacier Part
+            #     # ---------------------------------------------------------------------------------------------------------
+            #     if math.isnan(hru_info[hru_info['Ctm'] == self.catchment_ch_id]['GlaArea'].iloc[0]):
+            #         hru_short_name: str = "non_gla"
+            #         non_gla_extent = gpd.read_file(catchment_filepath).drop(
+            #             columns=['ezgnr', 'ar_1903', 'watr_nm', 'place'])
+            #         cols = ['id', 'geometry']
+            #         combi_grid = rpe.calc_hru_weight(basic_grid=basic_grid, hru_extent_gdf=non_gla_extent,
+            #                                          hru_short_name=hru_short_name).drop(columns=cols)
+            #     # ---------------------------------------------------------------------------------------------------------
+            #     # Glacier part
+            #     # ---------------------------------------------------------------------------------------------------------
+            #     else:
+            #         glacier_shape_path = Path(self.data_dir, "glaciers", "SGI_2016_glaciers.shp")
+            #         gla_extent, non_gla_extent = rpe.hru_extent_from_shp(ctm_shp=catchment_filepath,
+            #                                                              hru_shp=glacier_shape_path)
+            #         gla_extent = gla_extent.dissolve()
+            #         cols = ['id', 'geometry']
+            #         non_gla_grid = rpe.calc_hru_weight(basic_grid=basic_grid, hru_extent_gdf=non_gla_extent,
+            #                                            hru_short_name=non_gla_short_name).drop(columns=cols)
+            #         cols = ['id', 'geometry', 'polygons']
+            #         gla_grid = rpe.calc_hru_weight(basic_grid=basic_grid, hru_extent_gdf=gla_extent,
+            #                                        hru_short_name=gla_short_name).drop(columns=cols)
+            #         combi_grid: gpd.GeoDataFrame = non_gla_grid.join(other=gla_grid, rsuffix='_g', on='cell_id')
+            #     rpe.write_grid_data_to_file(gdf=combi_grid, grid_weights_file_path=grid_weights_file_path)
             logger.debug(f"grid weights written to file {grid_weights_file_path}")
 
-    def method_name(self, band_list, hru_id, res):
-        for (bd, hru) in zip(band_list, hru_id):
-            grid = gpd.read_file(Path(self.data_dir,
-                                      f"MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/grid_weights_{self.catchment_ch_id}.shp"))
-            dem = rxr.open_rasterio(filename=Path(self.data_dir,
-                                                  f"DEM/hbv/non_glacier/dem_{self.catchment_ch_id}_{bd}_{str(int(bd) + 99)}.tif"),
-                                    masked=True).squeeze()
-            dem_df = dem.to_dataframe(name='alti').dropna()
-            dem_gdf = gpd.GeoDataFrame(dem_df, crs='epsg:2056',
-                                       geometry=gpd.points_from_xy(dem_df.reset_index().x, dem_df.reset_index().y))
-            dem_gdf.reset_index(inplace=True)
-            centroid = dem_gdf.dissolve().centroid
-            ov = rpe.create_overlay(grd=grid, ctm_gdf=dem_gdf)
-            cou = ov.value_counts('cell_id')
-            cou = cou.to_frame().reset_index()
-            dem_aspect = rxr.open_rasterio(
-                filename=Path(self.data_dir,
-                              f"DEM/hbv/aspects/dem_{self.catchment_ch_id}_{bd}_{str(int(bd) + 99)}_aspects.tif"),
-                masked=True).squeeze()
-            dem_slope = rxr.open_rasterio(
-                filename=Path(self.data_dir,
-                              f"DEM/hbv/slopes/dem_{self.catchment_ch_id}_{bd}_{str(int(bd) + 99)}_slopes.tif"),
-                masked=True).squeeze()
-            cou['Ctm'] = self.catchment_ch_id
-            cou['Band'] = bd
-            cou['hru_id'] = hru
-            cou['aspect_mean'] = rpe.dem_mean_rasterio(dem_aspect)
-            cou['slope_mean'] = rpe.dem_mean_rasterio(dem_slope)
-            cou['alti_mean'] = rpe.dem_mean_rasterio(dem)
-            cou['centroid_lat'], cou['centroid_lon'] = rpe.weighted_centroid_raster_points(
-                raster_points_gdf=dem_gdf)
-            lat, lon = rpe.crs_old_to_new(lat_old=dem_gdf.to_crs(epsg=32632).y.mean(),
-                                          lon_old=dem_gdf.to_crs(epsg=32632).y.mean(), epsg_old=32632,
-                                          epsg_new=4326)
-            res = pd.concat([res, cou], ignore_index=True)
+    # def method_name(self, band_list, hru_id, res):
+    #     for (bd, hru) in zip(band_list, hru_id):
+    #         grid = gpd.read_file(Path(self.data_dir,
+    #                                   f"MeteoSwiss_gridded_products/RhiresD_v2.0_swiss.lv95/out/grid_weights_{self.catchment_ch_id}.shp"))
+    #         dem = rxr.open_rasterio(filename=Path(self.data_dir,
+    #                                               f"DEM/hbv/non_glacier/dem_{self.catchment_ch_id}_{bd}_{str(int(bd) + 99)}.tif"),
+    #                                 masked=True).squeeze()
+    #         dem_df = dem.to_dataframe(name='alti').dropna()
+    #         dem_gdf = gpd.GeoDataFrame(dem_df, crs='epsg:2056',
+    #                                    geometry=gpd.points_from_xy(dem_df.reset_index().x, dem_df.reset_index().y))
+    #         dem_gdf.reset_index(inplace=True)
+    #         centroid = dem_gdf.dissolve().centroid
+    #         ov = rpe.create_overlay(grd=grid, ctm_gdf=dem_gdf)
+    #         cou = ov.value_counts('cell_id')
+    #         cou = cou.to_frame().reset_index()
+    #         dem_aspect = rxr.open_rasterio(
+    #             filename=Path(self.data_dir,
+    #                           f"DEM/hbv/aspects/dem_{self.catchment_ch_id}_{bd}_{str(int(bd) + 99)}_aspects.tif"),
+    #             masked=True).squeeze()
+    #         dem_slope = rxr.open_rasterio(
+    #             filename=Path(self.data_dir,
+    #                           f"DEM/hbv/slopes/dem_{self.catchment_ch_id}_{bd}_{str(int(bd) + 99)}_slopes.tif"),
+    #             masked=True).squeeze()
+    #         cou['Ctm'] = self.catchment_ch_id
+    #         cou['Band'] = bd
+    #         cou['hru_id'] = hru
+    #         cou['aspect_mean'] = rpe.dem_mean_rasterio(dem_aspect)
+    #         cou['slope_mean'] = rpe.dem_mean_rasterio(dem_slope)
+    #         cou['alti_mean'] = rpe.dem_mean_rasterio(dem)
+    #         cou['centroid_lat'], cou['centroid_lon'] = rpe.weighted_centroid_raster_points(
+    #             raster_points_gdf=dem_gdf)
+    #         lat, lon = rpe.crs_old_to_new(lat_old=dem_gdf.to_crs(epsg=32632).y.mean(),
+    #                                       lon_old=dem_gdf.to_crs(epsg=32632).y.mean(), epsg_old=32632,
+    #                                       epsg_new=4326)
+    #         res = pd.concat([res, cou], ignore_index=True)
+    #
+    #         # res = ov.value_counts('cell_id')
+    #     return res
 
-            # res = ov.value_counts('cell_id')
-        return res
-
-    def glacier_ratio(self, dem_tif_filenames):
-        catchment_filepath: Path = Path(self.data_dir, "Catchment", "reproject_2056",
-                                        f"{config.variables.catchments[self.catchment_ch_id]['catchment_id']}.shp")
-        glacier_extent_filepath: Path = Path(self.data_dir, "glaciers", "SGI_2016_glaciers.shp")
-        # glaciation_ratio_height = {
-        #     "glaciation_ratio":
-        #         [],
-        #     "glaciation_height":
-        #         []
-        # }
-        dem_filepaths = [Path(self.data_dir, "DEM", f) for f in dem_tif_filenames]
-        try:
-            glaciation_ratio, glacier_height, non_glaciation_ratio, non_gla_height, glaciated_centroid, non_glaciated_centroid = rpe.glaciation_ratio_height(
-                catchment_filepath=catchment_filepath,
-                glacier_shape_path=glacier_extent_filepath,
-                dem_filepaths=dem_filepaths,
-                dem_out_path=Path(self.data_dir, "DEM"),
-                ctm_ch_id=self.catchment_ch_id)
-            # glaciation_ratio_height["glaciation_ratio"].append(glaciation_ratio)
-            # glaciation_ratio_height["glaciation_height"].append(glacier_height)
-            return glaciation_ratio, glacier_height, non_glaciation_ratio, non_gla_height, glaciated_centroid, non_glaciated_centroid
-        except ValueError:
-            logger.exception("Error clipping DEM")
-            pass
+    # def glacier_ratio(self, dem_tif_filenames):
+    #     """Calculate the glaciation ratio, glaciated part height and centroid of a catchment.
+    #
+    #     Args:
+    #         dem_tif_filenames:
+    #             Tif files with DEM info
+    #
+    #     Returns:
+    #         glaciation_ratio
+    #         glacier_height
+    #         non_glaciation_ratio
+    #         non_gla_height
+    #         glaciated_centroid
+    #         non_glaciated_centroid
+    #
+    #     """
+    #     catchment_filepath: Path = Path(self.data_dir, "Catchment", "reproject_2056",
+    #                                     f"{config.variables.catchments[self.catchment_ch_id]['catchment_id']}.shp")
+    #     glacier_extent_filepath: Path = Path(self.data_dir, "glaciers", "SGI_2016_glaciers.shp")
+    #     # glaciation_ratio_height = {
+    #     #     "glaciation_ratio":
+    #     #         [],
+    #     #     "glaciation_height":
+    #     #         []
+    #     # }
+    #     dem_filepaths = [Path(self.data_dir, "DEM", f) for f in dem_tif_filenames]
+    #     try:
+    #         glaciation_ratio, glacier_height, non_glaciation_ratio, non_gla_height, glaciated_centroid, non_glaciated_centroid = rpe.glaciation_ratio_height(
+    #             catchment_filepath=catchment_filepath,
+    #             glacier_shape_path=glacier_extent_filepath,
+    #             dem_filepaths=dem_filepaths,
+    #             dem_out_path=Path(self.data_dir, "DEM"),
+    #             ctm_ch_id=self.catchment_ch_id)
+    #         # glaciation_ratio_height["glaciation_ratio"].append(glaciation_ratio)
+    #         # glaciation_ratio_height["glaciation_height"].append(glacier_height)
+    #         return glaciation_ratio, glacier_height, non_glaciation_ratio, non_gla_height, glaciated_centroid, non_glaciated_centroid
+    #     except ValueError:
+    #         logger.exception("Error clipping DEM")
+    #         pass
 
     def hru_dem_props(self, glacier: bool = False):
+        """Creates HRU properties for the catchment.
+
+        Args:
+            glacier: bool
+                Set True if catchment contains glaciers.
+
+        Returns:
+            aspect_slope: pd.DataFrame
+                HRU Properties
+
+        """
         columns = ["NonGlaArea",
                    "GlaArea",
                    "NonGlaAlti",
@@ -1029,6 +1115,16 @@ class RavenModel:
 
 
 def ch1903_to_wgs84(lat_1903, lon_1903):
+    """Convert CH1903 coordinates to WGS84
+
+    Args:
+        lat_1903:
+        lon_1903:
+
+    Returns:
+        lat_wgs84:
+        lon_wgs84
+    """
     transformer = Transformer.from_crs("EPSG:21781", "EPSG:4326")
     lat_wgs84, lon_wgs84 = transformer.transform(lat_1903, lon_1903)
     return lat_wgs84, lon_wgs84
