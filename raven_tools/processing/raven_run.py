@@ -235,10 +235,8 @@ def write_rvt(start_year: int,
         file_path: Path = Path(model_dir, file_name)
         logger.debug(f"file_path = {file_path}")
 
-    if not math.isnan(hru_info['GlaArea']):
-        glacier: bool = True
-    else:
-        glacier: bool = False
+    # Gauge info
+    # ----------
     gauge_header = f":Gauge {gauge_short_code}\n"
     gauge_end = f":EndGauge{newline}{newline}"
     gauge_info = [
@@ -247,11 +245,15 @@ def write_rvt(start_year: int,
         f"  :Elevation  {station_elevation}{newline}{newline}",
     ]
 
+    # Discharge info
+    # --------------
     flow_observation = [
         "# observed streamflow\n",
         f":RedirectToFile data_obs/{gauge_short_code}_Q_{catchment_gauge_id}_daily.rvt"
     ]
 
+    # For HBV model
+    # --------------
     if model_type == "HBV":
         gauge_correction = [
             f"  :RainCorrection    {params['HBV'][param_or_name]['HBV_Param_20']}{newline}",
@@ -273,7 +275,9 @@ def write_rvt(start_year: int,
             gauge_end
         ]
 
-    else:
+    # For all other models
+    # ---------------------
+    if not model_type == "HBV":
         gauge = [
             gauge_header,
             *gauge_info,
@@ -290,6 +294,9 @@ def write_rvt(start_year: int,
 
         ff.writelines(gauge)
         ff.writelines(flow_observation)
+
+    # Copy the RVT file to the model folder
+    # -------------------------------------
     if template_type == "Raven":
         dst_path: Path = Path(model_dir, model_sub_dir, file_name)
         shutil.copy(file_path, dst_path)
