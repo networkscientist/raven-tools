@@ -1495,9 +1495,9 @@ def elevation_band_slope_aspect(data_dir: Path, ctm_ch_id: str, band_list, hru_i
     slope_aspect_info_df.rename(columns={'count': 'area'}, inplace=True)
     slope_aspect_info_df.area = slope_aspect_info_df.area.astype(int)
     slope_aspect_info_df['hru_id'] = slope_aspect_info_df['hru_id'].astype(int)
-    area_non_gla = float(hru_info_df[hru_info_df['Ctm'] == ctm_ch_id]['NonGlaArea'].iloc[0])
-    area_gla = float(hru_info_df[hru_info_df['Ctm'] == ctm_ch_id]['GlaArea'].iloc[0])
-    if math.isnan(area_gla):
+    area_non_gla = np.float64(hru_info_df[hru_info_df['Ctm'] == ctm_ch_id]['NonGlaArea'].iloc[0])
+    area_gla = np.float64(hru_info_df[hru_info_df['Ctm'] == ctm_ch_id]['GlaArea'].iloc[0])
+    if np.isnan(area_gla):
         area_gla = 0
     area_total = area_non_gla + area_gla
     # slope_aspect_info_df['ratio'] = slope_aspect_info_df.area / slope_aspect_info_df.area.sum()
@@ -1505,12 +1505,21 @@ def elevation_band_slope_aspect(data_dir: Path, ctm_ch_id: str, band_list, hru_i
     # tes = slope_aspect_info_df.value_counts('cell_id')
     slope_aspect_info_df.sort_values(['hru_id', 'cell_id'])
     info = pd.DataFrame()
-    for id in hru_id[:-1]:
+    if not np.isnan(area_gla):
+        hru_id_sublist = hru_id[:-1]
+    else:
+        hru_id_sublist = hru_id
+    for id in hru_id_sublist:
         info = pd.concat(
             [info,
              slope_aspect_info_df[slope_aspect_info_df['hru_id'] == id].iloc[0].to_frame().transpose().set_index(
                  'hru_id')])
-
+    new = slope_aspect_info_df.groupby('hru_id').hru_id.agg(['sum'])
+    num_points_total = slope_aspect_info_df.area.sum()
+    for id in hru_id_sublist:
+        info.loc[id, 'area'] = ((slope_aspect_info_df[
+                                     slope_aspect_info_df.hru_id == id].area.sum() / num_points_total) * area_total)
+    info.area.sum()
     info.to_csv(Path(data_dir, "Catchment", f"slope_aspect_{ctm_ch_id}.txt"))
     return slope_aspect_info_df, area_total, info
 
