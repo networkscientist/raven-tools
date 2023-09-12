@@ -34,6 +34,6 @@ for c in catchments_by_id:
         for s in suffix:
             model_instance.write_rvx(rvx_type=s, ostrich_template=True, raven_template=True)
         model_instance.write_rvt()
-        model_instance.write_ost(max_iterations=50)
+        # model_instance.write_ost(max_iterations=50)
         # model_instance.create_symlinks(forcings=False, discharge=True, raven_executable=True, ostrich_executable=True,
         #                                rvx_files=False, raven_diag=False, delete=False)

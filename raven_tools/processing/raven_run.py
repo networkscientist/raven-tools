@@ -767,15 +767,16 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                     ]
             },
         "rvc":
-            {"Basin":
-                [
-                    ":BasinInitialConditions",
-                    ":Attributes, ID,              Q",
-                    ":Units,      none,         m3/s",
-                    "#                  HBV_PARA_???",
-                    "1,             1.0",
-                    ":EndBasinInitialConditions"
-                ],
+            {
+                "Basin":
+                    [
+                        ":BasinInitialConditions",
+                        ":Attributes, ID,              Q",
+                        ":Units,      none,         m3/s",
+                        "#                  HBV_PARA_???",
+                        "1,             1.0",
+                        ":EndBasinInitialConditions"
+                    ],
                 "Lower Groundwater Storage":
                     [
                         "# Initial Lower groundwater storage - for each HRU",
