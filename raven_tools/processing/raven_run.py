@@ -347,22 +347,22 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
         glacier_lon: float = float(hru_info['GlaLon'])
         glacier_aspect: float = float(hru_info['GlaAspect'])
         glacier_slope: float = float(hru_info['GlaSlope'])
-        new = pd.read_csv(Path(data_dir, "Catchment", "HBV", f"hrus_{catchment_ch_id}.txt"), sep=",", header=None)
         if model_type == "HBV":
-            with open(Path(data_dir, "Catchment", "HBV", f"hrus_{catchment_ch_id}.txt"), "r") as f:
-                lines = f.readlines()
-                lines = [line.strip("\n") for line in lines]
-                hru_non_gla_list = []
-                hru_list = \
-                    [
-                        ":HRUs",
-                        "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
-                        "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
-                        f"            1, {glaciated_area}, {glacier_altitude}, {glacier_lat}, {glacier_lon}, 1, GLACIER, GLACIER, GLACIER, [NONE], [NONE], {glacier_slope}, {glacier_aspect}",
-                        *lines,
-                        ":EndHRUs"
-                    ]
-        else:
+            hru_band_info = pd.read_csv(Path(data_dir, "Catchment", f"slope_aspect_{catchment_ch_id}.txt"), sep=",",
+                                        header=0)
+            lines = [
+                f"            {row['hru_id']}, {row['area']}, {row['alti_mean']}, {row['centroid_lat']}, {row['centroid_lon']}, 1, LU_ALL, VEG_ALL, DEFAULT_P, [NONE], [NONE], {row['slope_mean']}, {row['aspect_mean']}"
+                for (index, row) in hru_band_info.iterrows()]
+            hru_list = \
+                [
+                    ":HRUs",
+                    "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
+                    "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
+                    *lines,
+                    f"            {len(hru_band_info) + 1}, {glaciated_area}, {glacier_altitude}, {glacier_lat}, {glacier_lon}, 1, GLACIER, GLACIER, GLACIER, [NONE], [NONE], {glacier_slope}, {glacier_aspect}",
+                    ":EndHRUs"
+                ]
+        if not model_type == "HBV":
             hru_list = \
                 [
                     ":HRUs",
@@ -390,15 +390,30 @@ def generate_template_rvx(catchment_ch_id: str, hru_info: dict, csv_file=None, m
                 "   GLACIER, 0.0, 0.0, 0.0",
                 ":EndVegetationClasses"
             ]
-    else:
-        hru_list = \
-            [
-                ":HRUs",
-                "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
-                "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
-                f"            1, {non_glaciated_area},     {non_glacier_altitude},   {non_glacier_lat},     {non_glacier_lon},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {non_glacier_slope},  {non_glacier_aspect}",
-                ":EndHRUs"
-            ]
+    if math.isnan(hru_info['GlaArea']):
+        if model_type == "HBV":
+            hru_band_info = pd.read_csv(Path(data_dir, "Catchment", f"slope_aspect_{catchment_ch_id}.txt"), sep=",",
+                                        header=0)
+            lines = [
+                f"            {row['hru_id']}, {row['area']}, {row['alti_mean']}, {row['centroid_lat']}, {row['centroid_lon']}, 1, LU_ALL, VEG_ALL, DEFAULT_P, [NONE], [NONE], {row['slope_mean']}, {row['aspect_mean']}"
+                for (index, row) in hru_band_info.iterrows()]
+            hru_list = \
+                [
+                    ":HRUs",
+                    "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
+                    "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
+                    *lines,
+                    ":EndHRUs"
+                ]
+        if not model_type == "HBV":
+            hru_list = \
+                [
+                    ":HRUs",
+                    "  :Attributes,  AREA, ELEVATION, LATITUDE, LONGITUDE, BASIN_ID,LAND_USE_CLASS, VEG_CLASS, SOIL_PROFILE, AQUIFER_PROFILE, TERRAIN_CLASS, SLOPE, ASPECT",
+                    "  :Units     ,   km2,         m,      deg,       deg,     none,          none,      none,         none,            none,          none,   deg,    deg",
+                    f"            1, {non_glaciated_area},     {non_glacier_altitude},   {non_glacier_lat},     {non_glacier_lon},        1,        LU_ALL,   VEG_ALL,    DEFAULT_P,          [NONE],        [NONE],   {non_glacier_slope},  {non_glacier_aspect}",
+                    ":EndHRUs"
+                ]
         land_use_classes = \
             [
                 ":LandUseClasses",
