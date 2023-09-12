@@ -191,7 +191,7 @@ HBV:
     HBV_Param_21: '1.0'
     HBV_Param_11b: '0.5'
     HBV_Param_15b: '3.0'
-    HBV_Param_17b: '0.5'
+    HBV_Param_17b: '500'
   lower:
     HBV_Param_01: '-3'
     HBV_Param_02: '1'
@@ -216,7 +216,7 @@ HBV:
     HBV_Param_21: '0.4'
     HBV_Param_11b: '0.5'
     HBV_Param_15b: '1.0'
-    HBV_Param_17b: '0.1'
+    HBV_Param_17b: '100'
   upper:
     HBV_Param_01: '3'
     HBV_Param_02: '10'
@@ -241,7 +241,7 @@ HBV:
     HBV_Param_21: '1.2'
     HBV_Param_11b: '0.5'
     HBV_Param_15b: '10.0'
-    HBV_Param_17b: '10'
+    HBV_Param_17b: '10000'
 HMETS:
   names:
     HMETS_Param_01: HMETS_alpha1 #GAMMA_SHAPE for surface UH
