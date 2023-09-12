@@ -129,7 +129,7 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str, model_ty
         f"    :FileNameNC           data_obs/TabsD_v2.0_swiss.lv95/out/TabsD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
         "    :VarNameNC            TabsD",
         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-        f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
+        f"    :RedirectToFile       {grid_weights_file_path}",
         ":EndGriddedForcing"]
     forcing_temp_max = [
         ":GriddedForcing           Maximum Temperature",
@@ -137,7 +137,7 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str, model_ty
         f"    :FileNameNC           data_obs/TmaxD_v2.0_swiss.lv95/out/TmaxD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
         "    :VarNameNC            TmaxD",
         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-        f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
+        f"    :RedirectToFile       {grid_weights_file_path}",
         ":EndGriddedForcing"]
     forcing_temp_min = [
         ":GriddedForcing           Minimum Temperature",
@@ -145,7 +145,7 @@ def forcing_block(start_year: int, end_year: int, catchment_ch_id: str, model_ty
         f"    :FileNameNC           data_obs/TminD_v2.0_swiss.lv95/out/TminD_v2.0_swiss.lv95_{start_year}01010000_{end_year}12310000_{catchment_ch_id}_clipped.nc",
         "    :VarNameNC            TminD",
         "    :DimNamesNC           E N time     # must be in the order of (x,y,t) ",
-        f"    :RedirectToFile       data_obs/RhiresD_v2.0_swiss.lv95/out/grid_weights_{catchment_ch_id}.txt",
+        f"    :RedirectToFile       {grid_weights_file_path}",
         ":EndGriddedForcing"
     ]
 
