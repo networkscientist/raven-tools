@@ -1266,8 +1266,8 @@ def extract_elevation_band_from_rio_dem(dem: xr.DataArray, ctm_ch_id: str, data_
         if save_to_tif:
             for limit in elevation_band_limit_list:
                 dem_clipped_to_ctm.where((dem_clipped_to_ctm.values >= limit) & (
-                        dem_clipped_to_ctm.values < limit)).rio.to_raster(Path(data_dir,
-                                                                               f"DEM/hbv/non_glacier/dem_{ctm_ch_id}_{limit}_{limit + 99}.tif"))
+                        dem_clipped_to_ctm.values < (limit + 100))).rio.to_raster(Path(data_dir,
+                                                                                       f"DEM/hbv/non_glacier/dem_{ctm_ch_id}_{limit}_{limit + 99}.tif"))
     return new_grid_dgdf
 
 
