@@ -1248,8 +1248,8 @@ def extract_elevation_band_from_rio_dem(dem: xr.DataArray, ctm_ch_id: str, data_
         if save_to_tif:
             for limit in elevation_band_limit_list:
                 dem_clipped_to_ctm_without_glacier.where((dem_clipped_to_ctm_without_glacier.values >= limit) & (
-                        dem_clipped_to_ctm_without_glacier.values < limit)).rio.to_raster(Path(data_dir,
-                                                                                               f"DEM/hbv/non_glacier/dem_{ctm_ch_id}_{limit}_{limit + 99}.tif"))
+                        dem_clipped_to_ctm_without_glacier.values < (limit + 100))).rio.to_raster(Path(data_dir,
+                                                                                                       f"DEM/hbv/non_glacier/dem_{ctm_ch_id}_{limit}_{limit + 99}.tif"))
     else:
         dem_df = dem_clipped_to_ctm.to_dataframe(name='alti').reset_index()
         dem_gdf = gpd.GeoDataFrame(dem_df, geometry=gpd.points_from_xy(dem_df.x, dem_df.y, crs=2056), crs=2056)
