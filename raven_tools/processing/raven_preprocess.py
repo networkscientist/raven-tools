@@ -867,7 +867,7 @@ def weighted_centroid_raster_points(raster_points_gdf: GeoDataFrame) -> tuple:
     """
     raster_points_gdf_new = raster_points_gdf.to_crs(epsg='32632')
     raster_points_gdf_diss = raster_points_gdf_new.dissolve()
-    centroid = raster_points_gdf_diss.centroid[0]
+    centroid = raster_points_gdf_diss.centroid.loc[0]
     return crs_old_to_new(lat_old=centroid.y, lon_old=centroid.x, epsg_old=32632, epsg_new=4326)
 
 
