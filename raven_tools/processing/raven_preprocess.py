@@ -436,7 +436,8 @@ def create_dask_overlay(underlay: gpd.GeoDataFrame, overlay: gpd.GeoDataFrame, k
     # overlay = overlay.explode()
     # underlay = underlay.explode()
     # res_u: dgpd.GeoDataFrame = ctm_gdf.overlay(grd, how='intersection', keep_geom_type=keep_geom_type)
-    res_u = gpd.overlay(underlay, overlay, overlay_type, keep_geom_type)
+    res_u = gpd.overlay(underlay.explode(), overlay.explode(), overlay_type, keep_geom_type)
+    # res_u = gpd.overlay(underlay, overlay, overlay_type, keep_geom_type)
     # res_u.set_index("cell_id", inplace=True)
     res_u.to_crs(2056)
     return res_u
