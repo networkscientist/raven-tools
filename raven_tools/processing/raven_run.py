@@ -1383,6 +1383,12 @@ def generate_template_ostrich(catchment_ch_id: str,
             f"cp ./{file_name}.rvh model/{file_name}.rvh",
             f"cp ./{file_name}.rvp model/{file_name}.rvp"
         ]
+    elif model_type == "HYMOD":
+        ost_mpi_script_cp_lines = [
+            f"cp ./{file_name}.rvi model/{file_name}.rvi",
+            f"cp ./{file_name}.rvh model/{file_name}.rvh",
+            f"cp ./{file_name}.rvp model/{file_name}.rvp"
+        ]
     ost_mpi_header = [
         f"#!/bin/bash{newline}{newline}",
         f"# match assignment to location of OSTRICH installation{newline}",
