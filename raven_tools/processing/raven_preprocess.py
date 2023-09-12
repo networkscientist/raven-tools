@@ -1218,6 +1218,9 @@ def extract_elevation_band_from_rio_dem(dem: xr.DataArray, ctm_ch_id: str, data_
         ctm_without_glacier_extent = create_dask_overlay(underlay=catchment_extent, overlay=gla_extent,
                                                          keep_geom_type=False, overlay_type='difference')
         dem_clipped_to_ctm_without_glacier = dem.rio.clip(ctm_without_glacier_extent.geometry, crs="epsg:2056")
+        lower = round_down(float(dem_clipped_to_ctm_without_glacier.min().compute()))
+        upper = round_up(float(dem_clipped_to_ctm_without_glacier.max().compute()))
+        elevation_band_limit_list = list(range(lower, upper, 100))
         dem_df = dem_clipped_to_ctm_without_glacier.to_dataframe(name='alti').reset_index()
         dem_gdf = gpd.GeoDataFrame(dem_df, geometry=gpd.points_from_xy(dem_df.x, dem_df.y, crs=2056), crs=2056)
         dem_dgdf = dgpd.from_geopandas(dem_gdf, npartitions=8)
